@@ -42,3 +42,5 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** function
 
 - [Product Requirement Document (PRD)](docs/PRD.md)
 - [Use Cases Document](docs/USE_CASES.md)
+- [Database Schema Specification](docs/DATABASE_SCHEMA.md)
+- [API Endpoints Specification](docs/API_ENDPOINTS.md)
