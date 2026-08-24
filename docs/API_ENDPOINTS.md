@@ -1,3 +1,19 @@
+---
+title: API Endpoints Specification
+description: REST API route specifications for Workouts, Calculators, Analytics, and Body Measurements using Hono on Cloudflare Workers.
+tags:
+  - api
+  - endpoints
+  - hono
+  - cloudflare-workers
+version: 1.0.0
+relations:
+  - type: defined_in
+    target: PRD.md
+  - type: queries
+    target: DATABASE_SCHEMA.md
+---
+
 # GymLogger - API Endpoints Specification (Hono Router)
 
 This document outlines the REST API endpoints supported by the Hono router running on Cloudflare Workers.

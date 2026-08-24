@@ -1,0 +1,23 @@
+bundle:
+  name: gymlogger-docs
+  version: 1.0.0
+  format: open-knowledge-format
+  description: Open Knowledge Format (OKF) bundle for GymLogger documentation.
+
+concepts:
+  - id: prd
+    file: PRD.md
+    title: Product Requirement Document (PRD) - GymLogger
+    description: High-level requirements, scope, architecture, and feature definitions.
+  - id: use-cases
+    file: USE_CASES.md
+    title: GymLogger Use Cases
+    description: Actor flows and scenarios for workout logging and progress tracking.
+  - id: database-schema
+    file: DATABASE_SCHEMA.md
+    title: Database Schema Specification
+    description: Relational table definitions for Cloudflare D1 SQLite database.
+  - id: api-endpoints
+    file: API_ENDPOINTS.md
+    title: API Endpoints Specification
+    description: Hono REST API routing specifications.

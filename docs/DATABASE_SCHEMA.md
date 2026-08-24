@@ -1,3 +1,19 @@
+---
+title: Database Schema Specification
+description: Cloudflare D1 (SQLite) relational database schema for users, workouts, exercises, sets, and body measurements.
+tags:
+  - database
+  - schema
+  - d1
+  - sqlite
+version: 1.0.0
+relations:
+  - type: defined_in
+    target: PRD.md
+  - type: implemented_by
+    target: API_ENDPOINTS.md
+---
+
 # GymLogger - Database Schema Specification (Cloudflare D1)
 
 This document defines the relational database schema for GymLogger running on Cloudflare D1 (serverless SQLite).

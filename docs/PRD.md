@@ -1,3 +1,20 @@
+---
+title: Product Requirement Document (PRD) - GymLogger
+description: Product Requirement Document defining project vision, scope, module requirements, tech stack, and documentation standards for GymLogger.
+tags:
+  - prd
+  - specifications
+  - gymlogger
+version: 1.0.0
+relations:
+  - type: references
+    target: USE_CASES.md
+  - type: references
+    target: DATABASE_SCHEMA.md
+  - type: references
+    target: API_ENDPOINTS.md
+---
+
 # Product Requirement Document (PRD) - GymLogger
 
 ## 1. Executive Summary & Vision
@@ -11,6 +28,7 @@
 - **Linter**: oxlint
 - **Formatter**: oxfmt
 - **Test Automation**: Vitest
+- **Documentation Standard**: Open Knowledge Format (OKF) with YAML frontmatter and bundle manifest.
 
 ---
 
@@ -85,7 +103,9 @@ GymLogger adopts the core pillars of Hevy's **Workout Logging** and **Progress T
 
 ## 4. Technical Specifications & Reference
 
-The detailed database schema and API endpoint specifications are maintained in separate dedicated reference documents:
+All documentation files in `/docs` follow the Open Knowledge Format (OKF) standard with structured YAML frontmatter and interlinked relations:
 
 - **Database Schema**: Refer to [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for the complete Cloudflare D1 relational database schema.
 - **API Endpoints**: Refer to [docs/API_ENDPOINTS.md](API_ENDPOINTS.md) for the complete REST API endpoint specifications.
+- **Use Cases**: Refer to [docs/USE_CASES.md](USE_CASES.md) for functional actor flows and edge cases.
+- **Manifest Index**: Refer to [docs/manifest.yaml](manifest.yaml) for the OKF bundle manifest.

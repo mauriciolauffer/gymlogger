@@ -1,3 +1,18 @@
+---
+title: GymLogger Use Cases
+description: Functional use cases covering Workout Logging and Progress Tracking features for GymLogger.
+tags:
+  - use-cases
+  - workflows
+  - gymlogger
+version: 1.0.0
+relations:
+  - type: defined_in
+    target: PRD.md
+  - type: targets_api
+    target: API_ENDPOINTS.md
+---
+
 # GymLogger Use Cases Document
 
 ## 1. Overview
