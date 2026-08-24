@@ -25,8 +25,7 @@ This document outlines the REST API endpoints supported by the Hono router runni
 - `GET /api/v1/workouts/previous-values?exerciseId=:id` - Fetch set values from previous workout for exercise.
 
 ## Calculators API
-- `GET /api/v1/calculators/warmup?targetWeight=:w` - Return warm-up set breakdown.
-- `GET /api/v1/calculators/plates?targetWeight=:w&barWeight=:b` - Return plate breakdown per side.
+- `GET /api/v1/calculators/warmup?targetWeight=:w` - Return warm-up set breakdown based directly on total target weight.
 
 ## Analytics & Progress API
 - `GET /api/v1/analytics/performance` - Retrieve 1RM, volume, and rep trends.

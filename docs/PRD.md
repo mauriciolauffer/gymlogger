@@ -60,9 +60,9 @@ GymLogger adopts the core pillars of Hevy's **Workout Logging** and **Progress T
 7. **Previous Workout Values**
    - Display previous weight and rep count for each set when starting an exercise, allowing effortless progressive overload targeting.
 8. **Warm Up Set Calculator**
-   - Calculate recommended warm-up weights and set progression based on target working set weight (e.g., 40%, 60%, 80%).
-9. **Weight Plate Calculator**
-   - Calculate exact plate combinations required per side based on bar weight and target weight (lb/kg support).
+   - Calculate recommended warm-up weight percentages and set progression directly from total target working weight (e.g., 40%, 60%, 80% of total target weight).
+9. **Weight Calculator**
+   - Simplified total weight calculation taking total weight input directly from the user without requiring separate bar weight or per-side plate inputs.
 10. **RPE (Rating of Perceived Exertion)**
     - Track RPE (scale 1–10) per set to measure relative intensity alongside weight and reps.
 11. **Supersets**

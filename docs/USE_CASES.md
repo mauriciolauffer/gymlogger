@@ -66,15 +66,14 @@ This document outlines the primary use cases for **GymLogger**, covering both **
 
 ---
 
-### UC-LOG-04: Calculate Warm Up Sets & Weight Plates
+### UC-LOG-04: Calculate Warm Up Sets & Total Weight
 - **Primary Actor**: Gym Athlete
-- **Preconditions**: Target working weight for an exercise is known.
+- **Preconditions**: Target total working weight for an exercise is known.
 - **Main Flow**:
-  1. User opens Warm Up Set Calculator or Weight Plate Calculator tool.
-  2. User specifies working weight (e.g., 100 kg) and barbell weight (e.g., 20 kg).
-  3. System calculates warm-up set progression (e.g., 40% x 10, 60% x 5, 80% x 3).
-  4. System calculates required weight plate combination per side (e.g., 1x 20kg, 1x 15kg, 1x 5kg).
-  5. User applies calculated warm-up sets directly into workout session.
+  1. User opens Warm Up Set Calculator tool.
+  2. User specifies total target working weight (e.g., 100 kg).
+  3. System calculates warm-up set progression based directly on total weight (e.g., 40% x 10, 60% x 5, 80% x 3).
+  4. User applies calculated warm-up sets directly into workout session.
 - **Postconditions**: Calculated warm-up sets added to workout set list.
 
 ---
