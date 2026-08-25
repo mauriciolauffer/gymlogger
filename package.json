@@ -11,6 +11,9 @@
     "fmt": "oxfmt --write ."
   },
   "dependencies": {
+    "@ui5/webcomponents": "^2.25.0",
+    "@ui5/webcomponents-fiori": "^2.25.0",
+    "@ui5/webcomponents-icons": "^2.25.0",
     "hono": "^4.13.4",
     "vue": "^3.5.41"
   },

@@ -7,6 +7,7 @@
 ## 🛠️ Technology Stack
 - **Frontend Framework**: Vue.js
 - **Frontend Build Tool**: Vite
+- **Frontend Design System**: [SAP UI5 Web Components](https://ui5.github.io/webcomponents/components/) (`@ui5/webcomponents`, `@ui5/webcomponents-fiori`, `@ui5/webcomponents-icons`)
 - **API Gateway & Backend Runtime**: Cloudflare Workers
 - **Web Framework**: [Hono](https://hono.dev/)
 - **Programming Language**: TypeScript

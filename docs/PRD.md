@@ -23,6 +23,7 @@ relations:
 ## 2. Technology Stack & Infrastructure
 - **Frontend Framework**: Vue.js
 - **Frontend Build Tool & Bundler**: Vite
+- **Frontend Design System**: SAP UI5 Web Components (`@ui5/webcomponents`, `@ui5/webcomponents-fiori`, `@ui5/webcomponents-icons`)
 - **Infrastructure & API Gateway**: Cloudflare Workers
 - **Backend Framework**: Hono (Lightweight, fast Web framework for Cloudflare Workers)
 - **Language**: TypeScript
