@@ -1,6 +1,6 @@
 ---
 title: Database Schema Specification
-description: Cloudflare D1 (SQLite) relational database schema for users, workouts, exercises, sets, and body measurements.
+description: Cloudflare D1 (SQLite) relational database schema for users, workouts, exercises, sets, body measurements, and units of measurement.
 tags:
   - database
   - schema
@@ -21,17 +21,20 @@ This document defines the relational database schema for GymLogger running on Cl
 ## Entity Relationship Overview
 
 ```
- [users] 1 ─────────── N [workouts]
-                           │ 1
-                           │
-                           ▼ N
- [exercises] 1 ─────── N [workout_exercises]
-                           │ 1
-                           │
-                           ▼ N
-                         [workout_sets]
+ [units] 1 ─────────── N [body_measurements]
+   │ 1                      ▲
+   │                        │ N
+   ├─────────── N [workouts]
+   │                │ 1
+   │                │
+   │                ▼ N
+   └─────────── N [workout_sets]
+                    ▲
+                    │ N
+ [exercises] 1 ─ N [workout_exercises]
 ```
 
+- **`units`**: Central lookup table defining supported units of measurement (e.g., `kg`, `lbs`, `cm`, `in`).
 - **`exercises`**: Exercise library containing preset and custom exercises.
 - **`workouts`**: Parent record for an athlete's workout session.
 - **`workout_exercises`**: Junction table mapping an exercise from the library into a specific workout (`1 Workout` -> `N Workout Exercises`).
@@ -42,6 +45,21 @@ This document defines the relational database schema for GymLogger running on Cl
 ## Schema Definition (SQL)
 
 ```sql
+-- Units of Measurement Central Lookup Table
+CREATE TABLE units (
+    code TEXT PRIMARY KEY, -- 'kg', 'lbs', 'cm', 'in'
+    type TEXT NOT NULL CHECK(type IN ('weight', 'length')),
+    name TEXT NOT NULL,
+    symbol TEXT NOT NULL
+);
+
+-- Seed Default Units
+INSERT INTO units (code, type, name, symbol) VALUES
+('kg', 'weight', 'Kilograms', 'kg'),
+('lbs', 'weight', 'Pounds', 'lbs'),
+('cm', 'length', 'Centimeters', 'cm'),
+('in', 'length', 'Inches', 'in');
+
 -- Users Table
 CREATE TABLE users (
     id TEXT PRIMARY KEY,
@@ -49,19 +67,19 @@ CREATE TABLE users (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Body Measurements Table (Decoupled Values and Units)
+-- Body Measurements Table
 CREATE TABLE body_measurements (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),
     date DATE NOT NULL,
     weight REAL,
-    weight_unit TEXT CHECK(weight_unit IN ('kg', 'lbs')) DEFAULT 'kg',
+    weight_unit TEXT REFERENCES units(code) DEFAULT 'kg',
     body_fat_pct REAL,
-    length_unit TEXT CHECK(length_unit IN ('cm', 'in')) DEFAULT 'cm',
     chest REAL,
     waist REAL,
     biceps REAL,
     thighs REAL,
+    length_unit TEXT REFERENCES units(code) DEFAULT 'cm',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -85,7 +103,7 @@ CREATE TABLE workouts (
     end_time DATETIME,
     duration_seconds INTEGER,
     total_volume REAL DEFAULT 0,
-    volume_unit TEXT CHECK(volume_unit IN ('kg', 'lbs')) DEFAULT 'kg',
+    volume_unit TEXT REFERENCES units(code) DEFAULT 'kg',
     notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -106,7 +124,7 @@ CREATE TABLE workout_sets (
     workout_exercise_id TEXT NOT NULL REFERENCES workout_exercises(id) ON DELETE CASCADE,
     set_type TEXT CHECK(set_type IN ('normal', 'warmup', 'drop', 'failure')) DEFAULT 'normal',
     weight REAL NOT NULL DEFAULT 0,
-    weight_unit TEXT CHECK(weight_unit IN ('kg', 'lbs')) DEFAULT 'kg',
+    weight_unit TEXT REFERENCES units(code) DEFAULT 'kg',
     reps INTEGER NOT NULL DEFAULT 0,
     rpe REAL,
     is_pr BOOLEAN DEFAULT FALSE,

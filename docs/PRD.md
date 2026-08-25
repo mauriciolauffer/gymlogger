@@ -69,7 +69,7 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
    - Dynamically append or delete sets within an exercise during logging.
 6. **Workout Set Types & Decoupled Units**
    - Categorize each set by type (`Normal`, `Warmup`, `Drop Set`, `Failure`).
-   - Weight values are decoupled from unit of measurement (separate `weight` value and `weight_unit` field supporting `kg` and `lbs`).
+   - Weight values reference the central `units` lookup table (`units(code)` foreign key supporting `kg` and `lbs`).
 7. **Previous Workout Values**
    - Display previous weight and rep count for each set when starting an exercise, allowing effortless progressive overload targeting.
 8. **Warm Up Set Calculator**
@@ -81,7 +81,7 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
 11. **Supersets**
     - Group two or more exercises into supersets or tri-sets with linked progression.
 12. **Saving a Workout**
-    - Persist workout logs reliably to Cloudflare D1 database with total volume, volume unit, set count, duration, and PR calculation.
+    - Persist workout logs reliably to Cloudflare D1 database with total volume, volume unit (foreign key to `units`), set count, duration, and PR calculation.
 13. **Live Personal Record Notification**
     - Real-time check and alert when completing a set/exercise that beats previous bests (1RM, Max Weight, Max Volume, Max Reps).
 14. **Live Activity**
@@ -101,9 +101,9 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
    - Analytics endpoint & metrics for tracking weekly volume (sets per muscle group) relative to target hypertrophy volume ranges (e.g., 10-20 sets/week).
 5. **Muscle Distribution Chart**
    - Percentage breakdown chart of muscle group focus across selectable date ranges (weekly, monthly, custom).
-6. **Body Measurements (Decoupled Units)**
+6. **Body Measurements & Central Units Lookup**
    - Record and track historical body metrics over time: Weight, Body Fat %, Neck, Shoulders, Chest, Biceps, Waist, Hips, Thighs, Calves.
-   - All measurement numerical values are explicitly decoupled from unit of measurement (separate `weight` + `weight_unit` and `length` + `length_unit` fields).
+   - All measurement unit fields reference the central `units` lookup table (`weight_unit` and `length_unit` foreign keys to `units(code)`).
 7. **Progress Photos**
    - Upload and manage progress photos paired with body measurement logs and timestamps.
 8. **Track Exercise Performance**
@@ -119,7 +119,7 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
 
 All documentation files in `/docs` follow the Open Knowledge Format (OKF) standard with structured YAML frontmatter and interlinked relations:
 
-- **Database Schema**: Refer to [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for the complete Cloudflare D1 relational database schema.
+- **Database Schema**: Refer to [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for the complete Cloudflare D1 relational database schema, including the central `units` lookup table.
 - **API Endpoints**: Refer to [docs/API_ENDPOINTS.md](API_ENDPOINTS.md) for the complete REST API endpoint specifications.
 - **Use Cases**: Refer to [docs/USE_CASES.md](USE_CASES.md) for functional actor flows and edge cases.
 - **Manifest Index**: Refer to [docs/manifest.yaml](manifest.yaml) for the OKF bundle manifest.
