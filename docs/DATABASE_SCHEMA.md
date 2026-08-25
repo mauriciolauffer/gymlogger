@@ -18,6 +18,29 @@ relations:
 
 This document defines the relational database schema for GymLogger running on Cloudflare D1 (serverless SQLite).
 
+## Entity Relationship Overview
+
+```
+ [users] 1 ─────────── N [workouts]
+                           │ 1
+                           │
+                           ▼ N
+ [exercises] 1 ─────── N [workout_exercises]
+                           │ 1
+                           │
+                           ▼ N
+                         [workout_sets]
+```
+
+- **`exercises`**: Exercise library containing preset and custom exercises.
+- **`workouts`**: Parent record for an athlete's workout session.
+- **`workout_exercises`**: Junction table mapping an exercise from the library into a specific workout (`1 Workout` -> `N Workout Exercises`).
+- **`workout_sets`**: Individual set entries for an exercise within a workout (`1 Workout Exercise` -> `N Workout Sets`).
+
+---
+
+## Schema Definition (SQL)
+
 ```sql
 -- Users Table
 CREATE TABLE users (
@@ -40,7 +63,7 @@ CREATE TABLE body_measurements (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Exercises Table
+-- Exercises Library Table
 CREATE TABLE exercises (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -51,7 +74,7 @@ CREATE TABLE exercises (
     user_id TEXT REFERENCES users(id)
 );
 
--- Workouts Table
+-- Workouts Table (1 Workout -> N workout_exercises)
 CREATE TABLE workouts (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),
@@ -64,7 +87,7 @@ CREATE TABLE workouts (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Workout Exercises Table
+-- Workout Exercises Table (1 Exercise in a workout -> N workout_sets)
 CREATE TABLE workout_exercises (
     id TEXT PRIMARY KEY,
     workout_id TEXT NOT NULL REFERENCES workouts(id) ON DELETE CASCADE,
@@ -74,7 +97,7 @@ CREATE TABLE workout_exercises (
     order_index INTEGER NOT NULL
 );
 
--- Workout Sets Table
+-- Workout Sets Table (1 Set record belonging to a workout_exercise)
 CREATE TABLE workout_sets (
     id TEXT PRIMARY KEY,
     workout_exercise_id TEXT NOT NULL REFERENCES workout_exercises(id) ON DELETE CASCADE,

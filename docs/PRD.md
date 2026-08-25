@@ -37,12 +37,25 @@ relations:
 
 ## 3. Scope & Feature Requirements
 
-GymLogger focuses on core **Workout Logging** and **Progress Tracking** features.
+GymLogger focuses on core **Workout Logging** and **Progress Tracking** features structured around an Exercise Library and a hierarchical Workout model (`1 Workout` -> `N Exercises` -> `N Sets`).
 
-### 3.1 Workout Logging Module
+### 3.1 Exercise Library & Exercise Management
 
-1. **Log & Track Workouts**
-   - Record active workouts with structured routines or ad-hoc sessions.
+1. **Global Exercise Library**
+   - Pre-populated library of standard strength training exercises (Barbell, Dumbbell, Machine, Cable, Bodyweight).
+   - Each exercise metadata defines primary muscle group, secondary muscle groups, and exercise equipment category.
+2. **Custom Exercises**
+   - Ability for athletes to create user-defined custom exercises added to their personal exercise library.
+3. **Exercise Selection for Workouts**
+   - Searchable, filterable exercise picker enabling users to select and attach exercises from the library directly into any active or planned workout session.
+
+---
+
+### 3.2 Workout Logging Module
+
+1. **Log & Track Workouts (1:N Exercises, 1:N Sets Hierarchy)**
+   - Every workout session contains multiple exercises (`workout_exercises`).
+   - Every exercise within a workout contains multiple individual set records (`workout_sets`).
    - Support start timestamp, end timestamp, title, notes, and duration calculations.
 2. **Start Empty Workout**
    - Quick launch for blank workout sessions without predefined routines.
@@ -79,7 +92,7 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
 
 ---
 
-### 3.2 Progress Tracking Module
+### 3.3 Progress Tracking Module
 
 1. **Gym Performance Tracking**
    - Historical tracking of volume load, estimated 1RM (One Rep Max using Epley/Brzycki formulas), total reps, and total sets over time.
