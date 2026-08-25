@@ -21,8 +21,10 @@ relations:
 **GymLogger** is an intuitive, highly responsive workout logging and progress tracking backend system and web application. Designed to run on modern edge infrastructure, GymLogger provides athletes with fast, reliable workout logging, comprehensive performance analytics, body measurement tracking, and real-time exercise calculators.
 
 ## 2. Technology Stack & Infrastructure
+- **Frontend Framework**: Vue.js
+- **Frontend Build Tool & Bundler**: Vite
 - **Infrastructure & API Gateway**: Cloudflare Workers
-- **Framework**: Hono (Lightweight, fast Web framework for Cloudflare Workers)
+- **Backend Framework**: Hono (Lightweight, fast Web framework for Cloudflare Workers)
 - **Language**: TypeScript
 - **Database**: Cloudflare D1 (Serverless SQLite at the edge)
 - **Linter**: oxlint

@@ -5,6 +5,8 @@
 ---
 
 ## 🛠️ Technology Stack
+- **Frontend Framework**: Vue.js
+- **Frontend Build Tool**: Vite
 - **API Gateway & Backend Runtime**: Cloudflare Workers
 - **Web Framework**: [Hono](https://hono.dev/)
 - **Programming Language**: TypeScript
