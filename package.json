@@ -11,17 +11,17 @@
     "fmt": "oxfmt --write ."
   },
   "dependencies": {
-    "hono": "^4.7.2",
+    "hono": "^4.13.4",
     "vue": "^3.5.41"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250214.0",
+    "@cloudflare/workers-types": "^5.20260825.1",
     "@vitejs/plugin-vue": "^6.0.8",
-    "oxfmt": "^0.64.0",
-    "oxlint": "^0.15.13",
-    "typescript": "^5.7.3",
+    "oxfmt": "^0.65.0",
+    "oxlint": "^1.80.0",
+    "typescript": "^7.0.2",
     "vite": "^8.2.2",
-    "vitest": "^3.0.6",
-    "wrangler": "^3.111.0"
+    "vitest": "^4.1.11",
+    "wrangler": "^4.125.0"
   }
 }
