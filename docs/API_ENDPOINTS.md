@@ -1,6 +1,6 @@
 ---
 title: API Endpoints Specification
-description: REST API route specifications for Workouts, Calculators, Analytics, and Body Measurements using Hono on Cloudflare Workers.
+description: REST API route specifications for Users, Workouts, Calculators, Analytics, and Body Measurements using Hono on Cloudflare Workers.
 tags:
   - api
   - endpoints
@@ -18,9 +18,13 @@ relations:
 
 This document outlines the REST API endpoints supported by the Hono router running on Cloudflare Workers.
 
+## Users API
+- `GET /api/v1/users/profile` - Fetch current user's profile details (`email`, `name`, `location`, `birthday`, `sex`, `bio`).
+- `PUT /api/v1/users/profile` - Update current user's profile information (`name`, `location`, `birthday`, `sex`, `bio`).
+
 ## Workouts API
 - `POST /api/v1/workouts/start` - Start dynamic empty or routine-based workout.
-- `POST /api/v1/workouts/:id/sets` - Add set with type, weight, reps, RPE. Calculates PRs live.
+- `POST /api/v1/workouts/:id/sets` - Add set with type, weight, weight_unit, reps, RPE. Calculates PRs live.
 - `PUT /api/v1/workouts/:id/finish` - Finish workout, calculate final stats, volume, and duration.
 - `GET /api/v1/workouts/previous-values?exerciseId=:id` - Fetch set values from previous workout for exercise.
 

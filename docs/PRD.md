@@ -37,9 +37,23 @@ relations:
 
 ## 3. Scope & Feature Requirements
 
-GymLogger focuses on core **Workout Logging** and **Progress Tracking** features structured around an Exercise Library, a hierarchical Workout model (`1 Workout` -> `N Exercises` -> `N Sets`), and unit-decoupled measurement logging.
+GymLogger focuses on User Management, core **Workout Logging**, and **Progress Tracking** features structured around an Exercise Library, a hierarchical Workout model (`1 Workout` -> `N Exercises` -> `N Sets`), and unit-decoupled measurement logging.
 
-### 3.1 Exercise Library & Exercise Management
+### 3.1 User Profile & Account Management
+
+1. **User Authentication & Profile Details**
+   - User account creation and authentication.
+   - Comprehensive profile fields:
+     - `email`: User's primary email address (unique).
+     - `name`: Display name.
+     - `location`: Geographical location / city.
+     - `birthday`: Date of birth.
+     - `sex`: Biological sex or gender identity (`male`, `female`, `other`, `prefer_not_to_say`).
+     - `bio`: Short user bio / personal summary.
+
+---
+
+### 3.2 Exercise Library & Exercise Management
 
 1. **Global Exercise Library**
    - Pre-populated library of standard strength training exercises (Barbell, Dumbbell, Machine, Cable, Bodyweight).
@@ -51,7 +65,7 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
 
 ---
 
-### 3.2 Workout Logging Module
+### 3.3 Workout Logging Module
 
 1. **Log & Track Workouts (1:N Exercises, 1:N Sets Hierarchy)**
    - Every workout session contains multiple exercises (`workout_exercises`).
@@ -89,7 +103,7 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
 
 ---
 
-### 3.3 Progress Tracking Module
+### 3.4 Progress Tracking Module
 
 1. **Gym Performance Tracking**
    - Historical tracking of volume load, estimated 1RM (One Rep Max using Epley/Brzycki formulas), total reps, and total sets over time.
@@ -119,7 +133,7 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
 
 All documentation files in `/docs` follow the Open Knowledge Format (OKF) standard with structured YAML frontmatter and interlinked relations:
 
-- **Database Schema**: Refer to [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for the complete Cloudflare D1 relational database schema, including the central `units` lookup table.
+- **Database Schema**: Refer to [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for the complete Cloudflare D1 relational database schema, including the `users` profile table and central `units` lookup table.
 - **API Endpoints**: Refer to [docs/API_ENDPOINTS.md](API_ENDPOINTS.md) for the complete REST API endpoint specifications.
 - **Use Cases**: Refer to [docs/USE_CASES.md](USE_CASES.md) for functional actor flows and edge cases.
 - **Manifest Index**: Refer to [docs/manifest.yaml](manifest.yaml) for the OKF bundle manifest.

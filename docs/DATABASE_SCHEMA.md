@@ -35,6 +35,7 @@ This document defines the relational database schema for GymLogger running on Cl
 ```
 
 - **`units`**: Central lookup table defining supported units of measurement (e.g., `kg`, `lbs`, `cm`, `in`).
+- **`users`**: User profile table storing authentication and personal profile details.
 - **`exercises`**: Exercise library containing preset and custom exercises.
 - **`workouts`**: Parent record for an athlete's workout session.
 - **`workout_exercises`**: Junction table mapping an exercise from the library into a specific workout (`1 Workout` -> `N Workout Exercises`).
@@ -60,10 +61,15 @@ INSERT INTO units (code, type, name, symbol) VALUES
 ('cm', 'length', 'Centimeters', 'cm'),
 ('in', 'length', 'Inches', 'in');
 
--- Users Table
+-- Users Profile Table
 CREATE TABLE users (
     id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
+    name TEXT,
+    location TEXT,
+    birthday DATE,
+    sex TEXT CHECK(sex IN ('male', 'female', 'other', 'prefer_not_to_say')),
+    bio TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
