@@ -37,7 +37,7 @@ relations:
 
 ## 3. Scope & Feature Requirements
 
-GymLogger focuses on core **Workout Logging** and **Progress Tracking** features structured around an Exercise Library and a hierarchical Workout model (`1 Workout` -> `N Exercises` -> `N Sets`).
+GymLogger focuses on core **Workout Logging** and **Progress Tracking** features structured around an Exercise Library, a hierarchical Workout model (`1 Workout` -> `N Exercises` -> `N Sets`), and unit-decoupled measurement logging.
 
 ### 3.1 Exercise Library & Exercise Management
 
@@ -67,12 +67,9 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
    - Audio/haptic or notification cues when rest timer expires.
 5. **Add & Remove Sets**
    - Dynamically append or delete sets within an exercise during logging.
-6. **Workout Set Types**
-   - Categorize each set by type:
-     - `Normal`
-     - `Warmup`
-     - `Drop Set`
-     - `Failure`
+6. **Workout Set Types & Decoupled Units**
+   - Categorize each set by type (`Normal`, `Warmup`, `Drop Set`, `Failure`).
+   - Weight values are decoupled from unit of measurement (separate `weight` value and `weight_unit` field supporting `kg` and `lbs`).
 7. **Previous Workout Values**
    - Display previous weight and rep count for each set when starting an exercise, allowing effortless progressive overload targeting.
 8. **Warm Up Set Calculator**
@@ -84,7 +81,7 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
 11. **Supersets**
     - Group two or more exercises into supersets or tri-sets with linked progression.
 12. **Saving a Workout**
-    - Persist workout logs reliably to Cloudflare D1 database with total volume, set count, duration, and PR calculation.
+    - Persist workout logs reliably to Cloudflare D1 database with total volume, volume unit, set count, duration, and PR calculation.
 13. **Live Personal Record Notification**
     - Real-time check and alert when completing a set/exercise that beats previous bests (1RM, Max Weight, Max Volume, Max Reps).
 14. **Live Activity**
@@ -104,8 +101,9 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** features
    - Analytics endpoint & metrics for tracking weekly volume (sets per muscle group) relative to target hypertrophy volume ranges (e.g., 10-20 sets/week).
 5. **Muscle Distribution Chart**
    - Percentage breakdown chart of muscle group focus across selectable date ranges (weekly, monthly, custom).
-6. **Body Measurements**
+6. **Body Measurements (Decoupled Units)**
    - Record and track historical body metrics over time: Weight, Body Fat %, Neck, Shoulders, Chest, Biceps, Waist, Hips, Thighs, Calves.
+   - All measurement numerical values are explicitly decoupled from unit of measurement (separate `weight` + `weight_unit` and `length` + `length_unit` fields).
 7. **Progress Photos**
    - Upload and manage progress photos paired with body measurement logs and timestamps.
 8. **Track Exercise Performance**

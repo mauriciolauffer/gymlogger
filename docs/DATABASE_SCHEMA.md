@@ -49,17 +49,19 @@ CREATE TABLE users (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Body Measurements Table
+-- Body Measurements Table (Decoupled Values and Units)
 CREATE TABLE body_measurements (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),
     date DATE NOT NULL,
-    weight_kg REAL,
+    weight REAL,
+    weight_unit TEXT CHECK(weight_unit IN ('kg', 'lbs')) DEFAULT 'kg',
     body_fat_pct REAL,
-    chest_cm REAL,
-    waist_cm REAL,
-    biceps_cm REAL,
-    thighs_cm REAL,
+    length_unit TEXT CHECK(length_unit IN ('cm', 'in')) DEFAULT 'cm',
+    chest REAL,
+    waist REAL,
+    biceps REAL,
+    thighs REAL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -82,7 +84,8 @@ CREATE TABLE workouts (
     start_time DATETIME NOT NULL,
     end_time DATETIME,
     duration_seconds INTEGER,
-    total_volume_kg REAL DEFAULT 0,
+    total_volume REAL DEFAULT 0,
+    volume_unit TEXT CHECK(volume_unit IN ('kg', 'lbs')) DEFAULT 'kg',
     notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -102,7 +105,8 @@ CREATE TABLE workout_sets (
     id TEXT PRIMARY KEY,
     workout_exercise_id TEXT NOT NULL REFERENCES workout_exercises(id) ON DELETE CASCADE,
     set_type TEXT CHECK(set_type IN ('normal', 'warmup', 'drop', 'failure')) DEFAULT 'normal',
-    weight_kg REAL NOT NULL DEFAULT 0,
+    weight REAL NOT NULL DEFAULT 0,
+    weight_unit TEXT CHECK(weight_unit IN ('kg', 'lbs')) DEFAULT 'kg',
     reps INTEGER NOT NULL DEFAULT 0,
     rpe REAL,
     is_pr BOOLEAN DEFAULT FALSE,
