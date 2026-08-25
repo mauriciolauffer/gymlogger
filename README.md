@@ -1,6 +1,6 @@
 # GymLogger
 
-**GymLogger** is an edge-native workout tracker and gym logger API & backend application inspired by [Hevy](https://www.hevyapp.com/features/).
+**GymLogger** is an edge-native workout tracker and gym logger API & backend application.
 
 ---
 
@@ -23,7 +23,7 @@ GymLogger focuses on core **Workout Logging** and **Progress Tracking** function
 - **Log & Track Workouts**: Start empty workouts or routine-based sessions.
 - **Dynamic Set Management**: Add/remove sets, set types (`Normal`, `Warmup`, `Drop Set`, `Failure`), and RPE scale (1-10).
 - **Previous Workout Values & Notes**: Contextual display of past weight/reps and custom exercise notes.
-- **Built-in Calculators**: Warm-up set calculator and Weight Plate calculator.
+- **Built-in Calculators**: Warm-up set calculator and Weight calculator.
 - **Supersets & Live PRs**: Link exercises into supersets and receive immediate notifications when personal records are broken.
 - **Rest Timer & Live Activity**: Automatic rest countdown timer and real-time workout status.
 

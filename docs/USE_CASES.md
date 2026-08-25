@@ -16,7 +16,7 @@ relations:
 # GymLogger Use Cases Document
 
 ## 1. Overview
-This document outlines the primary use cases for **GymLogger**, covering both **Workout Logging** and **Progress Tracking** modules modeled after Hevy functionality (excluding Social, Coach, and Settings).
+This document outlines the primary use cases for **GymLogger**, covering both **Workout Logging** and **Progress Tracking** modules.
 
 ---
 

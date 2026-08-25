@@ -18,7 +18,7 @@ relations:
 # Product Requirement Document (PRD) - GymLogger
 
 ## 1. Executive Summary & Vision
-**GymLogger** is an intuitive, highly responsive workout logging and progress tracking backend system and web application inspired by Hevy. Designed to run on modern edge infrastructure, GymLogger provides athletes with fast, reliable workout logging, comprehensive performance analytics, body measurement tracking, and real-time exercise calculators.
+**GymLogger** is an intuitive, highly responsive workout logging and progress tracking backend system and web application. Designed to run on modern edge infrastructure, GymLogger provides athletes with fast, reliable workout logging, comprehensive performance analytics, body measurement tracking, and real-time exercise calculators.
 
 ## 2. Technology Stack & Infrastructure
 - **Infrastructure & API Gateway**: Cloudflare Workers
@@ -34,7 +34,7 @@ relations:
 
 ## 3. Scope & Feature Requirements
 
-GymLogger adopts the core pillars of Hevy's **Workout Logging** and **Progress Tracking** features while explicitly excluding Social, Coach, and Settings & Extra Features.
+GymLogger focuses on core **Workout Logging** and **Progress Tracking** features.
 
 ### 3.1 Workout Logging Module
 
