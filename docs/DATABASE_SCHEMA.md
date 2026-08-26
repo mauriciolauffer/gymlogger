@@ -1,6 +1,6 @@
 ---
 title: Database Schema Specification
-description: Cloudflare D1 (SQLite) relational database schema for users, workouts, exercises, sets, body measurements, and units of measurement.
+description: Cloudflare D1 (SQLite) relational database schema for users, user settings, workouts, exercises, sets, body measurements, and units of measurement.
 tags:
   - database
   - schema
@@ -21,13 +21,15 @@ This document defines the relational database schema for GymLogger running on Cl
 ## Entity Relationship Overview
 
 ```
- [units] 1 ─────────── N [body_measurements]
-   │ 1                      ▲
-   │                        │ N
-   ├─────────── N [workouts]
-   │                │ 1
-   │                │
-   │                ▼ N
+ [users] 1 ─────────── 1 [user_settings]
+   │ 1                      │ N
+   │                        ▼
+   │                      [units]
+   │                         │ 1
+   ├─────────── N [workouts] │
+   │                │ 1      ├─────────── N [body_measurements]
+   │                │        │
+   │                ▼ N      │
    └─────────── N [workout_sets]
                     ▲
                     │ N
@@ -36,6 +38,7 @@ This document defines the relational database schema for GymLogger running on Cl
 
 - **`units`**: Central lookup table defining supported units of measurement (e.g., `kg`, `lbs`, `cm`, `in`, `km`, `m`).
 - **`users`**: User profile table storing authentication and personal profile details.
+- **`user_settings`**: User preferences table storing theme, preferred unit of measurement, and language settings.
 - **`exercises`**: Exercise library containing preset and custom exercises.
 - **`workouts`**: Parent record for an athlete's workout session.
 - **`workout_exercises`**: Junction table mapping an exercise from the library into a specific workout (`1 Workout` -> `N Workout Exercises`).
@@ -73,6 +76,16 @@ CREATE TABLE users (
     sex TEXT CHECK(sex IN ('male', 'female', 'other', 'prefer_not_to_say')),
     bio TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User Settings Table
+CREATE TABLE user_settings (
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    theme TEXT CHECK(theme IN ('light', 'dark', 'system')) DEFAULT 'system',
+    preferred_weight_unit TEXT REFERENCES units(code) DEFAULT 'kg',
+    preferred_length_unit TEXT REFERENCES units(code) DEFAULT 'cm',
+    language TEXT DEFAULT 'en',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Body Measurements Table

@@ -37,19 +37,25 @@ relations:
 
 ## 3. Scope & Feature Requirements
 
-GymLogger focuses on User Management, core **Workout Logging**, and **Progress Tracking** features structured around an Exercise Library, a hierarchical Workout model (`1 Workout` -> `N Exercises` -> `N Sets`), and unit-decoupled measurement logging.
+GymLogger focuses on User Management & Settings, core **Workout Logging**, and **Progress Tracking** features structured around an Exercise Library, a hierarchical Workout model (`1 Workout` -> `N Exercises` -> `N Sets`), and unit-decoupled measurement logging.
 
-### 3.1 User Profile & Account Management
+### 3.1 User Profile & Settings Management
 
 1. **User Authentication & Profile Details**
    - User account creation and authentication.
-   - Comprehensive profile fields:
+   - Profile fields:
      - `email`: User's primary email address (unique).
      - `name`: Display name.
      - `location`: Geographical location / city.
      - `birthday`: Date of birth.
      - `sex`: Biological sex or gender identity (`male`, `female`, `other`, `prefer_not_to_say`).
      - `bio`: Short user bio / personal summary.
+2. **User Settings & Preferences**
+   - Manage user preference settings:
+     - `theme`: UI color theme selection (`light`, `dark`, `system`).
+     - `preferred_weight_unit`: Default weight unit of measurement (`kg`, `lbs`).
+     - `preferred_length_unit`: Default length unit of measurement (`cm`, `in`).
+     - `language`: Preferred interface language locale (e.g., `en`, `es`, `de`).
 
 ---
 
@@ -133,7 +139,7 @@ GymLogger focuses on User Management, core **Workout Logging**, and **Progress T
 
 All documentation files in `/docs` follow the Open Knowledge Format (OKF) standard with structured YAML frontmatter and interlinked relations:
 
-- **Database Schema**: Refer to [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for the complete Cloudflare D1 relational database schema, including the `users` profile table and central `units` lookup table.
+- **Database Schema**: Refer to [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for the complete Cloudflare D1 relational database schema, including `users`, `user_settings`, and `units` lookup tables.
 - **API Endpoints**: Refer to [docs/API_ENDPOINTS.md](API_ENDPOINTS.md) for the complete REST API endpoint specifications.
 - **Use Cases**: Refer to [docs/USE_CASES.md](USE_CASES.md) for functional actor flows and edge cases.
 - **Manifest Index**: Refer to [docs/manifest.yaml](manifest.yaml) for the OKF bundle manifest.
