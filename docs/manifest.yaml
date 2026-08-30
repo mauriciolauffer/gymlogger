@@ -9,10 +9,10 @@ concepts:
     file: PRD.md
     title: Product Requirement Document (PRD) - GymLogger
     description: High-level requirements, scope, architecture, and feature definitions.
-  - id: use-cases
-    file: USE_CASES.md
-    title: GymLogger Use Cases
-    description: Actor flows and scenarios for workout logging and progress tracking.
+  - id: user-stories
+    file: USER_STORIES.md
+    title: GymLogger User Stories
+    description: User story requirements, problem statements, acceptance criteria, and priority rankings.
   - id: database-schema
     file: DATABASE_SCHEMA.md
     title: Database Schema Specification

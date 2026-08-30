@@ -8,7 +8,7 @@ tags:
 version: 1.0.0
 relations:
   - type: references
-    target: USE_CASES.md
+    target: USER_STORIES.md
   - type: references
     target: DATABASE_SCHEMA.md
   - type: references
@@ -124,7 +124,7 @@ Morgan is a 32-year-old intermediate lifter following a structured program. Morg
 
 ## Requirements
 
-Placeholder... it should have a link to the USER_STORIES.md file.
+Refer to [USER_STORIES.md](USER_STORIES.md) for the complete list of functional user stories, acceptance criteria, and priority rankings (REQ-01 through REQ-07).
 
 ---
 
@@ -215,7 +215,7 @@ All documentation files in `/docs` follow the Open Knowledge Format (OKF) standa
 
 - **Database Schema**: Refer to [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for the complete Cloudflare D1 relational database schema, including `users`, `user_settings`, and `units` lookup tables.
 - **API Endpoints**: Refer to [docs/API_ENDPOINTS.md](API_ENDPOINTS.md) for the complete REST API endpoint specifications.
-- **Use Cases**: Refer to [docs/USE_CASES.md](USE_CASES.md) for functional actor flows and edge cases.
+- **User Stories**: Refer to [docs/USER_STORIES.md](USER_STORIES.md) for functional user stories and acceptance criteria.
 - **Manifest Index**: Refer to [docs/manifest.yaml](manifest.yaml) for the OKF bundle manifest.
 
 ---
