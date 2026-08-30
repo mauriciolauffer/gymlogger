@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "gymlogger",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-02-14",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gymlogger-db",
+      "database_id": "gymlogger-db-id"
+    }
+  ]
+}
