@@ -27,7 +27,7 @@ This document details the functional user stories, problem statements, acceptanc
   - Given I am on the registration screen, when I submit a valid email and password, then a user account is created and I am authenticated.
   - Given I am authenticated, when I update my profile details (name, location, birthday, sex, bio) or preferred weight or length unit, then all subsequent weight and measurement displays reflect that unit and profile state.
 - **Maps to Objective**: User Management
-- **Priority Rank**: 1
+- **Priority Rank**: MUST
 
 ---
 
@@ -40,7 +40,7 @@ This document details the functional user stories, problem statements, acceptanc
   - Given an active session, when I add an exercise, then sets from my most recent prior session for that exercise are pre-populated as reference values.
   - Given an active session, when I log a set with weight, reps, set type (Normal, Warmup, Drop Set, Failure), RPE, or superset grouping, then the set is appended to the exercise and the running volume total updates.
 - **Maps to Objective**: Workout Logging
-- **Priority Rank**: 2
+- **Priority Rank**: MUST
 
 ---
 
@@ -51,7 +51,7 @@ This document details the functional user stories, problem statements, acceptanc
 - **Acceptance Criteria**:
   - Given a completed set, when the logged weight × reps results in an estimated 1RM, max weight, max volume, or max reps exceeding all prior records for that exercise, then a PR notification is displayed before the next set begins.
 - **Maps to Objective**: Workout Logging
-- **Priority Rank**: 3
+- **Priority Rank**: MUST
 
 ---
 
@@ -62,7 +62,7 @@ This document details the functional user stories, problem statements, acceptanc
 - **Acceptance Criteria**:
   - Given a set is marked complete, when the default or user-configured rest duration is set, then a countdown timer starts immediately and triggers an audio or notification cue when it expires.
 - **Maps to Objective**: Workout Logging
-- **Priority Rank**: 4
+- **Priority Rank**: MUST
 
 ---
 
@@ -73,7 +73,7 @@ This document details the functional user stories, problem statements, acceptanc
 - **Acceptance Criteria**:
   - Given I select an exercise from the library, when I open its history view, then I see a 1RM progression curve, a max weight curve, a max reps curve, and a chronological list of logged sessions for that exercise.
 - **Maps to Objective**: Progress Tracking
-- **Priority Rank**: 5
+- **Priority Rank**: MUST
 
 ---
 
@@ -84,7 +84,7 @@ This document details the functional user stories, problem statements, acceptanc
 - **Acceptance Criteria**:
   - Given a calendar month has passed, when I open the monthly report, then I see total workouts, total volume, total duration, top PRs set that month, most frequently trained muscle groups, and weekly sets per muscle group versus target hypertrophy ranges.
 - **Maps to Objective**: Progress Tracking
-- **Priority Rank**: 6
+- **Priority Rank**: MUST
 
 ---
 
@@ -97,7 +97,7 @@ This document details the functional user stories, problem statements, acceptanc
   - Given I have a saved template, when I start a new workout from it, then a new session is created with all template exercises pre-added in the same order, ready for set logging.
   - Given I have a saved template, when I edit or delete it, then past sessions started from that template are unaffected.
 - **Maps to Objective**: Workout Logging
-- **Priority Rank**: 8
+- **Priority Rank**: MUST
 
 ---
 
@@ -108,4 +108,4 @@ This document details the functional user stories, problem statements, acceptanc
 - **Acceptance Criteria**:
   - Given I am on the measurements screen, when I enter values for one or more body metrics (weight, body fat %, circumferences) with decoupled units and optionally attach a photo, then the entry is saved with a timestamp and displayed in chronological history.
 - **Maps to Objective**: Progress Tracking
-- **Priority Rank**: 7
+- **Priority Rank**: COULD
