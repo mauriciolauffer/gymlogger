@@ -85,6 +85,7 @@ CREATE TABLE user_settings (
     preferred_weight_unit TEXT REFERENCES units(code) DEFAULT 'kg',
     preferred_length_unit TEXT REFERENCES units(code) DEFAULT 'cm',
     language TEXT DEFAULT 'en',
+    default_rest_timer_seconds INTEGER DEFAULT 90,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -100,7 +101,12 @@ CREATE TABLE body_measurements (
     waist REAL,
     biceps REAL,
     thighs REAL,
+    neck REAL,
+    shoulders REAL,
+    hips REAL,
+    calves REAL,
     length_unit TEXT REFERENCES units(code) DEFAULT 'cm',
+    photo_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -148,6 +154,8 @@ CREATE TABLE workout_sets (
     weight_unit TEXT REFERENCES units(code) DEFAULT 'kg',
     reps INTEGER NOT NULL DEFAULT 0,
     rpe REAL,
+    estimated_1rm REAL,
+    one_rm_formula TEXT CHECK(one_rm_formula IN ('epley', 'brzycki')),
     is_pr BOOLEAN DEFAULT FALSE,
     pr_type TEXT, -- '1rm', 'weight', 'volume', 'reps'
     order_index INTEGER NOT NULL
