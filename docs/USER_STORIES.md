@@ -88,6 +88,19 @@ This document details the functional user stories, problem statements, acceptanc
 
 ---
 
+### REQ-08: Workout Templates
+
+- **Problem to Solve**: Athletes who follow a structured routine repeat the same exercise selection each session and need a way to start a workout without manually re-adding every exercise from scratch.
+- **User Story**: As an athlete with a regular training routine, I need to save a workout as a template so that I can start future sessions from it instantly without rebuilding the exercise list each time.
+- **Acceptance Criteria**:
+  - Given I am authenticated, when I save a workout template with a title and an ordered list of exercises, then the template is stored and appears in my templates list.
+  - Given I have a saved template, when I start a new workout from it, then a new session is created with all template exercises pre-added in the same order, ready for set logging.
+  - Given I have a saved template, when I edit or delete it, then past sessions started from that template are unaffected.
+- **Maps to Objective**: Workout Logging
+- **Priority Rank**: 8
+
+---
+
 ### REQ-07: Body Measurements & Progress Photos
 
 - **Problem to Solve**: Athletes tracking body composition need a structured log for measurements and photos linked to the same date as training data.

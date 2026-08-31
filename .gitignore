@@ -133,3 +133,6 @@ test-results/
 
 # Cloudflare Workers / Wrangler
 .wrangler/
+
+.claude/
+agent/

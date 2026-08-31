@@ -109,6 +109,7 @@ Morgan is a 32-year-old intermediate lifter following a structured program. Morg
 - Exercise performance drill-down (1RM curve, weight curve, max reps curve, log history)
 - Workout consistency streaks and weekly calendar heatmaps
 - Year in Review annual summary dashboard
+- Workout templates: save a named exercise list and reuse it to start future sessions
 
 ### Non-Goals (Out of Scope)
 
