@@ -125,7 +125,7 @@ Morgan is a 32-year-old intermediate lifter following a structured program. Morg
 
 ## Requirements
 
-Refer to [USER_STORIES.md](USER_STORIES.md) for the complete list of functional user stories, acceptance criteria, and priority rankings categorized using MoSCoW Prioritization (REQ-01 through REQ-10).
+Refer to [USER_STORIES.md](USER_STORIES.md) for the complete list of functional user stories, acceptance criteria, and priority rankings categorized using MoSCoW Prioritization (REQ-01 through REQ-13).
 
 ---
 

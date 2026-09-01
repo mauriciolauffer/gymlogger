@@ -19,13 +19,52 @@ This document details the functional user stories, problem statements, acceptanc
 
 ---
 
-### REQ-01: User Authentication & Profile Setup
+### REQ-01: Account Creation
 
-- **Problem to Solve**: Athletes need a personal account to persist their data and preferences across devices.
-- **User Story**: As a new user, I need to create an account and configure my profile so that my workouts and measurements are saved and displayed in my preferred units.
+- **Problem to Solve**: New athletes need a personal account to securely save and access their workouts and progress data across devices.
+- **User Story**: As a new athlete, I want to create a GymLogger account using my email and password, so that I can securely save and access my workouts and progress data.
 - **Acceptance Criteria**:
-  - Given I am on the registration screen, when I submit a valid email and password, then a user account is created and I am authenticated.
-  - Given I am authenticated, when I update my profile details (name, location, birthday, sex, bio) or preferred weight or length unit, then all subsequent weight and measurement displays reflect that unit and profile state.
+  - Given I am on the registration screen, when I provide my name, email, and password, then an account is created if the email is unique and valid and password meets minimum security requirements.
+  - User receives confirmation that the account was created successfully.
+  - User can proceed to log in after registration.
+- **Maps to Objective**: User Management
+- **Priority Rank**: MUST
+
+---
+
+### REQ-11: Log In
+
+- **Problem to Solve**: Registered athletes need to authenticate securely to access their workouts, progress, and personal data.
+- **User Story**: As a registered athlete, I want to log in to GymLogger securely, so that I can access my workouts, progress, and personal data.
+- **Acceptance Criteria**:
+  - Given I am on the login screen, when I enter my email and password, then a successful login creates an authenticated session and redirects to the appropriate page.
+  - Given invalid credentials, then a clear error message is produced.
+  - Given an active session, when I select log out, then the session is terminated.
+- **Maps to Objective**: User Management
+- **Priority Rank**: MUST
+
+---
+
+### REQ-12: User Profile Setup
+
+- **Problem to Solve**: Athletes need to configure personal profile information (name, date of birth, gender, height, weight) for a personalized app experience.
+- **User Story**: As a new athlete, I want to set up my profile with information such as my name, date of birth, gender, height, and weight, so that GymLogger can personalise my experience and track my progress accurately.
+- **Acceptance Criteria**:
+  - Given I am on the profile settings screen, when I enter or update my profile information, then required fields are clearly identified and values are validated according to format and range.
+  - Given I save valid profile changes, then confirmation is displayed and profile information persists between sessions.
+- **Maps to Objective**: User Management
+- **Priority Rank**: MUST
+
+---
+
+### REQ-13: System Settings & Preferences
+
+- **Problem to Solve**: Users need to configure system preferences so the application behaves according to their preferences.
+- **User Story**: As a GymLogger user, I want to configure my system preferences, so that the application behaves according to my preferences.
+- **Acceptance Criteria**:
+  - Given I am on the settings screen, when I configure available preferences (units kg/lb, theme, notifications), then preferences persist across sessions and devices.
+  - Preferences have sensible default values.
+  - Changing units does not alter the underlying workout data.
 - **Maps to Objective**: User Management
 - **Priority Rank**: MUST
 
