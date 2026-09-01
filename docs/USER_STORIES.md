@@ -101,11 +101,33 @@ This document details the functional user stories, problem statements, acceptanc
 
 ---
 
-### REQ-07: Body Measurements & Progress Photos
+### REQ-07: Capture Body Measurements
 
-- **Problem to Solve**: Athletes tracking body composition need a structured log for measurements and photos linked to the same date as training data.
-- **User Story**: As an athlete monitoring body composition, I need to log measurements and upload photos so that I can correlate physical changes with training and nutrition over time.
+- **Problem to Solve**: Athletes tracking body composition need a structured log to record physical measurements linked to dates.
+- **User Story**: As an athlete monitoring body composition, I need to log my body measurements so that my physical metric data is saved with accurate timestamps.
 - **Acceptance Criteria**:
-  - Given I am on the measurements screen, when I enter values for one or more body metrics (weight, body fat %, circumferences) with decoupled units and optionally attach a photo, then the entry is saved with a timestamp and displayed in chronological history.
+  - Given I am on the measurements screen, when I enter values for one or more body metrics (weight, body fat %, circumferences) with decoupled units, then the entry is saved with a timestamp.
+- **Maps to Objective**: Progress Tracking
+- **Priority Rank**: MUST
+
+---
+
+### REQ-09: Body Measurements Progress
+
+- **Problem to Solve**: Athletes need to view historical measurement trends over time to evaluate physical progress.
+- **User Story**: As an athlete monitoring body composition, I need to view my measurement history in chronological order so that I can track physical changes over time.
+- **Acceptance Criteria**:
+  - Given I have saved body measurement entries, when I open the measurement history view, then past entries are displayed in chronological order with metrics converted to my preferred units.
+- **Maps to Objective**: Progress Tracking
+- **Priority Rank**: SHOULD
+
+---
+
+### REQ-10: Visual Progress
+
+- **Problem to Solve**: Athletes want visual confirmation of body composition changes alongside numerical measurements.
+- **User Story**: As an athlete monitoring body composition, I need to add photos to my body measurements so that I can track visual changes in my physique over time.
+- **Acceptance Criteria**:
+  - Given I am on the measurements screen, when I attach a photo to a measurement entry, then the photo is saved and displayed alongside historical measurement entries.
 - **Maps to Objective**: Progress Tracking
 - **Priority Rank**: COULD
