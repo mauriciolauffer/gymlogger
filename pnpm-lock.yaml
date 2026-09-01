@@ -7,6 +7,34 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      oxfmt:
+        specifier: ^0.65.0
+        version: 0.65.0
+      oxlint:
+        specifier: ^1.80.0
+        version: 1.80.0
+
+  backend:
+    dependencies:
+      hono:
+        specifier: ^4.13.4
+        version: 4.13.4
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^5.20260825.1
+        version: 5.20260825.1
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(vite@8.2.2(esbuild@0.28.2))
+      wrangler:
+        specifier: ^4.125.0
+        version: 4.125.0(@cloudflare/workers-types@5.20260825.1)
+
+  frontend:
     dependencies:
       '@ui5/webcomponents':
         specifier: ^2.25.0
@@ -17,37 +45,19 @@ importers:
       '@ui5/webcomponents-icons':
         specifier: ^2.25.0
         version: 2.25.0
-      hono:
-        specifier: ^4.13.4
-        version: 4.13.4
       vue:
         specifier: ^3.5.41
         version: 3.5.41(typescript@7.0.2)
     devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^5.20260825.1
-        version: 5.20260825.1
       '@vitejs/plugin-vue':
         specifier: ^6.0.8
         version: 6.0.8(vite@8.2.2(esbuild@0.28.2))(vue@3.5.41(typescript@7.0.2))
-      oxfmt:
-        specifier: ^0.65.0
-        version: 0.65.0
-      oxlint:
-        specifier: ^1.80.0
-        version: 1.80.0
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
       vite:
         specifier: ^8.2.2
         version: 8.2.2(esbuild@0.28.2)
-      vitest:
-        specifier: ^4.1.11
-        version: 4.1.11(vite@8.2.2(esbuild@0.28.2))
-      wrangler:
-        specifier: ^4.125.0
-        version: 4.125.0(@cloudflare/workers-types@5.20260825.1)
 
 packages:
 
