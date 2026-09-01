@@ -24,7 +24,7 @@ All endpoints except `/api/v1/auth/register` and `/api/v1/auth/login` require a 
 
 ## Authentication API
 
-- `POST /api/v1/auth/register` — Create a new user account (`email`, `password`). Returns the created user profile and session token.
+- `POST /api/v1/auth/register` — Create a new user account (`name`, `email`, `password`). Returns the created user profile and session token.
 - `POST /api/v1/auth/login` — Authenticate with `email` and `password`. Returns a session token.
 - `POST /api/v1/auth/logout` — Invalidate the current session token.
 
@@ -32,10 +32,10 @@ All endpoints except `/api/v1/auth/register` and `/api/v1/auth/login` require a 
 
 ## Users & Settings API
 
-- `GET /api/v1/users/profile` — Fetch current user's profile details (`email`, `name`, `location`, `birthday`, `sex`, `bio`).
-- `PUT /api/v1/users/profile` — Update current user's profile information (`name`, `location`, `birthday`, `sex`, `bio`).
-- `GET /api/v1/users/settings` — Fetch current user's preferences (`theme`, `preferred_weight_unit`, `preferred_length_unit`, `language`, `rest_timer_duration_seconds`).
-- `PUT /api/v1/users/settings` — Update current user's preferences (`theme`, `preferred_weight_unit`, `preferred_length_unit`, `language`, `rest_timer_duration_seconds`).
+- `GET /api/v1/users/profile` — Fetch current user's profile details (`email`, `name`, `location`, `birthday`, `sex`, `height`, `height_unit`, `bio`).
+- `PUT /api/v1/users/profile` — Update current user's profile information (`name`, `location`, `birthday`, `sex`, `height`, `height_unit`, `bio`).
+- `GET /api/v1/users/settings` — Fetch current user's preferences (`theme`, `preferred_weight_unit`, `preferred_length_unit`, `language`, `rest_timer_duration_seconds`, `notifications_enabled`).
+- `PUT /api/v1/users/settings` — Update current user's preferences (`theme`, `preferred_weight_unit`, `preferred_length_unit`, `language`, `rest_timer_duration_seconds`, `notifications_enabled`).
 
 ---
 
@@ -113,7 +113,7 @@ All endpoints except `/api/v1/auth/register` and `/api/v1/auth/login` require a 
 ## Body Measurements API
 
 - `GET /api/v1/body-measurements` — Fetch historical body measurement logs in chronological order.
-- `POST /api/v1/body-measurements` — Record a new measurement log (weight, body fat %, and any circumference metrics with decoupled units).
+- `POST /api/v1/body-measurements` — Record a new measurement log (weight, body fat %, any circumference metrics with decoupled units, and optional `photo_url`).
 - `GET /api/v1/body-measurements/:id` — Fetch a single measurement log entry.
 - `PUT /api/v1/body-measurements/:id` — Update a measurement log entry.
 - `DELETE /api/v1/body-measurements/:id` — Delete a measurement log entry.
