@@ -96,6 +96,8 @@ CREATE TABLE users (
     location TEXT,
     birthday DATE,
     sex TEXT CHECK(sex IN ('male', 'female', 'other', 'prefer_not_to_say')),
+    height REAL,
+    height_unit TEXT REFERENCES units(code) DEFAULT 'cm',
     bio TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -111,7 +113,7 @@ CREATE TABLE user_settings (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Body Measurements Table (10 metrics)
+-- Body Measurements Table (10 metrics + progress photo)
 CREATE TABLE body_measurements (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),
@@ -129,6 +131,7 @@ CREATE TABLE body_measurements (
     calves REAL,
     neck REAL,
     length_unit TEXT REFERENCES units(code) DEFAULT 'cm',
+    photo_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

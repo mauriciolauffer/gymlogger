@@ -19,15 +19,54 @@ This document details the functional user stories, problem statements, acceptanc
 
 ---
 
-### REQ-01: User Authentication & Profile Setup
+### REQ-01: Account Creation
 
-- **Problem to Solve**: Athletes need a personal account to persist their data and preferences across devices.
-- **User Story**: As a new user, I need to create an account and configure my profile so that my workouts and measurements are saved and displayed in my preferred units.
+- **Problem to Solve**: New athletes need a personal account to securely save and access their workouts and progress data across devices.
+- **User Story**: As a new athlete, I want to create a GymLogger account using my email and password, so that I can securely save and access my workouts and progress data.
 - **Acceptance Criteria**:
-  - Given I am on the registration screen, when I submit a valid email and password, then a user account is created and I am authenticated.
-  - Given I am authenticated, when I update my profile details (name, location, birthday, sex, bio) or preferred weight or length unit, then all subsequent weight and measurement displays reflect that unit and profile state.
+  - Given I am on the registration screen, when I provide my name, email, and password, then an account is created if the email is unique and valid and password meets minimum security requirements.
+  - User receives confirmation that the account was created successfully.
+  - User can proceed to log in after registration.
 - **Maps to Objective**: User Management
-- **Priority Rank**: 1
+- **Priority Rank**: MUST
+
+---
+
+### REQ-11: Log In
+
+- **Problem to Solve**: Registered athletes need to authenticate securely to access their workouts, progress, and personal data.
+- **User Story**: As a registered athlete, I want to log in to GymLogger securely, so that I can access my workouts, progress, and personal data.
+- **Acceptance Criteria**:
+  - Given I am on the login screen, when I enter my email and password, then a successful login creates an authenticated session and redirects to the appropriate page.
+  - Given invalid credentials, then a clear error message is produced.
+  - Given an active session, when I select log out, then the session is terminated.
+- **Maps to Objective**: User Management
+- **Priority Rank**: MUST
+
+---
+
+### REQ-12: User Profile Setup
+
+- **Problem to Solve**: Athletes need to configure personal profile information (name, date of birth, gender, height, weight) for a personalized app experience.
+- **User Story**: As a new athlete, I want to set up my profile with information such as my name, date of birth, gender, height, and weight, so that GymLogger can personalise my experience and track my progress accurately.
+- **Acceptance Criteria**:
+  - Given I am on the profile settings screen, when I enter or update my profile information, then required fields are clearly identified and values are validated according to format and range.
+  - Given I save valid profile changes, then confirmation is displayed and profile information persists between sessions.
+- **Maps to Objective**: User Management
+- **Priority Rank**: MUST
+
+---
+
+### REQ-13: System Settings & Preferences
+
+- **Problem to Solve**: Users need to configure system preferences so the application behaves according to their preferences.
+- **User Story**: As a GymLogger user, I want to configure my system preferences, so that the application behaves according to my preferences.
+- **Acceptance Criteria**:
+  - Given I am on the settings screen, when I configure available preferences (units kg/lb, theme, notifications), then preferences persist across sessions and devices.
+  - Preferences have sensible default values.
+  - Changing units does not alter the underlying workout data.
+- **Maps to Objective**: User Management
+- **Priority Rank**: MUST
 
 ---
 
@@ -40,7 +79,7 @@ This document details the functional user stories, problem statements, acceptanc
   - Given an active session, when I add an exercise, then sets from my most recent prior session for that exercise are pre-populated as reference values.
   - Given an active session, when I log a set with weight, reps, set type (Normal, Warmup, Drop Set, Failure), RPE, or superset grouping, then the set is appended to the exercise and the running volume total updates.
 - **Maps to Objective**: Workout Logging
-- **Priority Rank**: 2
+- **Priority Rank**: MUST
 
 ---
 
@@ -51,7 +90,7 @@ This document details the functional user stories, problem statements, acceptanc
 - **Acceptance Criteria**:
   - Given a completed set, when the logged weight × reps results in an estimated 1RM, max weight, max volume, or max reps exceeding all prior records for that exercise, then a PR notification is displayed before the next set begins.
 - **Maps to Objective**: Workout Logging
-- **Priority Rank**: 3
+- **Priority Rank**: MUST
 
 ---
 
@@ -62,7 +101,7 @@ This document details the functional user stories, problem statements, acceptanc
 - **Acceptance Criteria**:
   - Given a set is marked complete, when the default or user-configured rest duration is set, then a countdown timer starts immediately and triggers an audio or notification cue when it expires.
 - **Maps to Objective**: Workout Logging
-- **Priority Rank**: 4
+- **Priority Rank**: MUST
 
 ---
 
@@ -73,7 +112,7 @@ This document details the functional user stories, problem statements, acceptanc
 - **Acceptance Criteria**:
   - Given I select an exercise from the library, when I open its history view, then I see a 1RM progression curve, a max weight curve, a max reps curve, and a chronological list of logged sessions for that exercise.
 - **Maps to Objective**: Progress Tracking
-- **Priority Rank**: 5
+- **Priority Rank**: MUST
 
 ---
 
@@ -84,7 +123,7 @@ This document details the functional user stories, problem statements, acceptanc
 - **Acceptance Criteria**:
   - Given a calendar month has passed, when I open the monthly report, then I see total workouts, total volume, total duration, top PRs set that month, most frequently trained muscle groups, and weekly sets per muscle group versus target hypertrophy ranges.
 - **Maps to Objective**: Progress Tracking
-- **Priority Rank**: 6
+- **Priority Rank**: MUST
 
 ---
 
@@ -97,15 +136,37 @@ This document details the functional user stories, problem statements, acceptanc
   - Given I have a saved template, when I start a new workout from it, then a new session is created with all template exercises pre-added in the same order, ready for set logging.
   - Given I have a saved template, when I edit or delete it, then past sessions started from that template are unaffected.
 - **Maps to Objective**: Workout Logging
-- **Priority Rank**: 8
+- **Priority Rank**: MUST
 
 ---
 
-### REQ-07: Body Measurements & Progress Photos
+### REQ-07: Capture Body Measurements
 
-- **Problem to Solve**: Athletes tracking body composition need a structured log for measurements and photos linked to the same date as training data.
-- **User Story**: As an athlete monitoring body composition, I need to log measurements and upload photos so that I can correlate physical changes with training and nutrition over time.
+- **Problem to Solve**: Athletes tracking body composition need a structured log to record physical measurements linked to dates.
+- **User Story**: As an athlete monitoring body composition, I need to log my body measurements so that my physical metric data is saved with accurate timestamps.
 - **Acceptance Criteria**:
-  - Given I am on the measurements screen, when I enter values for one or more body metrics (weight, body fat %, circumferences) with decoupled units and optionally attach a photo, then the entry is saved with a timestamp and displayed in chronological history.
+  - Given I am on the measurements screen, when I enter values for one or more body metrics (weight, body fat %, circumferences) with decoupled units, then the entry is saved with a timestamp.
 - **Maps to Objective**: Progress Tracking
-- **Priority Rank**: 7
+- **Priority Rank**: MUST
+
+---
+
+### REQ-09: Body Measurements Progress
+
+- **Problem to Solve**: Athletes need to view historical measurement trends over time to evaluate physical progress.
+- **User Story**: As an athlete monitoring body composition, I need to view my measurement history in chronological order so that I can track physical changes over time.
+- **Acceptance Criteria**:
+  - Given I have saved body measurement entries, when I open the measurement history view, then past entries are displayed in chronological order with metrics converted to my preferred units.
+- **Maps to Objective**: Progress Tracking
+- **Priority Rank**: SHOULD
+
+---
+
+### REQ-10: Visual Progress
+
+- **Problem to Solve**: Athletes want visual confirmation of body composition changes alongside numerical measurements.
+- **User Story**: As an athlete monitoring body composition, I need to add photos to my body measurements so that I can track visual changes in my physique over time.
+- **Acceptance Criteria**:
+  - Given I am on the measurements screen, when I attach a photo to a measurement entry, then the photo is saved and displayed alongside historical measurement entries.
+- **Maps to Objective**: Progress Tracking
+- **Priority Rank**: COULD
