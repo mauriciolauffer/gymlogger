@@ -10,19 +10,21 @@ describe("REQ-01: Account Creation", () => {
   });
 
   it("registers a new user successfully and initializes user_settings", async () => {
-    const req = new Request("http://localhost/api/v1/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "Alex Athlete",
-        email: "alex@example.com",
-        password: "securepassword123",
-      }),
-    });
+    const res = await app.request(
+      "/api/v1/auth/register",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Alex Athlete",
+          email: "alex@example.com",
+          password: "securepassword123",
+        }),
+      },
+      { DB: db },
+    );
 
-    const res = await app.request(req, {}, { DB: db });
     expect(res.status).toBe(201);
-
     const data = await res.json();
     expect(data.message).toBe("Account created successfully");
     expect(data.token).toBeDefined();
@@ -30,7 +32,6 @@ describe("REQ-01: Account Creation", () => {
     expect(data.user.name).toBe("Alex Athlete");
     expect(data.user.id).toBeDefined();
 
-    // Check database persistence
     const userInDb = await db
       .prepare("SELECT * FROM users WHERE id = ?")
       .bind(data.user.id)
@@ -53,25 +54,23 @@ describe("REQ-01: Account Creation", () => {
       password: "password123",
     };
 
-    // First registration
     await app.request(
-      new Request("http://localhost/api/v1/auth/register", {
+      "/api/v1/auth/register",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      }),
-      {},
+      },
       { DB: db },
     );
 
-    // Second registration with same email
     const res = await app.request(
-      new Request("http://localhost/api/v1/auth/register", {
+      "/api/v1/auth/register",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      }),
-      {},
+      },
       { DB: db },
     );
 
@@ -82,23 +81,23 @@ describe("REQ-01: Account Creation", () => {
 
   it("validates invalid email and weak password", async () => {
     const resInvalidEmail = await app.request(
-      new Request("http://localhost/api/v1/auth/register", {
+      "/api/v1/auth/register",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: "notanemail", password: "password123" }),
-      }),
-      {},
+      },
       { DB: db },
     );
     expect(resInvalidEmail.status).toBe(400);
 
     const resWeakPassword = await app.request(
-      new Request("http://localhost/api/v1/auth/register", {
+      "/api/v1/auth/register",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: "valid@example.com", password: "123" }),
-      }),
-      {},
+      },
       { DB: db },
     );
     expect(resWeakPassword.status).toBe(400);

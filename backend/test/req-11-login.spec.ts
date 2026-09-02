@@ -7,9 +7,9 @@ describe("REQ-11: Log In", () => {
 
   beforeEach(async () => {
     db = createMockD1();
-    // Register user for login tests
     await app.request(
-      new Request("http://localhost/api/v1/auth/register", {
+      "/api/v1/auth/register",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -17,23 +17,22 @@ describe("REQ-11: Log In", () => {
           email: "sam@example.com",
           password: "password123",
         }),
-      }),
-      {},
+      },
       { DB: db },
     );
   });
 
   it("logs in successfully with valid credentials", async () => {
     const res = await app.request(
-      new Request("http://localhost/api/v1/auth/login", {
+      "/api/v1/auth/login",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "sam@example.com",
           password: "password123",
         }),
-      }),
-      {},
+      },
       { DB: db },
     );
 
@@ -46,15 +45,15 @@ describe("REQ-11: Log In", () => {
 
   it("rejects login with wrong password", async () => {
     const res = await app.request(
-      new Request("http://localhost/api/v1/auth/login", {
+      "/api/v1/auth/login",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "sam@example.com",
           password: "wrongpassword",
         }),
-      }),
-      {},
+      },
       { DB: db },
     );
 
@@ -65,15 +64,15 @@ describe("REQ-11: Log In", () => {
 
   it("rejects login for non-existent user", async () => {
     const res = await app.request(
-      new Request("http://localhost/api/v1/auth/login", {
+      "/api/v1/auth/login",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "nobody@example.com",
           password: "password123",
         }),
-      }),
-      {},
+      },
       { DB: db },
     );
 
@@ -83,25 +82,23 @@ describe("REQ-11: Log In", () => {
   });
 
   it("allows authenticated logout", async () => {
-    // Login to get token
     const loginRes = await app.request(
-      new Request("http://localhost/api/v1/auth/login", {
+      "/api/v1/auth/login",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: "sam@example.com", password: "password123" }),
-      }),
-      {},
+      },
       { DB: db },
     );
     const { token } = await loginRes.json();
 
-    // Call logout with token
     const logoutRes = await app.request(
-      new Request("http://localhost/api/v1/auth/logout", {
+      "/api/v1/auth/logout",
+      {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
-      }),
-      {},
+      },
       { DB: db },
     );
 
@@ -112,11 +109,11 @@ describe("REQ-11: Log In", () => {
 
   it("denies logout without valid token", async () => {
     const res = await app.request(
-      new Request("http://localhost/api/v1/auth/logout", {
+      "/api/v1/auth/logout",
+      {
         method: "POST",
         headers: { Authorization: "Bearer invalidtoken" },
-      }),
-      {},
+      },
       { DB: db },
     );
 
