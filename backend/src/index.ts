@@ -1,4 +1,6 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { secureHeaders } from "hono/secure-headers";
 import { createAuth } from "./lib/auth";
 import { authRouter } from "./routes/auth";
 import { usersRouter } from "./routes/users";
@@ -22,6 +24,11 @@ export type Env = {
 
 const app = new Hono<Env>();
 
+// Built-in Middleware for security & CORS
+app.use("*", secureHeaders());
+app.use("*", cors());
+
+// Health check endpoints
 app.get("/", (c) => {
   return c.json({
     name: "GymLogger API",
@@ -34,20 +41,34 @@ app.get("/health", (c) => {
   return c.json({ status: "healthy" });
 });
 
-// Mount Better Auth handler according to Hono / Better Auth Cloudflare guide
+// Mount Better Auth handler
 app.on(["GET", "POST"], "/api/auth/*", (c) => {
   return createAuth(c.env.DB).handler(c.req.raw);
 });
 
-app.route("/api/v1/auth", authRouter);
-app.route("/api/v1/users", usersRouter);
-app.route("/api/v1", exercisesRouter);
-app.route("/api/v1/workouts", workoutsRouter);
-app.route("/api/v1/workout-templates", workoutTemplatesRouter);
-app.route("/api/v1/workouts", liveActivityRouter);
-app.route("/api/v1/personal-records", personalRecordsRouter);
-app.route("/api/v1/calculators", calculatorsRouter);
-app.route("/api/v1/analytics", analyticsRouter);
-app.route("/api/v1/body-measurements", bodyMeasurementsRouter);
+// Mount API routes
+const routes = app
+  .route("/api/v1/auth", authRouter)
+  .route("/api/v1/users", usersRouter)
+  .route("/api/v1", exercisesRouter)
+  .route("/api/v1/workouts", workoutsRouter)
+  .route("/api/v1/workout-templates", workoutTemplatesRouter)
+  .route("/api/v1/workouts", liveActivityRouter)
+  .route("/api/v1/personal-records", personalRecordsRouter)
+  .route("/api/v1/calculators", calculatorsRouter)
+  .route("/api/v1/analytics", analyticsRouter)
+  .route("/api/v1/body-measurements", bodyMeasurementsRouter);
+
+// Global Not Found handler
+app.notFound((c) => {
+  return c.json({ error: "Endpoint not found" }, 404);
+});
+
+// Global Error handler
+app.onError((err, c) => {
+  console.error("Unhandled Application Error:", err);
+  return c.json({ error: "Internal Server Error" }, 500);
+});
 
 export default app;
+export type AppType = typeof routes;
