@@ -6,6 +6,7 @@ import vue from "@vitejs/plugin-vue";
 export default defineConfig({
   plugins: [
     vue({
+      vapor: true,
       template: {
         compilerOptions: {
           isCustomElement: (tag) => tag.startsWith("ui5-"),
@@ -48,9 +49,9 @@ export default defineConfig({
         {
           browser: "chromium",
           headless: true,
-          launch: {
-            executablePath: "/home/jules/.cache/ms-playwright/chromium-1208/chrome-linux64/chrome",
-          },
+          launch: process.env.CHROMIUM_PATH
+            ? { executablePath: process.env.CHROMIUM_PATH }
+            : undefined,
         },
       ],
     },
