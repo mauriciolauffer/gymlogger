@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { createAuth } from "./lib/auth";
 import { authRouter } from "./routes/auth";
 import { usersRouter } from "./routes/users";
 import { exercisesRouter } from "./routes/exercises";
@@ -31,6 +32,11 @@ app.get("/", (c) => {
 
 app.get("/health", (c) => {
   return c.json({ status: "healthy" });
+});
+
+// Mount Better Auth handler according to Hono / Better Auth Cloudflare guide
+app.on(["GET", "POST"], "/api/auth/*", (c) => {
+  return createAuth(c.env.DB).handler(c.req.raw);
 });
 
 app.route("/api/v1/auth", authRouter);

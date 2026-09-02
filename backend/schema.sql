@@ -1,3 +1,57 @@
+-- ==========================================
+-- BETTER AUTH TABLES (SQLite)
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS user (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    email_verified INTEGER NOT NULL DEFAULT 0,
+    image TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS session (
+    id TEXT PRIMARY KEY,
+    expires_at INTEGER NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    user_id TEXT NOT NULL REFERENCES user(id)
+);
+
+CREATE TABLE IF NOT EXISTS account (
+    id TEXT PRIMARY KEY,
+    account_id TEXT NOT NULL,
+    provider_id TEXT NOT NULL,
+    user_id TEXT NOT NULL REFERENCES user(id),
+    access_token TEXT,
+    refresh_token TEXT,
+    id_token TEXT,
+    access_token_expires_at INTEGER,
+    refresh_token_expires_at INTEGER,
+    scope TEXT,
+    password TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS verification (
+    id TEXT PRIMARY KEY,
+    identifier TEXT NOT NULL,
+    value TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER,
+    updated_at INTEGER
+);
+
+-- ==========================================
+-- GYMLOGGER DOMAIN TABLES
+-- ==========================================
+
 -- Units of Measurement Central Lookup Table
 CREATE TABLE IF NOT EXISTS units (
     code TEXT PRIMARY KEY,
@@ -112,7 +166,7 @@ INSERT OR IGNORE INTO exercises (id, name, category, body_part, equipment, muscl
 ('ex_bicep_curl', 'Dumbbell Bicep Curl', 'biceps', 'arms', 'dumbbell', 'mg_biceps', 'biceps brachii', FALSE),
 ('ex_tricep_pushdown', 'Triceps Pushdown', 'triceps', 'arms', 'cable', 'mg_triceps', 'triceps brachii', FALSE);
 
--- Exercise Secondary Muscles Join Table (many-to-many)
+-- Exercise Secondary Muscles Join Table
 CREATE TABLE IF NOT EXISTS exercise_secondary_muscles (
     exercise_id TEXT NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
     muscle_group_id TEXT NOT NULL REFERENCES muscle_groups(id) ON DELETE CASCADE,
