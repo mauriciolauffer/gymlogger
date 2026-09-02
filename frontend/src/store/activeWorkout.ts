@@ -105,10 +105,13 @@ export const activeWorkoutStore = {
       title,
       template_id: templateId,
     });
-    // fetch full details if created from template to get initialized exercises
     const fullWorkout = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${res.workout.id}`);
-    state.workout = fullWorkout.workout;
-    state.workout.exercises = state.workout.exercises || [];
+    if (fullWorkout && fullWorkout.workout) {
+      state.workout = fullWorkout.workout;
+      state.workout.exercises = state.workout.exercises || [];
+    } else {
+      state.workout = { ...res.workout, exercises: [] };
+    }
     this.saveLocal();
     this.startDurationTimer();
   },
@@ -116,6 +119,9 @@ export const activeWorkoutStore = {
   async fetchActiveWorkout(id: string) {
     const res = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${id}`);
     state.workout = res.workout;
+    if (state.workout) {
+      state.workout.exercises = state.workout.exercises || [];
+    }
     this.saveLocal();
     this.startDurationTimer();
   },
@@ -126,7 +132,6 @@ export const activeWorkoutStore = {
       `/api/v1/workouts/${state.workout.id}/exercises`,
       { exercise_id: exerciseId, superset_id: supersetId }
     );
-    // Fetch previous values for pre-populating set reference
     let previousSets: any[] = [];
     try {
       const prevData = await api.get<{ sets: any[] }>(
@@ -142,6 +147,7 @@ export const activeWorkoutStore = {
       sets: [],
       previousSets,
     };
+    state.workout.exercises = state.workout.exercises || [];
     state.workout.exercises.push(newEx);
     this.saveLocal();
   },
@@ -156,19 +162,19 @@ export const activeWorkoutStore = {
       }
     );
 
-    const exercise = state.workout.exercises.find((e) => e.id === workoutExerciseId);
+    const exercise = state.workout.exercises?.find((e) => e.id === workoutExerciseId);
     if (exercise) {
       exercise.sets.push(res.set);
     }
 
-    // Refresh workout totals
     const updated = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${state.workout.id}`);
-    state.workout.total_volume = updated.workout.total_volume;
-    state.workout.set_count = updated.workout.set_count;
+    if (updated && updated.workout) {
+      state.workout.total_volume = updated.workout.total_volume;
+      state.workout.set_count = updated.workout.set_count;
+    }
 
     this.saveLocal();
 
-    // Trigger Rest Timer
     const duration = settingsStore.settings.rest_timer_duration_seconds || 90;
     this.startRestTimer(duration);
 
@@ -182,17 +188,21 @@ export const activeWorkoutStore = {
       setData
     );
 
-    for (const ex of state.workout.exercises) {
-      const idx = ex.sets.findIndex((s) => s.id === setId);
-      if (idx !== -1) {
-        ex.sets[idx] = res.set;
-        break;
+    if (state.workout.exercises) {
+      for (const ex of state.workout.exercises) {
+        const idx = ex.sets.findIndex((s) => s.id === setId);
+        if (idx !== -1) {
+          ex.sets[idx] = res.set;
+          break;
+        }
       }
     }
 
     const updated = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${state.workout.id}`);
-    state.workout.total_volume = updated.workout.total_volume;
-    state.workout.set_count = updated.workout.set_count;
+    if (updated && updated.workout) {
+      state.workout.total_volume = updated.workout.total_volume;
+      state.workout.set_count = updated.workout.set_count;
+    }
 
     this.saveLocal();
     return res;
@@ -202,13 +212,17 @@ export const activeWorkoutStore = {
     if (!state.workout) return;
     await api.delete(`/api/v1/workouts/${state.workout.id}/sets/${setId}`);
 
-    for (const ex of state.workout.exercises) {
-      ex.sets = ex.sets.filter((s) => s.id !== setId);
+    if (state.workout.exercises) {
+      for (const ex of state.workout.exercises) {
+        ex.sets = ex.sets.filter((s) => s.id !== setId);
+      }
     }
 
     const updated = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${state.workout.id}`);
-    state.workout.total_volume = updated.workout.total_volume;
-    state.workout.set_count = updated.workout.set_count;
+    if (updated && updated.workout) {
+      state.workout.total_volume = updated.workout.total_volume;
+      state.workout.set_count = updated.workout.set_count;
+    }
 
     this.saveLocal();
   },
@@ -222,7 +236,7 @@ export const activeWorkoutStore = {
     this.stopRestTimer();
     state.workout = null;
     this.saveLocal();
-    return res.workout;
+    return res?.workout;
   },
 
   startRestTimer(durationInSeconds: number) {
