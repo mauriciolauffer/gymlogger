@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Input.js";
 import "@ui5/webcomponents/dist/Title.js";
@@ -11,7 +12,7 @@ import "@ui5/webcomponents/dist/Label.js";
 import { api } from "../api/client";
 import { authStore } from "../store/auth";
 
-const emit = defineEmits(["navigate"]);
+const router = useRouter();
 
 const name = ref("");
 const email = ref("");
@@ -48,7 +49,7 @@ const handleRegister = async () => {
       password: password.value,
     });
     authStore.setAuth(res.token, res.user);
-    emit("navigate", "workouts");
+    router.push("/workouts");
   } catch (err: any) {
     errorMsg.value = err.message || "Registration failed. Please try again.";
   } finally {
@@ -113,7 +114,7 @@ const handleRegister = async () => {
           <ui5-button design="Emphasized" :disabled="loading" @click="handleRegister">
             {{ loading ? 'Creating Account...' : 'Register' }}
           </ui5-button>
-          <ui5-button design="Transparent" @click="emit('navigate', 'login')">
+          <ui5-button design="Transparent" @click="router.push('/login')">
             Already have an account? Log In
           </ui5-button>
         </div>

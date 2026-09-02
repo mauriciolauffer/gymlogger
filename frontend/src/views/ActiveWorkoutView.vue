@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
 import "@ui5/webcomponents/dist/Card.js";
@@ -17,7 +18,7 @@ import RestTimer from "../components/RestTimer.vue";
 import PrNotificationDialog from "../components/PrNotificationDialog.vue";
 import WarmupCalculatorModal from "../components/WarmupCalculatorModal.vue";
 
-const emit = defineEmits(["navigate"]);
+const router = useRouter();
 
 const workout = computed(() => activeWorkoutStore.workout);
 const elapsedSeconds = computed(() => activeWorkoutStore.elapsedSeconds);
@@ -77,7 +78,6 @@ const handleConfirmAddExercise = async () => {
 };
 
 const handleAddSet = async (exercise: any) => {
-  // Pre-fill weight and reps from previous set if present
   let defaultWeight = 20;
   let defaultReps = 10;
   const setIndex = exercise.sets.length;
@@ -135,7 +135,7 @@ const handleOpenWarmup = (targetWeight: number) => {
 const handleFinishWorkout = async () => {
   await activeWorkoutStore.finishWorkout(finishNotes.value);
   showFinishModal.value = false;
-  emit("navigate", "workouts");
+  router.push("/workouts");
 };
 </script>
 

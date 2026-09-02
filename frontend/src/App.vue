@@ -1,45 +1,36 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import "@ui5/webcomponents-fiori/dist/ShellBar.js";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
 import "@ui5/webcomponents/dist/TabContainer.js";
 import "@ui5/webcomponents/dist/Tab.js";
-import "@ui5/webcomponents/dist/Icon.js";
 
 import { authStore } from "./store/auth";
 import { activeWorkoutStore } from "./store/activeWorkout";
 import { settingsStore } from "./store/settings";
 
-import LoginView from "./views/LoginView.vue";
-import RegisterView from "./views/RegisterView.vue";
-import ActiveWorkoutView from "./views/ActiveWorkoutView.vue";
-import WorkoutHistoryView from "./views/WorkoutHistoryView.vue";
-import TemplatesView from "./views/TemplatesView.vue";
-import ExercisesView from "./views/ExercisesView.vue";
-import AnalyticsView from "./views/AnalyticsView.vue";
-import MeasurementsView from "./views/MeasurementsView.vue";
-import ProfileView from "./views/ProfileView.vue";
-import SettingsView from "./views/SettingsView.vue";
+const router = useRouter();
+const route = useRoute();
 
-const currentTab = ref("workouts");
 const isAuthenticated = computed(() => authStore.isAuthenticated.value);
 const isWorkingOut = computed(() => activeWorkoutStore.isWorkingOut);
 
-const handleNavigate = (target: string) => {
-  currentTab.value = target;
-};
-
 const handleTabSelect = (e: any) => {
   const selectedTab = e.detail.tab;
-  if (selectedTab && selectedTab.dataset.view) {
-    currentTab.value = selectedTab.dataset.view;
+  if (selectedTab && selectedTab.dataset.path) {
+    router.push(selectedTab.dataset.path);
   }
+};
+
+const navigateTo = (path: string) => {
+  router.push(path);
 };
 
 const handleLogout = async () => {
   await authStore.logout();
-  currentTab.value = "login";
+  router.push("/login");
 };
 
 onMounted(() => {
@@ -54,67 +45,52 @@ onMounted(() => {
     <!-- SAP UI5 ShellBar -->
     <ui5-shellbar primary-title="GymLogger" secondary-title="Workout Tracker">
       <div slot="profile" v-if="isAuthenticated" class="shell-actions">
-        <ui5-button design="Transparent" @click="handleNavigate('profile')">Profile</ui5-button>
-        <ui5-button design="Transparent" @click="handleNavigate('settings')">Settings</ui5-button>
+        <ui5-button design="Transparent" @click="navigateTo('/profile')">Profile</ui5-button>
+        <ui5-button design="Transparent" @click="navigateTo('/settings')">Settings</ui5-button>
         <ui5-button design="Transparent" @click="handleLogout">Log Out</ui5-button>
       </div>
     </ui5-shellbar>
 
-    <!-- App Navigation Container for Authenticated Users -->
+    <!-- Navigation Tabs for Authenticated Users -->
     <div v-if="isAuthenticated" class="navigation-tabs">
       <ui5-tabcontainer fixed @tab-select="handleTabSelect">
         <ui5-tab
           text="Active Session"
-          :selected="currentTab === 'active-workout'"
-          data-view="active-workout"
+          :selected="route.path === '/active-workout'"
+          data-path="/active-workout"
           v-if="isWorkingOut"
         ></ui5-tab>
         <ui5-tab
           text="History"
-          :selected="currentTab === 'workouts'"
-          data-view="workouts"
+          :selected="route.path === '/workouts'"
+          data-path="/workouts"
         ></ui5-tab>
         <ui5-tab
           text="Templates"
-          :selected="currentTab === 'templates'"
-          data-view="templates"
+          :selected="route.path === '/templates'"
+          data-path="/templates"
         ></ui5-tab>
         <ui5-tab
           text="Exercises"
-          :selected="currentTab === 'exercises'"
-          data-view="exercises"
+          :selected="route.path === '/exercises'"
+          data-path="/exercises"
         ></ui5-tab>
         <ui5-tab
           text="Analytics"
-          :selected="currentTab === 'analytics'"
-          data-view="analytics"
+          :selected="route.path === '/analytics'"
+          data-path="/analytics"
         ></ui5-tab>
         <ui5-tab
           text="Measurements"
-          :selected="currentTab === 'measurements'"
-          data-view="measurements"
+          :selected="route.path === '/measurements'"
+          data-path="/measurements"
         ></ui5-tab>
       </ui5-tabcontainer>
     </div>
 
-    <!-- View Contents -->
+    <!-- Router View Area -->
     <main class="content-area">
-      <template v-if="!isAuthenticated">
-        <RegisterView v-if="currentTab === 'register'" @navigate="handleNavigate" />
-        <LoginView v-else @navigate="handleNavigate" />
-      </template>
-
-      <template v-else>
-        <ActiveWorkoutView v-if="currentTab === 'active-workout'" @navigate="handleNavigate" />
-        <WorkoutHistoryView v-else-if="currentTab === 'workouts'" @navigate="handleNavigate" />
-        <TemplatesView v-else-if="currentTab === 'templates'" @navigate="handleNavigate" />
-        <ExercisesView v-else-if="currentTab === 'exercises'" @navigate="handleNavigate" />
-        <AnalyticsView v-else-if="currentTab === 'analytics'" @navigate="handleNavigate" />
-        <MeasurementsView v-else-if="currentTab === 'measurements'" @navigate="handleNavigate" />
-        <ProfileView v-else-if="currentTab === 'profile'" @navigate="handleNavigate" />
-        <SettingsView v-else-if="currentTab === 'settings'" @navigate="handleNavigate" />
-        <WorkoutHistoryView v-else @navigate="handleNavigate" />
-      </template>
+      <router-view />
     </main>
   </div>
 </template>

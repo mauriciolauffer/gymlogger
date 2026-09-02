@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Input.js";
 import "@ui5/webcomponents/dist/Title.js";
@@ -11,7 +12,7 @@ import "@ui5/webcomponents/dist/Label.js";
 import { api } from "../api/client";
 import { authStore } from "../store/auth";
 
-const emit = defineEmits(["navigate"]);
+const router = useRouter();
 
 const email = ref("");
 const password = ref("");
@@ -40,7 +41,7 @@ const handleLogin = async () => {
       password: password.value,
     });
     authStore.setAuth(res.token, res.user);
-    emit("navigate", "workouts");
+    router.push("/workouts");
   } catch (err: any) {
     errorMsg.value = err.message || "Login failed. Please check your credentials.";
   } finally {
@@ -84,7 +85,7 @@ const handleLogin = async () => {
           <ui5-button design="Emphasized" :disabled="loading" @click="handleLogin">
             {{ loading ? 'Logging in...' : 'Log In' }}
           </ui5-button>
-          <ui5-button design="Transparent" @click="emit('navigate', 'register')">
+          <ui5-button design="Transparent" @click="router.push('/register')">
             Need an account? Register
           </ui5-button>
         </div>

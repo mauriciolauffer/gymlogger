@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
 import "@ui5/webcomponents/dist/Card.js";
@@ -11,7 +12,7 @@ import { api } from "../api/client";
 import { activeWorkoutStore } from "../store/activeWorkout";
 import TemplateEditorModal from "../components/TemplateEditorModal.vue";
 
-const emit = defineEmits(["navigate"]);
+const router = useRouter();
 
 const templates = ref<any[]>([]);
 const loading = ref(false);
@@ -58,7 +59,7 @@ const handleDelete = async (tplId: string) => {
 const handleStartFromTemplate = async (tpl: any) => {
   try {
     await activeWorkoutStore.startWorkout(tpl.title, tpl.id);
-    emit("navigate", "active-workout");
+    router.push("/active-workout");
   } catch (err) {
     console.error("Failed to start workout from template", err);
   }

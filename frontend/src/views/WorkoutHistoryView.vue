@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
 import "@ui5/webcomponents/dist/Card.js";
@@ -11,7 +12,7 @@ import { api } from "../api/client";
 import { activeWorkoutStore } from "../store/activeWorkout";
 import WorkoutDetailModal from "../components/WorkoutDetailModal.vue";
 
-const emit = defineEmits(["navigate"]);
+const router = useRouter();
 
 const workouts = ref<any[]>([]);
 const loading = ref(false);
@@ -31,7 +32,7 @@ const fetchWorkouts = async () => {
 
 const handleStartNewWorkout = async () => {
   await activeWorkoutStore.startWorkout("Empty Workout Session");
-  emit("navigate", "active-workout");
+  router.push("/active-workout");
 };
 
 const handleViewWorkout = async (workoutId: string) => {
