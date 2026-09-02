@@ -1,11 +1,11 @@
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
 
 export function createMockD1(dbFile: string = ":memory:"): D1Database {
-  const sqlite = new Database(dbFile);
+  const sqlite = new DatabaseSync(dbFile);
 
-  // Initialize schema if creating memory db
+  // Initialize schema if schema.sql exists
   const schemaPath = path.resolve(process.cwd(), "schema.sql");
   if (fs.existsSync(schemaPath)) {
     const schema = fs.readFileSync(schemaPath, "utf-8");
@@ -43,14 +43,15 @@ export function createMockD1(dbFile: string = ":memory:"): D1Database {
             results: [] as T[],
             success: true,
             meta: {
-              changes: info.changes,
+              changes: Number(info.changes),
               last_row_id: Number(info.lastInsertRowid),
             } as any,
           };
         },
         async raw<T = unknown>(): Promise<T[]> {
           const stmt = sqlite.prepare(query);
-          return stmt.raw().all(...boundParams) as T[];
+          const rows = stmt.all(...boundParams) as any[];
+          return rows.map((r) => Object.values(r)) as T[];
         },
       };
     },
