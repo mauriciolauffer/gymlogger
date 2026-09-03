@@ -13,7 +13,13 @@ export const authRouter = new Hono<Env>()
 
     const { name, email, password } = body;
 
-    if (!email || typeof email !== "string" || !email.includes("@")) {
+    if (
+      !email ||
+      typeof email !== "string" ||
+      !email.includes("@") ||
+      email.indexOf("@") === 0 ||
+      email.lastIndexOf(".") < email.indexOf("@")
+    ) {
       return c.json({ error: "Valid email is required" }, 400);
     }
 

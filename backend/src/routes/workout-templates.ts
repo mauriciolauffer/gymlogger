@@ -80,18 +80,25 @@ workoutTemplatesRouter.post("/", async (c) => {
     .run();
 
   if (Array.isArray(exercises)) {
-    for (let i = 0; i < exercises.length; i++) {
-      const ex = exercises[i];
-      const wteId = `wte_${crypto.randomUUID()}`;
-      const orderIdx = ex.order_index !== undefined ? ex.order_index : i;
-
-      await c.env.DB.prepare(
-        `INSERT INTO workout_template_exercises (id, template_id, exercise_id, superset_id, notes, order_index)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-      )
-        .bind(wteId, templateId, ex.exercise_id, ex.superset_id ?? null, ex.notes ?? null, orderIdx)
-        .run();
-    }
+    await Promise.all(
+      exercises.map((ex, i) => {
+        const wteId = `wte_${crypto.randomUUID()}`;
+        const orderIdx = ex.order_index !== undefined ? ex.order_index : i;
+        return c.env.DB.prepare(
+          `INSERT INTO workout_template_exercises (id, template_id, exercise_id, superset_id, notes, order_index)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+          .bind(
+            wteId,
+            templateId,
+            ex.exercise_id,
+            ex.superset_id ?? null,
+            ex.notes ?? null,
+            orderIdx,
+          )
+          .run();
+      }),
+    );
   }
 
   const template = await c.env.DB.prepare("SELECT * FROM workout_templates WHERE id = ?")
@@ -125,6 +132,10 @@ workoutTemplatesRouter.put("/:id", async (c) => {
     return c.json({ error: "Workout template not found or unauthorized" }, 404);
   }
 
+  if (!body) {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
   const { title, notes, exercises } = body;
 
   await c.env.DB.prepare(
@@ -142,18 +153,18 @@ workoutTemplatesRouter.put("/:id", async (c) => {
       .bind(id)
       .run();
 
-    for (let i = 0; i < exercises.length; i++) {
-      const ex = exercises[i];
-      const wteId = `wte_${crypto.randomUUID()}`;
-      const orderIdx = ex.order_index !== undefined ? ex.order_index : i;
-
-      await c.env.DB.prepare(
-        `INSERT INTO workout_template_exercises (id, template_id, exercise_id, superset_id, notes, order_index)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-      )
-        .bind(wteId, id, ex.exercise_id, ex.superset_id ?? null, ex.notes ?? null, orderIdx)
-        .run();
-    }
+    await Promise.all(
+      exercises.map((ex, i) => {
+        const wteId = `wte_${crypto.randomUUID()}`;
+        const orderIdx = ex.order_index !== undefined ? ex.order_index : i;
+        return c.env.DB.prepare(
+          `INSERT INTO workout_template_exercises (id, template_id, exercise_id, superset_id, notes, order_index)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+          .bind(wteId, id, ex.exercise_id, ex.superset_id ?? null, ex.notes ?? null, orderIdx)
+          .run();
+      }),
+    );
   }
 
   const updatedTemplate = await c.env.DB.prepare("SELECT * FROM workout_templates WHERE id = ?")

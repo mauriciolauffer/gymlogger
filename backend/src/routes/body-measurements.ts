@@ -168,6 +168,10 @@ bodyMeasurementsRouter.put("/:id", async (c) => {
     return c.json({ error: "Body measurement entry not found or unauthorized" }, 404);
   }
 
+  if (!body) {
+    return c.json({ error: "Invalid JSON body" }, 400);
+  }
+
   const {
     date,
     weight,

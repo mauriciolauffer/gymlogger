@@ -48,10 +48,10 @@ workoutsRouter.get("/previous-values", async (c) => {
 // POST /api/v1/workouts/start
 workoutsRouter.post("/start", async (c) => {
   const user = c.get("user")!;
-  const body = await c.req.json().catch(() => ({}));
+  const body = await c.req.json().catch(() => null);
 
   const workoutId = `wk_${crypto.randomUUID()}`;
-  const title = body?.title || "Workout";
+  const title = body?.title ?? "Workout";
   const startTime = body?.start_time || new Date().toISOString();
   const templateId = body?.template_id || null;
 
@@ -84,15 +84,17 @@ workoutsRouter.post("/start", async (c) => {
         order_index: number;
       }>();
 
-    for (const te of templateExercises) {
-      const weId = `we_${crypto.randomUUID()}`;
-      await c.env.DB.prepare(
-        `INSERT INTO workout_exercises (id, workout_id, exercise_id, superset_id, notes, order_index)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-      )
-        .bind(weId, workoutId, te.exercise_id, te.superset_id, te.notes, te.order_index)
-        .run();
-    }
+    await Promise.all(
+      templateExercises.map((te) => {
+        const weId = `we_${crypto.randomUUID()}`;
+        return c.env.DB.prepare(
+          `INSERT INTO workout_exercises (id, workout_id, exercise_id, superset_id, notes, order_index)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+        )
+          .bind(weId, workoutId, te.exercise_id, te.superset_id, te.notes, te.order_index)
+          .run();
+      }),
+    );
   }
 
   const workout = await c.env.DB.prepare("SELECT * FROM workouts WHERE id = ?")
@@ -400,10 +402,10 @@ workoutsRouter.get("/", async (c) => {
 
   query += ` ORDER BY start_time DESC`;
 
-  const l = parseInt(limit || "20", 10);
-  const o = parseInt(offset || "0", 10);
+  const limitVal = Math.min(Math.max(1, parseInt(limit || "20", 10)), 100);
+  const offsetVal = Math.max(0, parseInt(offset || "0", 10));
   query += ` LIMIT ? OFFSET ?`;
-  params.push(l, o);
+  params.push(limitVal, offsetVal);
 
   const { results: workouts } = await c.env.DB.prepare(query)
     .bind(...params)
@@ -432,18 +434,32 @@ workoutsRouter.get("/:id", async (c) => {
      ORDER BY we.order_index ASC`,
   )
     .bind(id)
-    .all();
+    .all<{ id: string; [key: string]: unknown }>();
 
-  for (const ex of exercises as any[]) {
-    const { results: sets } = await c.env.DB.prepare(
-      `SELECT * FROM workout_sets WHERE workout_exercise_id = ? ORDER BY order_index ASC`,
-    )
-      .bind(ex.id)
-      .all();
-    ex.sets = sets;
+  const exerciseIds = exercises.map((ex) => ex.id);
+  const sets =
+    exerciseIds.length > 0
+      ? (
+          await c.env.DB.prepare(
+            `SELECT * FROM workout_sets WHERE workout_exercise_id IN (${exerciseIds.map(() => "?").join(",")}) ORDER BY order_index ASC`,
+          )
+            .bind(...exerciseIds)
+            .all()
+        ).results
+      : [];
+
+  const setsByExercise = new Map<string, typeof sets>();
+  for (const s of sets) {
+    const key = s.workout_exercise_id as string;
+    if (!setsByExercise.has(key)) setsByExercise.set(key, []);
+    setsByExercise.get(key)!.push(s);
   }
 
-  return c.json({ workout: { ...workout, exercises } });
+  const exercisesWithSets = exercises.map((ex) =>
+    Object.assign(ex, { sets: setsByExercise.get(ex.id) ?? [] }),
+  );
+
+  return c.json({ workout: { ...workout, exercises: exercisesWithSets } });
 });
 
 // DELETE /api/v1/workouts/:id

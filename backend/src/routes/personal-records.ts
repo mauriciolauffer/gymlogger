@@ -21,7 +21,7 @@ export const personalRecordsRouter = new Hono<Env>()
       params.push(exerciseId);
     }
 
-    query += ` ORDER BY pr.achieved_at DESC`;
+    query += ` ORDER BY pr.achieved_at DESC LIMIT 500`;
 
     const { results: personalRecords } = await c.env.DB.prepare(query)
       .bind(...params)

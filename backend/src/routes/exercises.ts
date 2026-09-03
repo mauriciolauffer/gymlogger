@@ -13,8 +13,7 @@ exercisesRouter.get("/muscle-groups", async (c) => {
 });
 
 // Protected exercise routes
-exercisesRouter.use("/exercises/*", authMiddleware);
-exercisesRouter.use("/exercises", authMiddleware);
+exercisesRouter.use("/exercises*", authMiddleware);
 
 // GET /api/v1/exercises
 exercisesRouter.get("/exercises", async (c) => {
@@ -64,7 +63,7 @@ exercisesRouter.get("/exercises", async (c) => {
     params.push(muscleGroupId);
   }
 
-  query += ` ORDER BY e.name ASC`;
+  query += ` ORDER BY e.name ASC LIMIT 500`;
 
   const { results } = await c.env.DB.prepare(query)
     .bind(...params)
@@ -147,13 +146,15 @@ exercisesRouter.post("/exercises", async (c) => {
     .run();
 
   if (Array.isArray(secondary_muscle_ids)) {
-    for (const mgId of secondary_muscle_ids) {
-      await c.env.DB.prepare(
-        "INSERT OR IGNORE INTO exercise_secondary_muscles (exercise_id, muscle_group_id) VALUES (?, ?)",
-      )
-        .bind(id, mgId)
-        .run();
-    }
+    await Promise.all(
+      secondary_muscle_ids.map((mgId: string) =>
+        c.env.DB.prepare(
+          "INSERT OR IGNORE INTO exercise_secondary_muscles (exercise_id, muscle_group_id) VALUES (?, ?)",
+        )
+          .bind(id, mgId)
+          .run(),
+      ),
+    );
   }
 
   const newExercise = await c.env.DB.prepare("SELECT * FROM exercises WHERE id = ?")
@@ -176,6 +177,10 @@ exercisesRouter.put("/exercises/:id", async (c) => {
 
   if (!existing) {
     return c.json({ error: "Custom exercise not found or unauthorized" }, 404);
+  }
+
+  if (!body) {
+    return c.json({ error: "Invalid JSON body" }, 400);
   }
 
   const {
@@ -220,13 +225,15 @@ exercisesRouter.put("/exercises/:id", async (c) => {
     await c.env.DB.prepare("DELETE FROM exercise_secondary_muscles WHERE exercise_id = ?")
       .bind(id)
       .run();
-    for (const mgId of secondary_muscle_ids) {
-      await c.env.DB.prepare(
-        "INSERT OR IGNORE INTO exercise_secondary_muscles (exercise_id, muscle_group_id) VALUES (?, ?)",
-      )
-        .bind(id, mgId)
-        .run();
-    }
+    await Promise.all(
+      secondary_muscle_ids.map((mgId: string) =>
+        c.env.DB.prepare(
+          "INSERT OR IGNORE INTO exercise_secondary_muscles (exercise_id, muscle_group_id) VALUES (?, ?)",
+        )
+          .bind(id, mgId)
+          .run(),
+      ),
+    );
   }
 
   const updated = await c.env.DB.prepare("SELECT * FROM exercises WHERE id = ?").bind(id).first();

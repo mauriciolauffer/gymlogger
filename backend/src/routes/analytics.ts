@@ -6,6 +6,41 @@ export const analyticsRouter = new Hono<Env>();
 
 analyticsRouter.use("*", authMiddleware);
 
+async function muscleSetCounts(
+  db: D1Database,
+  userId: string,
+  from?: string,
+  to?: string,
+): Promise<{ id: string; muscle_group: string; set_count: number }[]> {
+  let query = `
+    SELECT mg.id, mg.name as muscle_group, COUNT(ws.id) as set_count
+    FROM workout_sets ws
+    JOIN workout_exercises we ON ws.workout_exercise_id = we.id
+    JOIN exercises e ON we.exercise_id = e.id
+    JOIN muscle_groups mg ON e.muscle_group_id = mg.id
+    JOIN workouts w ON we.workout_id = w.id
+    WHERE w.user_id = ?
+  `;
+  const params: (string | number)[] = [userId];
+
+  if (from) {
+    query += ` AND w.start_time >= ?`;
+    params.push(from);
+  }
+  if (to) {
+    query += ` AND w.start_time <= ?`;
+    params.push(to);
+  }
+
+  query += ` GROUP BY mg.id ORDER BY set_count DESC`;
+
+  const { results } = await db
+    .prepare(query)
+    .bind(...params)
+    .all<{ id: string; muscle_group: string; set_count: number }>();
+  return results;
+}
+
 // GET /api/v1/analytics/performance?exerciseId=:id
 analyticsRouter.get("/performance", async (c) => {
   const user = c.get("user")!;
@@ -111,11 +146,11 @@ analyticsRouter.get("/monthly-report", async (c) => {
   const year = parseInt(c.req.query("year") || String(now.getFullYear()), 10);
   const month = parseInt(c.req.query("month") || String(now.getMonth() + 1), 10);
 
-  const monthStr = month < 10 ? `0${month}` : `${month}`;
+  const monthStr = String(month).padStart(2, "0");
   const startDate = `${year}-${monthStr}-01T00:00:00Z`;
   const nextMonth = month === 12 ? 1 : month + 1;
   const nextYear = month === 12 ? year + 1 : year;
-  const nextMonthStr = nextMonth < 10 ? `0${nextMonth}` : `${nextMonth}`;
+  const nextMonthStr = String(nextMonth).padStart(2, "0");
   const endDate = `${nextYear}-${nextMonthStr}-01T00:00:00Z`;
 
   const totals = await c.env.DB.prepare(
@@ -169,31 +204,7 @@ analyticsRouter.get("/muscle-distribution", async (c) => {
   const user = c.get("user")!;
   const { from, to } = c.req.query();
 
-  let query = `
-    SELECT mg.id, mg.name as muscle_group, COUNT(ws.id) as set_count
-    FROM workout_sets ws
-    JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-    JOIN exercises e ON we.exercise_id = e.id
-    JOIN muscle_groups mg ON e.muscle_group_id = mg.id
-    JOIN workouts w ON we.workout_id = w.id
-    WHERE w.user_id = ?
-  `;
-  const params: any[] = [user.userId];
-
-  if (from) {
-    query += ` AND w.start_time >= ?`;
-    params.push(from);
-  }
-  if (to) {
-    query += ` AND w.start_time <= ?`;
-    params.push(to);
-  }
-
-  query += ` GROUP BY mg.id ORDER BY set_count DESC`;
-
-  const { results } = await c.env.DB.prepare(query)
-    .bind(...params)
-    .all<any>();
+  const results = await muscleSetCounts(c.env.DB, user.userId, from, to);
   const totalSets = results.reduce((acc, cur) => acc + cur.set_count, 0);
 
   const distribution = results.map((r) => ({
@@ -211,31 +222,7 @@ analyticsRouter.get("/sets-per-muscle-group", async (c) => {
   const user = c.get("user")!;
   const { from, to } = c.req.query();
 
-  let query = `
-    SELECT mg.id, mg.name as muscle_group, COUNT(ws.id) as set_count
-    FROM workout_sets ws
-    JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-    JOIN exercises e ON we.exercise_id = e.id
-    JOIN muscle_groups mg ON e.muscle_group_id = mg.id
-    JOIN workouts w ON we.workout_id = w.id
-    WHERE w.user_id = ?
-  `;
-  const params: any[] = [user.userId];
-
-  if (from) {
-    query += ` AND w.start_time >= ?`;
-    params.push(from);
-  }
-  if (to) {
-    query += ` AND w.start_time <= ?`;
-    params.push(to);
-  }
-
-  query += ` GROUP BY mg.id`;
-
-  const { results } = await c.env.DB.prepare(query)
-    .bind(...params)
-    .all<any>();
+  const results = await muscleSetCounts(c.env.DB, user.userId, from, to);
 
   const setsPerMuscleGroup = results.map((r) => ({
     muscleGroupId: r.id,

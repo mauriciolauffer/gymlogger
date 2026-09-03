@@ -2,6 +2,9 @@ import { Hono } from "hono";
 import type { Env } from "../index";
 import { authMiddleware } from "../middleware/auth";
 
+const VALID_WEIGHT_UNITS = new Set(["kg", "lbs"]);
+const VALID_LENGTH_UNITS = new Set(["cm", "in"]);
+
 export const usersRouter = new Hono<Env>()
   .use("*", authMiddleware)
   .get("/profile", async (c) => {
@@ -43,12 +46,7 @@ export const usersRouter = new Hono<Env>()
     }
 
     if (height_unit !== undefined && height_unit !== null) {
-      const unitInDb = await c.env.DB.prepare(
-        "SELECT code FROM units WHERE code = ? AND type = 'length'",
-      )
-        .bind(height_unit)
-        .first();
-      if (!unitInDb) {
+      if (!VALID_LENGTH_UNITS.has(height_unit)) {
         return c.json({ error: "Invalid height unit" }, 400);
       }
     }
@@ -148,23 +146,13 @@ export const usersRouter = new Hono<Env>()
     }
 
     if (preferred_weight_unit !== undefined && preferred_weight_unit !== null) {
-      const unit = await c.env.DB.prepare(
-        "SELECT code FROM units WHERE code = ? AND type = 'weight'",
-      )
-        .bind(preferred_weight_unit)
-        .first();
-      if (!unit) {
+      if (!VALID_WEIGHT_UNITS.has(preferred_weight_unit)) {
         return c.json({ error: "Invalid weight unit" }, 400);
       }
     }
 
     if (preferred_length_unit !== undefined && preferred_length_unit !== null) {
-      const unit = await c.env.DB.prepare(
-        "SELECT code FROM units WHERE code = ? AND type = 'length'",
-      )
-        .bind(preferred_length_unit)
-        .first();
-      if (!unit) {
+      if (!VALID_LENGTH_UNITS.has(preferred_length_unit)) {
         return c.json({ error: "Invalid length unit" }, 400);
       }
     }
