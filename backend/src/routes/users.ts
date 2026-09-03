@@ -1,6 +1,9 @@
 import { Hono } from "hono";
+import { eq } from "drizzle-orm";
 import type { Env } from "../index";
 import { authMiddleware } from "../middleware/auth";
+import { getDb } from "../db/schema";
+import { usersProfile, userSettings } from "../db/schema";
 
 const VALID_WEIGHT_UNITS = new Set(["kg", "lbs"]);
 const VALID_LENGTH_UNITS = new Set(["cm", "in"]);
@@ -9,12 +12,24 @@ export const usersRouter = new Hono<Env>()
   .use("*", authMiddleware)
   .get("/profile", async (c) => {
     const user = c.get("user")!;
+    const db = getDb(c);
 
-    const profile = await c.env.DB.prepare(
-      `SELECT id, email, name, location, birthday, sex, height, height_unit, bio, created_at FROM users WHERE id = ?`,
-    )
-      .bind(user.userId)
-      .first();
+    const profile = await db
+      .select({
+        id: usersProfile.id,
+        email: usersProfile.email,
+        name: usersProfile.name,
+        location: usersProfile.location,
+        birthday: usersProfile.birthday,
+        sex: usersProfile.sex,
+        height: usersProfile.height,
+        heightUnit: usersProfile.heightUnit,
+        bio: usersProfile.bio,
+        createdAt: usersProfile.createdAt,
+      })
+      .from(usersProfile)
+      .where(eq(usersProfile.id, user.userId))
+      .get();
 
     if (!profile) {
       return c.json({ error: "User profile not found" }, 404);
@@ -51,73 +66,105 @@ export const usersRouter = new Hono<Env>()
       }
     }
 
-    const current = await c.env.DB.prepare(
-      "SELECT name, location, birthday, sex, height, height_unit, bio FROM users WHERE id = ?",
-    )
-      .bind(user.userId)
-      .first<any>();
+    const db = getDb(c);
+
+    const current = await db
+      .select({
+        name: usersProfile.name,
+        location: usersProfile.location,
+        birthday: usersProfile.birthday,
+        sex: usersProfile.sex,
+        height: usersProfile.height,
+        heightUnit: usersProfile.heightUnit,
+        bio: usersProfile.bio,
+      })
+      .from(usersProfile)
+      .where(eq(usersProfile.id, user.userId))
+      .get();
 
     if (!current) {
       return c.json({ error: "User not found" }, 404);
     }
 
-    const updatedName = name !== undefined ? name : current.name;
-    const updatedLocation = location !== undefined ? location : current.location;
-    const updatedBirthday = birthday !== undefined ? birthday : current.birthday;
-    const updatedSex = sex !== undefined ? sex : current.sex;
-    const updatedHeight = height !== undefined ? height : current.height;
-    const updatedHeightUnit = height_unit !== undefined ? height_unit : current.height_unit;
-    const updatedBio = bio !== undefined ? bio : current.bio;
-
-    await c.env.DB.prepare(
-      `UPDATE users
-       SET name = ?, location = ?, birthday = ?, sex = ?, height = ?, height_unit = ?, bio = ?
-       WHERE id = ?`,
-    )
-      .bind(
-        updatedName,
-        updatedLocation,
-        updatedBirthday,
-        updatedSex,
-        updatedHeight,
-        updatedHeightUnit,
-        updatedBio,
-        user.userId,
-      )
+    await db
+      .update(usersProfile)
+      .set({
+        name: name !== undefined ? name : current.name,
+        location: location !== undefined ? location : current.location,
+        birthday: birthday !== undefined ? birthday : current.birthday,
+        sex: sex !== undefined ? sex : current.sex,
+        height: height !== undefined ? height : current.height,
+        heightUnit: height_unit !== undefined ? height_unit : current.heightUnit,
+        bio: bio !== undefined ? bio : current.bio,
+      })
+      .where(eq(usersProfile.id, user.userId))
       .run();
 
-    const profile = await c.env.DB.prepare(
-      `SELECT id, email, name, location, birthday, sex, height, height_unit, bio, created_at FROM users WHERE id = ?`,
-    )
-      .bind(user.userId)
-      .first();
+    const profile = await db
+      .select({
+        id: usersProfile.id,
+        email: usersProfile.email,
+        name: usersProfile.name,
+        location: usersProfile.location,
+        birthday: usersProfile.birthday,
+        sex: usersProfile.sex,
+        height: usersProfile.height,
+        heightUnit: usersProfile.heightUnit,
+        bio: usersProfile.bio,
+        createdAt: usersProfile.createdAt,
+      })
+      .from(usersProfile)
+      .where(eq(usersProfile.id, user.userId))
+      .get();
 
     return c.json({ message: "Profile updated successfully", profile });
   })
   .get("/settings", async (c) => {
     const user = c.get("user")!;
+    const db = getDb(c);
 
-    let settings = await c.env.DB.prepare(
-      `SELECT theme, preferred_weight_unit, preferred_length_unit, language, rest_timer_duration_seconds, notifications_enabled, updated_at
-       FROM user_settings WHERE user_id = ?`,
-    )
-      .bind(user.userId)
-      .first();
+    let settings = await db
+      .select({
+        theme: userSettings.theme,
+        preferredWeightUnit: userSettings.preferredWeightUnit,
+        preferredLengthUnit: userSettings.preferredLengthUnit,
+        language: userSettings.language,
+        restTimerDurationSeconds: userSettings.restTimerDurationSeconds,
+        notificationsEnabled: userSettings.notificationsEnabled,
+        updatedAt: userSettings.updatedAt,
+      })
+      .from(userSettings)
+      .where(eq(userSettings.userId, user.userId))
+      .get();
 
     if (!settings) {
-      await c.env.DB.prepare(
-        `INSERT INTO user_settings (user_id, theme, preferred_weight_unit, preferred_length_unit, language, rest_timer_duration_seconds, notifications_enabled)
-         VALUES (?, 'system', 'kg', 'cm', 'en', 90, TRUE)`,
-      )
-        .bind(user.userId)
+      await db
+        .insert(userSettings)
+        .values({
+          userId: user.userId,
+          theme: "system",
+          preferredWeightUnit: "kg",
+          preferredLengthUnit: "cm",
+          language: "en",
+          restTimerDurationSeconds: 90,
+          notificationsEnabled: true,
+        })
+        .onConflictDoNothing()
         .run();
 
-      settings = await c.env.DB.prepare(
-        `SELECT theme, preferred_weight_unit, preferred_length_unit, language, rest_timer_duration_seconds, notifications_enabled, updated_at
-         FROM user_settings WHERE user_id = ?`,
-      )
-        .bind(user.userId)
-        .first();
+      settings = await db
+        .select({
+          theme: userSettings.theme,
+          preferredWeightUnit: userSettings.preferredWeightUnit,
+          preferredLengthUnit: userSettings.preferredLengthUnit,
+          language: userSettings.language,
+          restTimerDurationSeconds: userSettings.restTimerDurationSeconds,
+          notificationsEnabled: userSettings.notificationsEnabled,
+          updatedAt: userSettings.updatedAt,
+        })
+        .from(userSettings)
+        .where(eq(userSettings.userId, user.userId))
+        .get();
     }
 
     return c.json({ settings });
@@ -163,60 +210,79 @@ export const usersRouter = new Hono<Env>()
       }
     }
 
-    const current = await c.env.DB.prepare(
-      `SELECT theme, preferred_weight_unit, preferred_length_unit, language, rest_timer_duration_seconds, notifications_enabled FROM user_settings WHERE user_id = ?`,
-    )
-      .bind(user.userId)
-      .first<any>();
+    const db = getDb(c);
+
+    const current = await db
+      .select({
+        theme: userSettings.theme,
+        preferredWeightUnit: userSettings.preferredWeightUnit,
+        preferredLengthUnit: userSettings.preferredLengthUnit,
+        language: userSettings.language,
+        restTimerDurationSeconds: userSettings.restTimerDurationSeconds,
+        notificationsEnabled: userSettings.notificationsEnabled,
+      })
+      .from(userSettings)
+      .where(eq(userSettings.userId, user.userId))
+      .get();
 
     const newTheme = theme !== undefined ? theme : (current?.theme ?? "system");
     const newWeightUnit =
       preferred_weight_unit !== undefined
         ? preferred_weight_unit
-        : (current?.preferred_weight_unit ?? "kg");
+        : (current?.preferredWeightUnit ?? "kg");
     const newLengthUnit =
       preferred_length_unit !== undefined
         ? preferred_length_unit
-        : (current?.preferred_length_unit ?? "cm");
+        : (current?.preferredLengthUnit ?? "cm");
     const newLang = language !== undefined ? language : (current?.language ?? "en");
     const newRestTimer =
       rest_timer_duration_seconds !== undefined
         ? rest_timer_duration_seconds
-        : (current?.rest_timer_duration_seconds ?? 90);
+        : (current?.restTimerDurationSeconds ?? 90);
     const newNotifs =
       notifications_enabled !== undefined
         ? notifications_enabled
-        : (current?.notifications_enabled ?? true);
+        : (current?.notificationsEnabled ?? true);
 
-    await c.env.DB.prepare(
-      `INSERT INTO user_settings (user_id, theme, preferred_weight_unit, preferred_length_unit, language, rest_timer_duration_seconds, notifications_enabled, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-       ON CONFLICT(user_id) DO UPDATE SET
-         theme = excluded.theme,
-         preferred_weight_unit = excluded.preferred_weight_unit,
-         preferred_length_unit = excluded.preferred_length_unit,
-         language = excluded.language,
-         rest_timer_duration_seconds = excluded.rest_timer_duration_seconds,
-         notifications_enabled = excluded.notifications_enabled,
-         updated_at = CURRENT_TIMESTAMP`,
-    )
-      .bind(
-        user.userId,
-        newTheme,
-        newWeightUnit,
-        newLengthUnit,
-        newLang,
-        newRestTimer,
-        newNotifs ? 1 : 0,
-      )
+    await db
+      .insert(userSettings)
+      .values({
+        userId: user.userId,
+        theme: newTheme,
+        preferredWeightUnit: newWeightUnit,
+        preferredLengthUnit: newLengthUnit,
+        language: newLang,
+        restTimerDurationSeconds: newRestTimer,
+        notificationsEnabled: newNotifs,
+        updatedAt: new Date().toISOString(),
+      })
+      .onConflictDoUpdate({
+        target: userSettings.userId,
+        set: {
+          theme: newTheme,
+          preferredWeightUnit: newWeightUnit,
+          preferredLengthUnit: newLengthUnit,
+          language: newLang,
+          restTimerDurationSeconds: newRestTimer,
+          notificationsEnabled: newNotifs,
+          updatedAt: new Date().toISOString(),
+        },
+      })
       .run();
 
-    const settings = await c.env.DB.prepare(
-      `SELECT theme, preferred_weight_unit, preferred_length_unit, language, rest_timer_duration_seconds, notifications_enabled, updated_at
-       FROM user_settings WHERE user_id = ?`,
-    )
-      .bind(user.userId)
-      .first();
+    const settings = await db
+      .select({
+        theme: userSettings.theme,
+        preferredWeightUnit: userSettings.preferredWeightUnit,
+        preferredLengthUnit: userSettings.preferredLengthUnit,
+        language: userSettings.language,
+        restTimerDurationSeconds: userSettings.restTimerDurationSeconds,
+        notificationsEnabled: userSettings.notificationsEnabled,
+        updatedAt: userSettings.updatedAt,
+      })
+      .from(userSettings)
+      .where(eq(userSettings.userId, user.userId))
+      .get();
 
     return c.json({ message: "Settings updated successfully", settings });
   });

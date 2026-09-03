@@ -2,6 +2,8 @@ import type { MiddlewareHandler } from "hono";
 import type { Env } from "../index";
 import { createAuth } from "../lib/auth";
 import { verifyToken } from "../utils/crypto";
+import { eq, and, gt } from "drizzle-orm";
+import { getDb, session as sessionTable, user as userTable } from "../db/schema";
 
 export const authMiddleware: MiddlewareHandler<Env> = async (c, next) => {
   const authHeader = c.req.header("Authorization");
@@ -32,15 +34,18 @@ export const authMiddleware: MiddlewareHandler<Env> = async (c, next) => {
       return await next();
     }
 
-    const sessionRecord = await c.env.DB.prepare(
-      `SELECT s.user_id, u.email FROM session s JOIN user u ON s.user_id = u.id
-       WHERE s.token = ? AND s.expires_at > datetime('now')`,
-    )
-      .bind(token)
-      .first<{ user_id: string; email: string }>();
+    const db = getDb(c);
+    const now = new Date();
+
+    const sessionRecord = await db
+      .select({ userId: sessionTable.userId, email: userTable.email })
+      .from(sessionTable)
+      .innerJoin(userTable, eq(sessionTable.userId, userTable.id))
+      .where(and(eq(sessionTable.token, token), gt(sessionTable.expiresAt, now)))
+      .get();
 
     if (sessionRecord) {
-      c.set("user", { userId: sessionRecord.user_id, email: sessionRecord.email });
+      c.set("user", { userId: sessionRecord.userId, email: sessionRecord.email });
       return await next();
     }
   }

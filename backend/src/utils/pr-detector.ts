@@ -1,4 +1,7 @@
+import { eq, and, gt } from "drizzle-orm";
 import { calculate1RM } from "./calculator";
+import type { DrizzleDb } from "../db/schema";
+import { personalRecords, workoutSets, workoutExercises, workouts } from "../db/schema";
 
 export interface PRCheckResult {
   isPr: boolean;
@@ -6,7 +9,7 @@ export interface PRCheckResult {
 }
 
 export async function checkAndUpdatePR(
-  db: D1Database,
+  db: DrizzleDb,
   userId: string,
   exerciseId: string,
   setId: string,
@@ -32,12 +35,16 @@ export async function checkAndUpdatePR(
     const existingValues = await Promise.all(
       prTypesToTest.map((item) =>
         db
-          .prepare(
-            `SELECT value FROM personal_records
-             WHERE user_id = ? AND exercise_id = ? AND pr_type = ?`,
+          .select({ value: personalRecords.value })
+          .from(personalRecords)
+          .where(
+            and(
+              eq(personalRecords.userId, userId),
+              eq(personalRecords.exerciseId, exerciseId),
+              eq(personalRecords.prType, item.type),
+            ),
           )
-          .bind(userId, exerciseId, item.type)
-          .first<{ value: number }>(),
+          .get(),
       ),
     );
 
@@ -53,16 +60,26 @@ export async function checkAndUpdatePR(
       broken.map((item) => {
         const prId = `pr_${crypto.randomUUID()}`;
         return db
-          .prepare(
-            `INSERT INTO personal_records (id, user_id, exercise_id, pr_type, value, value_unit, achieved_at, workout_set_id)
-             VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-             ON CONFLICT(user_id, exercise_id, pr_type) DO UPDATE SET
-               value = excluded.value,
-               value_unit = excluded.value_unit,
-               achieved_at = excluded.achieved_at,
-               workout_set_id = excluded.workout_set_id`,
-          )
-          .bind(prId, userId, exerciseId, item.type, item.value, weightUnit, setId)
+          .insert(personalRecords)
+          .values({
+            id: prId,
+            userId,
+            exerciseId,
+            prType: item.type,
+            value: item.value,
+            valueUnit: weightUnit,
+            achievedAt: new Date().toISOString(),
+            workoutSetId: setId,
+          })
+          .onConflictDoUpdate({
+            target: [personalRecords.userId, personalRecords.exerciseId, personalRecords.prType],
+            set: {
+              value: item.value,
+              valueUnit: weightUnit,
+              achievedAt: new Date().toISOString(),
+              workoutSetId: setId,
+            },
+          })
           .run();
       }),
     );
@@ -71,21 +88,20 @@ export async function checkAndUpdatePR(
     const primaryPrType = brokenTypes.includes("1rm") ? "1rm" : brokenTypes[0];
 
     await db
-      .prepare("UPDATE workout_sets SET is_pr = TRUE, pr_type = ? WHERE id = ?")
-      .bind(primaryPrType, setId)
+      .update(workoutSets)
+      .set({ isPr: true, prType: primaryPrType })
+      .where(eq(workoutSets.id, setId))
       .run();
 
-    const set = await db
-      .prepare(
-        `SELECT we.workout_id FROM workout_sets ws
-         JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-         WHERE ws.id = ?`,
-      )
-      .bind(setId)
-      .first<{ workout_id: string }>();
+    const setRow = await db
+      .select({ workoutId: workoutExercises.workoutId })
+      .from(workoutSets)
+      .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+      .where(eq(workoutSets.id, setId))
+      .get();
 
-    if (set?.workout_id) {
-      await db.prepare("UPDATE workouts SET has_pr = TRUE WHERE id = ?").bind(set.workout_id).run();
+    if (setRow?.workoutId) {
+      await db.update(workouts).set({ hasPr: true }).where(eq(workouts.id, setRow.workoutId)).run();
     }
 
     return { isPr: true, prTypes: brokenTypes };

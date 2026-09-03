@@ -1,8 +1,11 @@
 import { Hono } from "hono";
+import { eq } from "drizzle-orm";
 import type { Env } from "../index";
 import { createAuth } from "../lib/auth";
 import { generateToken, hashPassword, verifyPassword } from "../utils/crypto";
 import { authMiddleware } from "../middleware/auth";
+import { getDb } from "../db/schema";
+import { user, usersProfile, userSettings } from "../db/schema";
 
 export const authRouter = new Hono<Env>()
   .post("/register", async (c) => {
@@ -28,10 +31,13 @@ export const authRouter = new Hono<Env>()
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const db = getDb(c);
 
-    const existingUser = await c.env.DB.prepare("SELECT id FROM user WHERE email = ?")
-      .bind(normalizedEmail)
-      .first();
+    const existingUser = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.email, normalizedEmail))
+      .get();
 
     if (existingUser) {
       return c.json({ error: "Email is already registered" }, 400);
@@ -61,17 +67,26 @@ export const authRouter = new Hono<Env>()
 
     const passwordHash = await hashPassword(password);
 
-    await c.env.DB.prepare(
-      `INSERT OR REPLACE INTO users (id, email, password_hash, name) VALUES (?, ?, ?, ?)`,
-    )
-      .bind(userId, normalizedEmail, passwordHash, name ?? null)
+    await db
+      .insert(usersProfile)
+      .values({ id: userId, email: normalizedEmail, passwordHash, name: name ?? null })
+      .onConflictDoUpdate({
+        target: usersProfile.id,
+        set: { email: normalizedEmail, passwordHash, name: name ?? null },
+      })
       .run();
 
-    await c.env.DB.prepare(
-      `INSERT OR IGNORE INTO user_settings (user_id, theme, preferred_weight_unit, preferred_length_unit, language, rest_timer_duration_seconds)
-       VALUES (?, 'system', 'kg', 'cm', 'en', 90)`,
-    )
-      .bind(userId)
+    await db
+      .insert(userSettings)
+      .values({
+        userId,
+        theme: "system",
+        preferredWeightUnit: "kg",
+        preferredLengthUnit: "cm",
+        language: "en",
+        restTimerDurationSeconds: 90,
+      })
+      .onConflictDoNothing()
       .run();
 
     return c.json(
@@ -100,14 +115,20 @@ export const authRouter = new Hono<Env>()
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const db = getDb(c);
 
-    const user = await c.env.DB.prepare(
-      "SELECT id, email, password_hash, name FROM users WHERE email = ?",
-    )
-      .bind(normalizedEmail)
-      .first<{ id: string; email: string; password_hash: string; name: string | null }>();
+    const userRow = await db
+      .select({
+        id: usersProfile.id,
+        email: usersProfile.email,
+        passwordHash: usersProfile.passwordHash,
+        name: usersProfile.name,
+      })
+      .from(usersProfile)
+      .where(eq(usersProfile.email, normalizedEmail))
+      .get();
 
-    if (!user) {
+    if (!userRow) {
       return c.json({ error: "Invalid email or password" }, 401);
     }
 
@@ -126,20 +147,20 @@ export const authRouter = new Hono<Env>()
     }
 
     if (!token) {
-      const validPassword = await verifyPassword(password, user.password_hash);
+      const validPassword = await verifyPassword(password, userRow.passwordHash!);
       if (!validPassword) {
         return c.json({ error: "Invalid email or password" }, 401);
       }
-      token = await generateToken({ userId: user.id, email: user.email }, secret);
+      token = await generateToken({ userId: userRow.id, email: userRow.email }, secret);
     }
 
     return c.json({
       message: "Login successful",
       token,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
+        id: userRow.id,
+        email: userRow.email,
+        name: userRow.name,
       },
     });
   })

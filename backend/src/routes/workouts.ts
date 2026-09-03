@@ -1,8 +1,19 @@
 import { Hono } from "hono";
+import { eq, and, gte, lte, desc, asc, max, sql, inArray } from "drizzle-orm";
 import type { Env } from "../index";
 import { authMiddleware } from "../middleware/auth";
 import { calculate1RM } from "../utils/calculator";
 import { checkAndUpdatePR } from "../utils/pr-detector";
+import { getDb } from "../db/schema";
+import type { DrizzleDb } from "../db/schema";
+import {
+  workouts,
+  workoutExercises,
+  workoutSets,
+  userSettings,
+  exercises,
+  workoutTemplateExercises,
+} from "../db/schema";
 
 export const workoutsRouter = new Hono<Env>();
 
@@ -17,89 +28,104 @@ workoutsRouter.get("/previous-values", async (c) => {
     return c.json({ error: "exerciseId parameter is required" }, 400);
   }
 
-  const previousExercise = await c.env.DB.prepare(
-    `SELECT we.id, w.start_time
-     FROM workout_exercises we
-     JOIN workouts w ON we.workout_id = w.id
-     JOIN workout_sets ws ON ws.workout_exercise_id = we.id
-     WHERE w.user_id = ? AND we.exercise_id = ?
-     ORDER BY w.start_time DESC
-     LIMIT 1`,
-  )
-    .bind(user.userId, exerciseId)
-    .first<{ id: string; start_time: string }>();
+  const db = getDb(c);
+
+  const previousExercise = await db
+    .select({ id: workoutExercises.id, startTime: workouts.startTime })
+    .from(workoutExercises)
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .innerJoin(workoutSets, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .where(and(eq(workouts.userId, user.userId), eq(workoutExercises.exerciseId, exerciseId)))
+    .orderBy(desc(workouts.startTime))
+    .limit(1)
+    .get();
 
   if (!previousExercise) {
     return c.json({ sets: [], previousWorkoutDate: null });
   }
 
-  const { results: sets } = await c.env.DB.prepare(
-    `SELECT id, set_type, weight, weight_unit, reps, rpe, order_index
-     FROM workout_sets
-     WHERE workout_exercise_id = ?
-     ORDER BY order_index ASC`,
-  )
-    .bind(previousExercise.id)
+  const sets = await db
+    .select({
+      id: workoutSets.id,
+      setType: workoutSets.setType,
+      weight: workoutSets.weight,
+      weightUnit: workoutSets.weightUnit,
+      reps: workoutSets.reps,
+      rpe: workoutSets.rpe,
+      orderIndex: workoutSets.orderIndex,
+    })
+    .from(workoutSets)
+    .where(eq(workoutSets.workoutExerciseId, previousExercise.id))
+    .orderBy(asc(workoutSets.orderIndex))
     .all();
 
-  return c.json({ sets, previousWorkoutDate: previousExercise.start_time });
+  return c.json({ sets, previousWorkoutDate: previousExercise.startTime });
 });
 
 // POST /api/v1/workouts/start
 workoutsRouter.post("/start", async (c) => {
   const user = c.get("user")!;
   const body = await c.req.json().catch(() => null);
+  const db = getDb(c);
 
   const workoutId = `wk_${crypto.randomUUID()}`;
   const title = body?.title ?? "Workout";
   const startTime = body?.start_time || new Date().toISOString();
   const templateId = body?.template_id || null;
 
-  const settings = await c.env.DB.prepare(
-    "SELECT preferred_weight_unit FROM user_settings WHERE user_id = ?",
-  )
-    .bind(user.userId)
-    .first<{ preferred_weight_unit: string }>();
-  const weightUnit = settings?.preferred_weight_unit || "kg";
+  const settings = await db
+    .select({ preferredWeightUnit: userSettings.preferredWeightUnit })
+    .from(userSettings)
+    .where(eq(userSettings.userId, user.userId))
+    .get();
+  const weightUnit = settings?.preferredWeightUnit || "kg";
 
-  await c.env.DB.prepare(
-    `INSERT INTO workouts (id, user_id, template_id, title, start_time, total_volume, volume_unit, set_count)
-     VALUES (?, ?, ?, ?, ?, 0, ?, 0)`,
-  )
-    .bind(workoutId, user.userId, templateId, title, startTime, weightUnit)
+  await db
+    .insert(workouts)
+    .values({
+      id: workoutId,
+      userId: user.userId,
+      templateId,
+      title,
+      startTime,
+      totalVolume: 0,
+      volumeUnit: weightUnit,
+      setCount: 0,
+    })
     .run();
 
   if (templateId) {
-    const { results: templateExercises } = await c.env.DB.prepare(
-      `SELECT exercise_id, superset_id, notes, order_index
-       FROM workout_template_exercises
-       WHERE template_id = ?
-       ORDER BY order_index ASC`,
-    )
-      .bind(templateId)
-      .all<{
-        exercise_id: string;
-        superset_id: string | null;
-        notes: string | null;
-        order_index: number;
-      }>();
+    const templateExs = await db
+      .select({
+        exerciseId: workoutTemplateExercises.exerciseId,
+        supersetId: workoutTemplateExercises.supersetId,
+        notes: workoutTemplateExercises.notes,
+        orderIndex: workoutTemplateExercises.orderIndex,
+      })
+      .from(workoutTemplateExercises)
+      .where(eq(workoutTemplateExercises.templateId, templateId))
+      .orderBy(asc(workoutTemplateExercises.orderIndex))
+      .all();
 
     await Promise.all(
-      templateExercises.map((te) => {
+      templateExs.map((te) => {
         const weId = `we_${crypto.randomUUID()}`;
-        return c.env.DB.prepare(
-          `INSERT INTO workout_exercises (id, workout_id, exercise_id, superset_id, notes, order_index)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-        )
-          .bind(weId, workoutId, te.exercise_id, te.superset_id, te.notes, te.order_index)
+        return db
+          .insert(workoutExercises)
+          .values({
+            id: weId,
+            workoutId,
+            exerciseId: te.exerciseId,
+            supersetId: te.supersetId,
+            notes: te.notes,
+            orderIndex: te.orderIndex,
+          })
           .run();
       }),
     );
   }
 
-  const workout = await c.env.DB.prepare("SELECT * FROM workouts WHERE id = ?")
-    .bind(workoutId)
-    .first();
+  const workout = await db.select().from(workouts).where(eq(workouts.id, workoutId)).get();
   return c.json({ message: "Workout session started", workout }, 201);
 });
 
@@ -113,9 +139,13 @@ workoutsRouter.post("/:id/exercises", async (c) => {
     return c.json({ error: "exercise_id is required" }, 400);
   }
 
-  const workout = await c.env.DB.prepare("SELECT id FROM workouts WHERE id = ? AND user_id = ?")
-    .bind(workoutId, user.userId)
-    .first();
+  const db = getDb(c);
+
+  const workout = await db
+    .select({ id: workouts.id })
+    .from(workouts)
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, user.userId)))
+    .get();
 
   if (!workout) {
     return c.json({ error: "Workout session not found" }, 404);
@@ -126,43 +156,49 @@ workoutsRouter.post("/:id/exercises", async (c) => {
 
   let orderIdx = order_index;
   if (orderIdx === undefined || orderIdx === null) {
-    const maxOrder = await c.env.DB.prepare(
-      "SELECT MAX(order_index) as m FROM workout_exercises WHERE workout_id = ?",
-    )
-      .bind(workoutId)
-      .first<{ m: number | null }>();
+    const maxOrder = await db
+      .select({ m: max(workoutExercises.orderIndex) })
+      .from(workoutExercises)
+      .where(eq(workoutExercises.workoutId, workoutId))
+      .get();
     orderIdx = (maxOrder?.m ?? -1) + 1;
   }
 
-  await c.env.DB.prepare(
-    `INSERT INTO workout_exercises (id, workout_id, exercise_id, superset_id, notes, order_index)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-  )
-    .bind(weId, workoutId, exercise_id, superset_id ?? null, notes ?? null, orderIdx)
+  await db
+    .insert(workoutExercises)
+    .values({
+      id: weId,
+      workoutId,
+      exerciseId: exercise_id,
+      supersetId: superset_id ?? null,
+      notes: notes ?? null,
+      orderIndex: orderIdx,
+    })
     .run();
 
-  const workoutExercise = await c.env.DB.prepare("SELECT * FROM workout_exercises WHERE id = ?")
-    .bind(weId)
-    .first();
+  const workoutExercise = await db
+    .select()
+    .from(workoutExercises)
+    .where(eq(workoutExercises.id, weId))
+    .get();
   return c.json({ message: "Exercise added to workout", workoutExercise }, 201);
 });
 
-async function updateWorkoutTotals(db: D1Database, workoutId: string) {
+async function updateWorkoutTotals(db: DrizzleDb, workoutId: string) {
   const stats = await db
-    .prepare(
-      `SELECT
-         COALESCE(SUM(ws.weight * ws.reps), 0) as total_vol,
-         COUNT(ws.id) as set_cnt
-       FROM workout_sets ws
-       JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-       WHERE we.workout_id = ?`,
-    )
-    .bind(workoutId)
-    .first<{ total_vol: number; set_cnt: number }>();
+    .select({
+      totalVol: sql<number>`COALESCE(SUM(${workoutSets.weight} * ${workoutSets.reps}), 0)`,
+      setCnt: sql<number>`COUNT(${workoutSets.id})`,
+    })
+    .from(workoutSets)
+    .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .where(eq(workoutExercises.workoutId, workoutId))
+    .get();
 
   await db
-    .prepare("UPDATE workouts SET total_volume = ?, set_count = ? WHERE id = ?")
-    .bind(stats?.total_vol ?? 0, stats?.set_cnt ?? 0, workoutId)
+    .update(workouts)
+    .set({ totalVolume: stats?.totalVol ?? 0, setCount: stats?.setCnt ?? 0 })
+    .where(eq(workouts.id, workoutId))
     .run();
 }
 
@@ -176,9 +212,13 @@ workoutsRouter.post("/:id/sets", async (c) => {
     return c.json({ error: "workout_exercise_id is required" }, 400);
   }
 
-  const workout = await c.env.DB.prepare("SELECT id FROM workouts WHERE id = ? AND user_id = ?")
-    .bind(workoutId, user.userId)
-    .first();
+  const db = getDb(c);
+
+  const workout = await db
+    .select({ id: workouts.id })
+    .from(workouts)
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, user.userId)))
+    .get();
 
   if (!workout) {
     return c.json({ error: "Workout session not found" }, 404);
@@ -192,55 +232,54 @@ workoutsRouter.post("/:id/sets", async (c) => {
   const formula = "epley";
   const est1RM = calculate1RM(setWeight, setReps, formula);
 
-  const settings = await c.env.DB.prepare(
-    "SELECT preferred_weight_unit FROM user_settings WHERE user_id = ?",
-  )
-    .bind(user.userId)
-    .first<{ preferred_weight_unit: string }>();
-  const unit = weight_unit || settings?.preferred_weight_unit || "kg";
+  const settings = await db
+    .select({ preferredWeightUnit: userSettings.preferredWeightUnit })
+    .from(userSettings)
+    .where(eq(userSettings.userId, user.userId))
+    .get();
+  const unit = weight_unit || settings?.preferredWeightUnit || "kg";
 
   let orderIdx = order_index;
   if (orderIdx === undefined || orderIdx === null) {
-    const maxOrder = await c.env.DB.prepare(
-      "SELECT MAX(order_index) as m FROM workout_sets WHERE workout_exercise_id = ?",
-    )
-      .bind(workout_exercise_id)
-      .first<{ m: number | null }>();
+    const maxOrder = await db
+      .select({ m: max(workoutSets.orderIndex) })
+      .from(workoutSets)
+      .where(eq(workoutSets.workoutExerciseId, workout_exercise_id))
+      .get();
     orderIdx = (maxOrder?.m ?? -1) + 1;
   }
 
   const setId = `ws_${crypto.randomUUID()}`;
 
-  await c.env.DB.prepare(
-    `INSERT INTO workout_sets (
-      id, workout_exercise_id, set_type, weight, weight_unit, reps, rpe, estimated_1rm, estimated_1rm_formula, order_index
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  )
-    .bind(
-      setId,
-      workout_exercise_id,
+  await db
+    .insert(workoutSets)
+    .values({
+      id: setId,
+      workoutExerciseId: workout_exercise_id,
       setType,
-      setWeight,
-      unit,
-      setReps,
-      rpe ?? null,
-      est1RM,
-      formula,
-      orderIdx,
-    )
+      weight: setWeight,
+      weightUnit: unit,
+      reps: setReps,
+      rpe: rpe ?? null,
+      estimated1rm: est1RM,
+      estimated1rmFormula: formula,
+      orderIndex: orderIdx,
+    })
     .run();
 
   // PR Detection
-  const we = await c.env.DB.prepare("SELECT exercise_id FROM workout_exercises WHERE id = ?")
-    .bind(workout_exercise_id)
-    .first<{ exercise_id: string }>();
+  const we = await db
+    .select({ exerciseId: workoutExercises.exerciseId })
+    .from(workoutExercises)
+    .where(eq(workoutExercises.id, workout_exercise_id))
+    .get();
 
   let prResult = { isPr: false, prTypes: [] as string[] };
   if (we) {
     prResult = await checkAndUpdatePR(
-      c.env.DB,
+      db,
       user.userId,
-      we.exercise_id,
+      we.exerciseId,
       setId,
       setWeight,
       setReps,
@@ -248,11 +287,9 @@ workoutsRouter.post("/:id/sets", async (c) => {
     );
   }
 
-  await updateWorkoutTotals(c.env.DB, workoutId);
+  await updateWorkoutTotals(db, workoutId);
 
-  const loggedSet = await c.env.DB.prepare("SELECT * FROM workout_sets WHERE id = ?")
-    .bind(setId)
-    .first();
+  const loggedSet = await db.select().from(workoutSets).where(eq(workoutSets.id, setId)).get();
   return c.json(
     {
       message: "Set logged successfully",
@@ -270,15 +307,25 @@ workoutsRouter.put("/:id/sets/:setId", async (c) => {
   const workoutId = c.req.param("id");
   const setId = c.req.param("setId");
   const body = await c.req.json().catch(() => null);
+  const db = getDb(c);
 
-  const set = await c.env.DB.prepare(
-    `SELECT ws.*, we.exercise_id FROM workout_sets ws
-     JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-     JOIN workouts w ON we.workout_id = w.id
-     WHERE ws.id = ? AND w.id = ? AND w.user_id = ?`,
-  )
-    .bind(setId, workoutId, user.userId)
-    .first<any>();
+  const set = await db
+    .select({
+      id: workoutSets.id,
+      weight: workoutSets.weight,
+      reps: workoutSets.reps,
+      setType: workoutSets.setType,
+      rpe: workoutSets.rpe,
+      weightUnit: workoutSets.weightUnit,
+      exerciseId: workoutExercises.exerciseId,
+    })
+    .from(workoutSets)
+    .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(
+      and(eq(workoutSets.id, setId), eq(workouts.id, workoutId), eq(workouts.userId, user.userId)),
+    )
+    .get();
 
   if (!set) {
     return c.json({ error: "Set not found or unauthorized" }, 404);
@@ -286,34 +333,37 @@ workoutsRouter.put("/:id/sets/:setId", async (c) => {
 
   const newWeight = body?.weight !== undefined ? body.weight : set.weight;
   const newReps = body?.reps !== undefined ? body.reps : set.reps;
-  const newSetType = body?.set_type !== undefined ? body.set_type : set.set_type;
+  const newSetType = body?.set_type !== undefined ? body.set_type : set.setType;
   const newRpe = body?.rpe !== undefined ? body.rpe : set.rpe;
   const newFormula = "epley";
   const newEst1RM = calculate1RM(newWeight, newReps, newFormula);
 
-  await c.env.DB.prepare(
-    `UPDATE workout_sets
-     SET set_type = ?, weight = ?, reps = ?, rpe = ?, estimated_1rm = ?, estimated_1rm_formula = ?
-     WHERE id = ?`,
-  )
-    .bind(newSetType, newWeight, newReps, newRpe ?? null, newEst1RM, newFormula, setId)
+  await db
+    .update(workoutSets)
+    .set({
+      setType: newSetType,
+      weight: newWeight,
+      reps: newReps,
+      rpe: newRpe ?? null,
+      estimated1rm: newEst1RM,
+      estimated1rmFormula: newFormula,
+    })
+    .where(eq(workoutSets.id, setId))
     .run();
 
   const prResult = await checkAndUpdatePR(
-    c.env.DB,
+    db,
     user.userId,
-    set.exercise_id,
+    set.exerciseId,
     setId,
     newWeight,
     newReps,
-    set.weight_unit || "kg",
+    set.weightUnit || "kg",
   );
 
-  await updateWorkoutTotals(c.env.DB, workoutId);
+  await updateWorkoutTotals(db, workoutId);
 
-  const updatedSet = await c.env.DB.prepare("SELECT * FROM workout_sets WHERE id = ?")
-    .bind(setId)
-    .first();
+  const updatedSet = await db.select().from(workoutSets).where(eq(workoutSets.id, setId)).get();
   return c.json({
     message: "Set updated",
     set: updatedSet,
@@ -327,22 +377,24 @@ workoutsRouter.delete("/:id/sets/:setId", async (c) => {
   const user = c.get("user")!;
   const workoutId = c.req.param("id");
   const setId = c.req.param("setId");
+  const db = getDb(c);
 
-  const set = await c.env.DB.prepare(
-    `SELECT ws.id FROM workout_sets ws
-     JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-     JOIN workouts w ON we.workout_id = w.id
-     WHERE ws.id = ? AND w.id = ? AND w.user_id = ?`,
-  )
-    .bind(setId, workoutId, user.userId)
-    .first();
+  const set = await db
+    .select({ id: workoutSets.id })
+    .from(workoutSets)
+    .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(
+      and(eq(workoutSets.id, setId), eq(workouts.id, workoutId), eq(workouts.userId, user.userId)),
+    )
+    .get();
 
   if (!set) {
     return c.json({ error: "Set not found or unauthorized" }, 404);
   }
 
-  await c.env.DB.prepare("DELETE FROM workout_sets WHERE id = ?").bind(setId).run();
-  await updateWorkoutTotals(c.env.DB, workoutId);
+  await db.delete(workoutSets).where(eq(workoutSets.id, setId)).run();
+  await updateWorkoutTotals(db, workoutId);
 
   return c.json({ message: "Set deleted" });
 });
@@ -352,33 +404,36 @@ workoutsRouter.put("/:id/finish", async (c) => {
   const user = c.get("user")!;
   const workoutId = c.req.param("id");
   const body = await c.req.json().catch(() => ({}));
+  const db = getDb(c);
 
-  const workout = await c.env.DB.prepare("SELECT * FROM workouts WHERE id = ? AND user_id = ?")
-    .bind(workoutId, user.userId)
-    .first<any>();
+  const workout = await db
+    .select()
+    .from(workouts)
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, user.userId)))
+    .get();
 
   if (!workout) {
     return c.json({ error: "Workout session not found" }, 404);
   }
 
   const endTime = new Date().toISOString();
-  const startMs = new Date(workout.start_time).getTime();
+  const startMs = new Date(workout.startTime).getTime();
   const endMs = new Date(endTime).getTime();
   const durationSeconds = Math.max(0, Math.floor((endMs - startMs) / 1000));
 
-  await updateWorkoutTotals(c.env.DB, workoutId);
+  await updateWorkoutTotals(db, workoutId);
 
-  await c.env.DB.prepare(
-    `UPDATE workouts
-     SET end_time = ?, duration_seconds = ?, notes = COALESCE(?, notes)
-     WHERE id = ?`,
-  )
-    .bind(endTime, durationSeconds, body?.notes ?? null, workoutId)
+  await db
+    .update(workouts)
+    .set({
+      endTime,
+      durationSeconds,
+      ...(body?.notes != null ? { notes: body.notes } : {}),
+    })
+    .where(eq(workouts.id, workoutId))
     .run();
 
-  const finishedWorkout = await c.env.DB.prepare("SELECT * FROM workouts WHERE id = ?")
-    .bind(workoutId)
-    .first();
+  const finishedWorkout = await db.select().from(workouts).where(eq(workouts.id, workoutId)).get();
   return c.json({ message: "Workout completed", workout: finishedWorkout });
 });
 
@@ -386,76 +441,81 @@ workoutsRouter.put("/:id/finish", async (c) => {
 workoutsRouter.get("/", async (c) => {
   const user = c.get("user")!;
   const { limit, offset, from, to } = c.req.query();
+  const db = getDb(c);
 
-  let query = `SELECT * FROM workouts WHERE user_id = ?`;
-  const params: any[] = [user.userId];
-
-  if (from) {
-    query += ` AND start_time >= ?`;
-    params.push(from);
-  }
-
-  if (to) {
-    query += ` AND start_time <= ?`;
-    params.push(to);
-  }
-
-  query += ` ORDER BY start_time DESC`;
+  const conditions = [eq(workouts.userId, user.userId)];
+  if (from) conditions.push(gte(workouts.startTime, from));
+  if (to) conditions.push(lte(workouts.startTime, to));
 
   const limitVal = Math.min(Math.max(1, parseInt(limit || "20", 10)), 100);
   const offsetVal = Math.max(0, parseInt(offset || "0", 10));
-  query += ` LIMIT ? OFFSET ?`;
-  params.push(limitVal, offsetVal);
 
-  const { results: workouts } = await c.env.DB.prepare(query)
-    .bind(...params)
+  const results = await db
+    .select()
+    .from(workouts)
+    .where(and(...conditions))
+    .orderBy(desc(workouts.startTime))
+    .limit(limitVal)
+    .offset(offsetVal)
     .all();
-  return c.json({ workouts });
+
+  return c.json({ workouts: results });
 });
 
 // GET /api/v1/workouts/:id
 workoutsRouter.get("/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
+  const db = getDb(c);
 
-  const workout = await c.env.DB.prepare("SELECT * FROM workouts WHERE id = ? AND user_id = ?")
-    .bind(id, user.userId)
-    .first();
+  const workout = await db
+    .select()
+    .from(workouts)
+    .where(and(eq(workouts.id, id), eq(workouts.userId, user.userId)))
+    .get();
 
   if (!workout) {
     return c.json({ error: "Workout not found" }, 404);
   }
 
-  const { results: exercises } = await c.env.DB.prepare(
-    `SELECT we.*, e.name as exercise_name, e.category, e.equipment, e.muscle_group_id
-     FROM workout_exercises we
-     JOIN exercises e ON we.exercise_id = e.id
-     WHERE we.workout_id = ?
-     ORDER BY we.order_index ASC`,
-  )
-    .bind(id)
-    .all<{ id: string; [key: string]: unknown }>();
+  const workoutExerciseList = await db
+    .select({
+      id: workoutExercises.id,
+      workoutId: workoutExercises.workoutId,
+      exerciseId: workoutExercises.exerciseId,
+      supersetId: workoutExercises.supersetId,
+      notes: workoutExercises.notes,
+      orderIndex: workoutExercises.orderIndex,
+      exerciseName: exercises.name,
+      category: exercises.category,
+      equipment: exercises.equipment,
+      muscleGroupId: exercises.muscleGroupId,
+    })
+    .from(workoutExercises)
+    .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
+    .where(eq(workoutExercises.workoutId, id))
+    .orderBy(asc(workoutExercises.orderIndex))
+    .all();
 
-  const exerciseIds = exercises.map((ex) => ex.id);
+  const exerciseIds = workoutExerciseList.map((ex) => ex.id);
   const sets =
     exerciseIds.length > 0
-      ? (
-          await c.env.DB.prepare(
-            `SELECT * FROM workout_sets WHERE workout_exercise_id IN (${exerciseIds.map(() => "?").join(",")}) ORDER BY order_index ASC`,
-          )
-            .bind(...exerciseIds)
-            .all()
-        ).results
+      ? await db
+          .select()
+          .from(workoutSets)
+          .where(inArray(workoutSets.workoutExerciseId, exerciseIds))
+          .orderBy(asc(workoutSets.orderIndex))
+          .all()
       : [];
 
   const setsByExercise = new Map<string, typeof sets>();
   for (const s of sets) {
-    const key = s.workout_exercise_id as string;
+    const key = s.workoutExerciseId;
     if (!setsByExercise.has(key)) setsByExercise.set(key, []);
     setsByExercise.get(key)!.push(s);
   }
 
-  const exercisesWithSets = exercises.map((ex) =>
+  const exercisesWithSets = workoutExerciseList.map((ex) =>
     Object.assign(ex, { sets: setsByExercise.get(ex.id) ?? [] }),
   );
 
@@ -466,15 +526,18 @@ workoutsRouter.get("/:id", async (c) => {
 workoutsRouter.delete("/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
+  const db = getDb(c);
 
-  const workout = await c.env.DB.prepare("SELECT id FROM workouts WHERE id = ? AND user_id = ?")
-    .bind(id, user.userId)
-    .first();
+  const workout = await db
+    .select({ id: workouts.id })
+    .from(workouts)
+    .where(and(eq(workouts.id, id), eq(workouts.userId, user.userId)))
+    .get();
 
   if (!workout) {
     return c.json({ error: "Workout not found" }, 404);
   }
 
-  await c.env.DB.prepare("DELETE FROM workouts WHERE id = ?").bind(id).run();
+  await db.delete(workouts).where(eq(workouts.id, id)).run();
   return c.json({ message: "Workout deleted" });
 });

@@ -1,44 +1,49 @@
 import { Hono } from "hono";
+import { eq, and, gte, lte, desc, asc, sql, count } from "drizzle-orm";
 import type { Env } from "../index";
 import { authMiddleware } from "../middleware/auth";
+import { getDb } from "../db/schema";
+import type { DrizzleDb } from "../db/schema";
+import {
+  workouts,
+  workoutExercises,
+  workoutSets,
+  exercises,
+  muscleGroups,
+  personalRecords,
+} from "../db/schema";
 
 export const analyticsRouter = new Hono<Env>();
 
 analyticsRouter.use("*", authMiddleware);
 
 async function muscleSetCounts(
-  db: D1Database,
+  db: DrizzleDb,
   userId: string,
   from?: string,
   to?: string,
 ): Promise<{ id: string; muscle_group: string; set_count: number }[]> {
-  let query = `
-    SELECT mg.id, mg.name as muscle_group, COUNT(ws.id) as set_count
-    FROM workout_sets ws
-    JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-    JOIN exercises e ON we.exercise_id = e.id
-    JOIN muscle_groups mg ON e.muscle_group_id = mg.id
-    JOIN workouts w ON we.workout_id = w.id
-    WHERE w.user_id = ?
-  `;
-  const params: (string | number)[] = [userId];
+  const conditions = [eq(workouts.userId, userId)];
+  if (from) conditions.push(gte(workouts.startTime, from));
+  if (to) conditions.push(lte(workouts.startTime, to));
 
-  if (from) {
-    query += ` AND w.start_time >= ?`;
-    params.push(from);
-  }
-  if (to) {
-    query += ` AND w.start_time <= ?`;
-    params.push(to);
-  }
+  const results = await db
+    .select({
+      id: muscleGroups.id,
+      muscle_group: muscleGroups.name,
+      set_count: count(workoutSets.id),
+    })
+    .from(workoutSets)
+    .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
+    .innerJoin(muscleGroups, eq(exercises.muscleGroupId, muscleGroups.id))
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(and(...conditions))
+    .groupBy(muscleGroups.id)
+    .orderBy(desc(count(workoutSets.id)))
+    .all();
 
-  query += ` GROUP BY mg.id ORDER BY set_count DESC`;
-
-  const { results } = await db
-    .prepare(query)
-    .bind(...params)
-    .all<{ id: string; muscle_group: string; set_count: number }>();
-  return results;
+  return results as { id: string; muscle_group: string; set_count: number }[];
 }
 
 // GET /api/v1/analytics/performance?exerciseId=:id
@@ -50,40 +55,46 @@ analyticsRouter.get("/performance", async (c) => {
     return c.json({ error: "exerciseId parameter is required" }, 400);
   }
 
-  const exercise = await c.env.DB.prepare(
-    "SELECT id, name, category, target FROM exercises WHERE id = ?",
-  )
-    .bind(exerciseId)
-    .first();
+  const db = getDb(c);
+
+  const exercise = await db
+    .select({
+      id: exercises.id,
+      name: exercises.name,
+      category: exercises.category,
+      target: exercises.target,
+    })
+    .from(exercises)
+    .where(eq(exercises.id, exerciseId))
+    .get();
 
   if (!exercise) {
     return c.json({ error: "Exercise not found" }, 404);
   }
 
-  const { results: rawRows } = await c.env.DB.prepare(
-    `SELECT
-       w.id as workout_id,
-       w.start_time,
-       ws.id as set_id,
-       ws.weight,
-       ws.reps,
-       ws.rpe,
-       ws.set_type,
-       ws.estimated_1rm,
-       ws.estimated_1rm_formula
-     FROM workout_sets ws
-     JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-     JOIN workouts w ON we.workout_id = w.id
-     WHERE w.user_id = ? AND we.exercise_id = ?
-     ORDER BY w.start_time ASC, ws.order_index ASC`,
-  )
-    .bind(user.userId, exerciseId)
-    .all<any>();
+  const rawRows = await db
+    .select({
+      workout_id: workouts.id,
+      start_time: workouts.startTime,
+      set_id: workoutSets.id,
+      weight: workoutSets.weight,
+      reps: workoutSets.reps,
+      rpe: workoutSets.rpe,
+      set_type: workoutSets.setType,
+      estimated_1rm: workoutSets.estimated1rm,
+      estimated_1rm_formula: workoutSets.estimated1rmFormula,
+    })
+    .from(workoutSets)
+    .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(and(eq(workouts.userId, user.userId), eq(workoutExercises.exerciseId, exerciseId)))
+    .orderBy(asc(workouts.startTime), asc(workoutSets.orderIndex))
+    .all();
 
-  const sessionsMap = new Map<string, any>();
-  const oneRepMaxCurve: any[] = [];
-  const maxWeightCurve: any[] = [];
-  const maxRepsCurve: any[] = [];
+  const sessionsMap = new Map<string, { workoutId: string; date: string; sets: unknown[] }>();
+  const oneRepMaxCurve: unknown[] = [];
+  const maxWeightCurve: unknown[] = [];
+  const maxRepsCurve: unknown[] = [];
 
   for (const row of rawRows) {
     if (!sessionsMap.has(row.workout_id)) {
@@ -93,8 +104,7 @@ analyticsRouter.get("/performance", async (c) => {
         sets: [],
       });
     }
-
-    sessionsMap.get(row.workout_id).sets.push({
+    sessionsMap.get(row.workout_id)!.sets.push({
       setId: row.set_id,
       weight: row.weight,
       reps: row.reps,
@@ -110,7 +120,7 @@ analyticsRouter.get("/performance", async (c) => {
     let maxReps = 0;
     let maxRepsWeight = 0;
 
-    for (const set of session.sets) {
+    for (const set of session.sets as { estimated1RM: number; weight: number; reps: number }[]) {
       if (set.estimated1RM > max1RM) max1RM = set.estimated1RM;
       if (set.weight > maxWeight) maxWeight = set.weight;
       if (set.reps > maxReps) {
@@ -119,15 +129,10 @@ analyticsRouter.get("/performance", async (c) => {
       }
     }
 
-    if (max1RM > 0) {
-      oneRepMaxCurve.push({ date: session.date, value: max1RM, formula: "epley" });
-    }
-    if (maxWeight > 0) {
-      maxWeightCurve.push({ date: session.date, value: maxWeight });
-    }
-    if (maxReps > 0) {
+    if (max1RM > 0) oneRepMaxCurve.push({ date: session.date, value: max1RM, formula: "epley" });
+    if (maxWeight > 0) maxWeightCurve.push({ date: session.date, value: maxWeight });
+    if (maxReps > 0)
       maxRepsCurve.push({ date: session.date, value: maxReps, weight: maxRepsWeight });
-    }
   }
 
   return c.json({
@@ -153,41 +158,68 @@ analyticsRouter.get("/monthly-report", async (c) => {
   const nextMonthStr = String(nextMonth).padStart(2, "0");
   const endDate = `${nextYear}-${nextMonthStr}-01T00:00:00Z`;
 
-  const totals = await c.env.DB.prepare(
-    `SELECT
-       COUNT(id) as totalWorkouts,
-       COALESCE(SUM(total_volume), 0) as totalVolume,
-       COALESCE(SUM(duration_seconds), 0) as totalDurationSeconds
-     FROM workouts
-     WHERE user_id = ? AND start_time >= ? AND start_time < ?`,
-  )
-    .bind(user.userId, startDate, endDate)
-    .first<any>();
+  const db = getDb(c);
 
-  const { results: topPRs } = await c.env.DB.prepare(
-    `SELECT pr.*, e.name as exercise_name
-     FROM personal_records pr
-     JOIN exercises e ON pr.exercise_id = e.id
-     WHERE pr.user_id = ? AND pr.achieved_at >= ? AND pr.achieved_at < ?
-     ORDER BY pr.value DESC
-     LIMIT 5`,
-  )
-    .bind(user.userId, startDate, endDate)
+  const totals = await db
+    .select({
+      totalWorkouts: sql<number>`COUNT(${workouts.id})`,
+      totalVolume: sql<number>`COALESCE(SUM(${workouts.totalVolume}), 0)`,
+      totalDurationSeconds: sql<number>`COALESCE(SUM(${workouts.durationSeconds}), 0)`,
+    })
+    .from(workouts)
+    .where(
+      and(
+        eq(workouts.userId, user.userId),
+        gte(workouts.startTime, startDate),
+        lte(workouts.startTime, endDate),
+      ),
+    )
+    .get();
+
+  const topPRs = await db
+    .select({
+      id: personalRecords.id,
+      userId: personalRecords.userId,
+      exerciseId: personalRecords.exerciseId,
+      prType: personalRecords.prType,
+      value: personalRecords.value,
+      valueUnit: personalRecords.valueUnit,
+      achievedAt: personalRecords.achievedAt,
+      workoutSetId: personalRecords.workoutSetId,
+      exerciseName: exercises.name,
+    })
+    .from(personalRecords)
+    .innerJoin(exercises, eq(personalRecords.exerciseId, exercises.id))
+    .where(
+      and(
+        eq(personalRecords.userId, user.userId),
+        gte(personalRecords.achievedAt, startDate),
+        lte(personalRecords.achievedAt, endDate),
+      ),
+    )
+    .orderBy(desc(personalRecords.value))
+    .limit(5)
     .all();
 
-  // Muscle group set counts in month
-  const { results: muscleDistribution } = await c.env.DB.prepare(
-    `SELECT mg.name as muscle_group, COUNT(ws.id) as set_count
-     FROM workout_sets ws
-     JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-     JOIN exercises e ON we.exercise_id = e.id
-     JOIN muscle_groups mg ON e.muscle_group_id = mg.id
-     JOIN workouts w ON we.workout_id = w.id
-     WHERE w.user_id = ? AND w.start_time >= ? AND w.start_time < ?
-     GROUP BY mg.id`,
-  )
-    .bind(user.userId, startDate, endDate)
-    .all<any>();
+  const muscleDistribution = await db
+    .select({
+      muscle_group: muscleGroups.name,
+      set_count: count(workoutSets.id),
+    })
+    .from(workoutSets)
+    .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+    .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
+    .innerJoin(muscleGroups, eq(exercises.muscleGroupId, muscleGroups.id))
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(
+      and(
+        eq(workouts.userId, user.userId),
+        gte(workouts.startTime, startDate),
+        lte(workouts.startTime, endDate),
+      ),
+    )
+    .groupBy(muscleGroups.id)
+    .all();
 
   return c.json({
     period: { year, month },
@@ -203,8 +235,9 @@ analyticsRouter.get("/monthly-report", async (c) => {
 analyticsRouter.get("/muscle-distribution", async (c) => {
   const user = c.get("user")!;
   const { from, to } = c.req.query();
+  const db = getDb(c);
 
-  const results = await muscleSetCounts(c.env.DB, user.userId, from, to);
+  const results = await muscleSetCounts(db, user.userId, from, to);
   const totalSets = results.reduce((acc, cur) => acc + cur.set_count, 0);
 
   const distribution = results.map((r) => ({
@@ -221,8 +254,9 @@ analyticsRouter.get("/muscle-distribution", async (c) => {
 analyticsRouter.get("/sets-per-muscle-group", async (c) => {
   const user = c.get("user")!;
   const { from, to } = c.req.query();
+  const db = getDb(c);
 
-  const results = await muscleSetCounts(c.env.DB, user.userId, from, to);
+  const results = await muscleSetCounts(db, user.userId, from, to);
 
   const setsPerMuscleGroup = results.map((r) => ({
     muscleGroupId: r.id,
@@ -238,15 +272,16 @@ analyticsRouter.get("/sets-per-muscle-group", async (c) => {
 // GET /api/v1/analytics/consistency
 analyticsRouter.get("/consistency", async (c) => {
   const user = c.get("user")!;
+  const db = getDb(c);
 
-  const { results: workouts } = await c.env.DB.prepare(
-    `SELECT id, start_time FROM workouts WHERE user_id = ? ORDER BY start_time DESC`,
-  )
-    .bind(user.userId)
-    .all<any>();
+  const workoutList = await db
+    .select({ id: workouts.id, startTime: workouts.startTime })
+    .from(workouts)
+    .where(eq(workouts.userId, user.userId))
+    .orderBy(desc(workouts.startTime))
+    .all();
 
-  // Calculate workout streak in consecutive active days/weeks
-  const activeDates = Array.from(new Set(workouts.map((w) => w.start_time.split("T")[0])))
+  const activeDates = Array.from(new Set(workoutList.map((w) => w.startTime.split("T")[0])))
     .toSorted()
     .toReversed();
 
@@ -271,7 +306,7 @@ analyticsRouter.get("/consistency", async (c) => {
 
   return c.json({
     currentStreakDays: currentStreak,
-    totalWorkouts: workouts.length,
+    totalWorkouts: workoutList.length,
     activeDates,
   });
 });
@@ -285,26 +320,47 @@ analyticsRouter.get("/year-in-review", async (c) => {
   const startDate = `${year}-01-01T00:00:00Z`;
   const endDate = `${year + 1}-01-01T00:00:00Z`;
 
-  const totals = await c.env.DB.prepare(
-    `SELECT
-       COUNT(id) as totalWorkouts,
-       COALESCE(SUM(total_volume), 0) as totalVolume,
-       COALESCE(SUM(duration_seconds), 0) as totalDurationSeconds
-     FROM workouts
-     WHERE user_id = ? AND start_time >= ? AND start_time < ?`,
-  )
-    .bind(user.userId, startDate, endDate)
-    .first<any>();
+  const db = getDb(c);
 
-  const { results: topPRs } = await c.env.DB.prepare(
-    `SELECT pr.*, e.name as exercise_name
-     FROM personal_records pr
-     JOIN exercises e ON pr.exercise_id = e.id
-     WHERE pr.user_id = ? AND pr.achieved_at >= ? AND pr.achieved_at < ?
-     ORDER BY pr.value DESC
-     LIMIT 10`,
-  )
-    .bind(user.userId, startDate, endDate)
+  const totals = await db
+    .select({
+      totalWorkouts: sql<number>`COUNT(${workouts.id})`,
+      totalVolume: sql<number>`COALESCE(SUM(${workouts.totalVolume}), 0)`,
+      totalDurationSeconds: sql<number>`COALESCE(SUM(${workouts.durationSeconds}), 0)`,
+    })
+    .from(workouts)
+    .where(
+      and(
+        eq(workouts.userId, user.userId),
+        gte(workouts.startTime, startDate),
+        lte(workouts.startTime, endDate),
+      ),
+    )
+    .get();
+
+  const topPRs = await db
+    .select({
+      id: personalRecords.id,
+      userId: personalRecords.userId,
+      exerciseId: personalRecords.exerciseId,
+      prType: personalRecords.prType,
+      value: personalRecords.value,
+      valueUnit: personalRecords.valueUnit,
+      achievedAt: personalRecords.achievedAt,
+      workoutSetId: personalRecords.workoutSetId,
+      exerciseName: exercises.name,
+    })
+    .from(personalRecords)
+    .innerJoin(exercises, eq(personalRecords.exerciseId, exercises.id))
+    .where(
+      and(
+        eq(personalRecords.userId, user.userId),
+        gte(personalRecords.achievedAt, startDate),
+        lte(personalRecords.achievedAt, endDate),
+      ),
+    )
+    .orderBy(desc(personalRecords.value))
+    .limit(10)
     .all();
 
   return c.json({

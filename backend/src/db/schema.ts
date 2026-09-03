@@ -1,4 +1,15 @@
-import { sqliteTable, text, integer, real, primaryKey } from "drizzle-orm/sqlite-core";
+import {
+  sqliteTable,
+  text,
+  integer,
+  real,
+  primaryKey,
+  index,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
+import { drizzle } from "drizzle-orm/d1";
+import type { Context } from "hono";
+import type { Env } from "../index";
 
 // ==========================================
 // BETTER AUTH TABLES (SQLite)
@@ -95,24 +106,31 @@ export const muscleGroups = sqliteTable("muscle_groups", {
   name: text("name").notNull().unique(),
 });
 
-export const exercises = sqliteTable("exercises", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  category: text("category").notNull(),
-  bodyPart: text("body_part").notNull(),
-  equipment: text("equipment"),
-  instructions: text("instructions"),
-  instructionSteps: text("instruction_steps"),
-  muscleGroupId: text("muscle_group_id"),
-  target: text("target"),
-  mediaId: text("media_id"),
-  image: text("image"),
-  gifUrl: text("gif_url"),
-  attribution: text("attribution"),
-  isCustom: integer("is_custom", { mode: "boolean" }).default(false),
-  userId: text("user_id"),
-  createdAt: text("created_at"),
-});
+export const exercises = sqliteTable(
+  "exercises",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    category: text("category").notNull(),
+    bodyPart: text("body_part").notNull(),
+    equipment: text("equipment"),
+    instructions: text("instructions"),
+    instructionSteps: text("instruction_steps"),
+    muscleGroupId: text("muscle_group_id"),
+    target: text("target"),
+    mediaId: text("media_id"),
+    image: text("image"),
+    gifUrl: text("gif_url"),
+    attribution: text("attribution"),
+    isCustom: integer("is_custom", { mode: "boolean" }).default(false),
+    userId: text("user_id"),
+    createdAt: text("created_at"),
+  },
+  (table) => [
+    index("idx_exercises_muscle_group").on(table.muscleGroupId),
+    index("idx_exercises_custom").on(table.userId),
+  ],
+);
 
 export const exerciseSecondaryMuscles = sqliteTable(
   "exercise_secondary_muscles",
@@ -123,14 +141,18 @@ export const exerciseSecondaryMuscles = sqliteTable(
   (table) => [primaryKey({ columns: [table.exerciseId, table.muscleGroupId] })],
 );
 
-export const workoutTemplates = sqliteTable("workout_templates", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  title: text("title").notNull(),
-  notes: text("notes"),
-  createdAt: text("created_at"),
-  updatedAt: text("updated_at"),
-});
+export const workoutTemplates = sqliteTable(
+  "workout_templates",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    title: text("title").notNull(),
+    notes: text("notes"),
+    createdAt: text("created_at"),
+    updatedAt: text("updated_at"),
+  },
+  (table) => [index("idx_workout_templates_user_id").on(table.userId)],
+);
 
 export const workoutTemplateExercises = sqliteTable("workout_template_exercises", {
   id: text("id").primaryKey(),
@@ -141,74 +163,130 @@ export const workoutTemplateExercises = sqliteTable("workout_template_exercises"
   orderIndex: integer("order_index").notNull(),
 });
 
-export const workouts = sqliteTable("workouts", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  templateId: text("template_id"),
-  title: text("title").notNull(),
-  startTime: text("start_time").notNull(),
-  endTime: text("end_time"),
-  durationSeconds: integer("duration_seconds"),
-  totalVolume: real("total_volume").default(0),
-  volumeUnit: text("volume_unit").default("kg"),
-  setCount: integer("set_count").default(0),
-  hasPr: integer("has_pr", { mode: "boolean" }).default(false),
-  notes: text("notes"),
-  createdAt: text("created_at"),
-});
+export const workouts = sqliteTable(
+  "workouts",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    templateId: text("template_id"),
+    title: text("title").notNull(),
+    startTime: text("start_time").notNull(),
+    endTime: text("end_time"),
+    durationSeconds: integer("duration_seconds"),
+    totalVolume: real("total_volume").default(0),
+    volumeUnit: text("volume_unit").default("kg"),
+    setCount: integer("set_count").default(0),
+    hasPr: integer("has_pr", { mode: "boolean" }).default(false),
+    notes: text("notes"),
+    createdAt: text("created_at"),
+  },
+  (table) => [
+    index("idx_workouts_user_id").on(table.userId),
+    index("idx_workouts_start_time").on(table.userId, table.startTime),
+  ],
+);
 
-export const workoutExercises = sqliteTable("workout_exercises", {
-  id: text("id").primaryKey(),
-  workoutId: text("workout_id").notNull(),
-  exerciseId: text("exercise_id").notNull(),
-  supersetId: text("superset_id"),
-  notes: text("notes"),
-  orderIndex: integer("order_index").notNull(),
-});
+export const workoutExercises = sqliteTable(
+  "workout_exercises",
+  {
+    id: text("id").primaryKey(),
+    workoutId: text("workout_id").notNull(),
+    exerciseId: text("exercise_id").notNull(),
+    supersetId: text("superset_id"),
+    notes: text("notes"),
+    orderIndex: integer("order_index").notNull(),
+  },
+  (table) => [index("idx_workout_exercises_workout_id").on(table.workoutId)],
+);
 
-export const workoutSets = sqliteTable("workout_sets", {
-  id: text("id").primaryKey(),
-  workoutExerciseId: text("workout_exercise_id").notNull(),
-  setType: text("set_type").default("normal"),
-  weight: real("weight").notNull().default(0),
-  weightUnit: text("weight_unit").default("kg"),
-  reps: integer("reps").notNull().default(0),
-  rpe: real("rpe"),
-  estimated1rm: real("estimated_1rm"),
-  estimated1rmFormula: text("estimated_1rm_formula"),
-  isPr: integer("is_pr", { mode: "boolean" }).default(false),
-  prType: text("pr_type"),
-  orderIndex: integer("order_index").notNull(),
-});
+export const workoutSets = sqliteTable(
+  "workout_sets",
+  {
+    id: text("id").primaryKey(),
+    workoutExerciseId: text("workout_exercise_id").notNull(),
+    setType: text("set_type").default("normal"),
+    weight: real("weight").notNull().default(0),
+    weightUnit: text("weight_unit").default("kg"),
+    reps: integer("reps").notNull().default(0),
+    rpe: real("rpe"),
+    estimated1rm: real("estimated_1rm"),
+    estimated1rmFormula: text("estimated_1rm_formula"),
+    isPr: integer("is_pr", { mode: "boolean" }).default(false),
+    prType: text("pr_type"),
+    orderIndex: integer("order_index").notNull(),
+  },
+  (table) => [index("idx_workout_sets_exercise").on(table.workoutExerciseId)],
+);
 
-export const personalRecords = sqliteTable("personal_records", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  exerciseId: text("exercise_id").notNull(),
-  prType: text("pr_type").notNull(),
-  value: real("value").notNull(),
-  valueUnit: text("value_unit"),
-  achievedAt: text("achieved_at").notNull(),
-  workoutSetId: text("workout_set_id"),
-});
+export const personalRecords = sqliteTable(
+  "personal_records",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    exerciseId: text("exercise_id").notNull(),
+    prType: text("pr_type").notNull(),
+    value: real("value").notNull(),
+    valueUnit: text("value_unit"),
+    achievedAt: text("achieved_at").notNull(),
+    workoutSetId: text("workout_set_id"),
+  },
+  (table) => [
+    uniqueIndex("idx_personal_records_unique").on(table.userId, table.exerciseId, table.prType),
+    index("idx_personal_records_user_exercise").on(table.userId, table.exerciseId),
+  ],
+);
 
-export const bodyMeasurements = sqliteTable("body_measurements", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  date: text("date").notNull(),
-  weight: real("weight"),
-  weightUnit: text("weight_unit").default("kg"),
-  bodyFatPct: real("body_fat_pct"),
-  chest: real("chest"),
-  waist: real("waist"),
-  hips: real("hips"),
-  shoulders: real("shoulders"),
-  biceps: real("biceps"),
-  forearms: real("forearms"),
-  thighs: real("thighs"),
-  calves: real("calves"),
-  neck: real("neck"),
-  lengthUnit: text("length_unit").default("cm"),
-  photoUrl: text("photo_url"),
-  createdAt: text("created_at"),
-});
+export const bodyMeasurements = sqliteTable(
+  "body_measurements",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    date: text("date").notNull(),
+    weight: real("weight"),
+    weightUnit: text("weight_unit").default("kg"),
+    bodyFatPct: real("body_fat_pct"),
+    chest: real("chest"),
+    waist: real("waist"),
+    hips: real("hips"),
+    shoulders: real("shoulders"),
+    biceps: real("biceps"),
+    forearms: real("forearms"),
+    thighs: real("thighs"),
+    calves: real("calves"),
+    neck: real("neck"),
+    lengthUnit: text("length_unit").default("cm"),
+    photoUrl: text("photo_url"),
+    createdAt: text("created_at"),
+  },
+  (table) => [index("idx_body_measurements_user_date").on(table.userId, table.date)],
+);
+
+// ==========================================
+// DB HELPER
+// ==========================================
+
+export function getDb(c: Context<Env>) {
+  return drizzle(c.env.DB, {
+    schema: {
+      user,
+      session,
+      account,
+      verification,
+      units,
+      usersProfile,
+      userSettings,
+      muscleGroups,
+      exercises,
+      exerciseSecondaryMuscles,
+      workoutTemplates,
+      workoutTemplateExercises,
+      workouts,
+      workoutExercises,
+      workoutSets,
+      personalRecords,
+      bodyMeasurements,
+    },
+  });
+}
+
+export type DrizzleDb = ReturnType<typeof getDb>;

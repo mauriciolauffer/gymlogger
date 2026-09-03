@@ -1,7 +1,10 @@
 import { Hono } from "hono";
+import { eq, and, gte, lte, asc } from "drizzle-orm";
 import type { Env } from "../index";
 import { authMiddleware } from "../middleware/auth";
 import { convertLength, convertWeight } from "../utils/unit-converter";
+import { getDb } from "../db/schema";
+import { bodyMeasurements, userSettings } from "../db/schema";
 
 export const bodyMeasurementsRouter = new Hono<Env>();
 
@@ -11,42 +14,39 @@ bodyMeasurementsRouter.use("*", authMiddleware);
 bodyMeasurementsRouter.get("/", async (c) => {
   const user = c.get("user")!;
   const { from, to } = c.req.query();
+  const db = getDb(c);
 
-  // Get user settings for unit preference
-  const settings = await c.env.DB.prepare(
-    "SELECT preferred_weight_unit, preferred_length_unit FROM user_settings WHERE user_id = ?",
-  )
-    .bind(user.userId)
-    .first<{ preferred_weight_unit: string; preferred_length_unit: string }>();
+  const settings = await db
+    .select({
+      preferredWeightUnit: userSettings.preferredWeightUnit,
+      preferredLengthUnit: userSettings.preferredLengthUnit,
+    })
+    .from(userSettings)
+    .where(eq(userSettings.userId, user.userId))
+    .get();
 
-  const targetWeightUnit = settings?.preferred_weight_unit || "kg";
-  const targetLengthUnit = settings?.preferred_length_unit || "cm";
+  const targetWeightUnit = settings?.preferredWeightUnit || "kg";
+  const targetLengthUnit = settings?.preferredLengthUnit || "cm";
 
-  let query = `SELECT * FROM body_measurements WHERE user_id = ?`;
-  const params: any[] = [user.userId];
+  const conditions = [eq(bodyMeasurements.userId, user.userId)];
+  if (from) conditions.push(gte(bodyMeasurements.date, from));
+  if (to) conditions.push(lte(bodyMeasurements.date, to));
 
-  if (from) {
-    query += ` AND date >= ?`;
-    params.push(from);
-  }
-  if (to) {
-    query += ` AND date <= ?`;
-    params.push(to);
-  }
-
-  query += ` ORDER BY date ASC`;
-
-  const { results: rawEntries } = await c.env.DB.prepare(query)
-    .bind(...params)
-    .all<any>();
+  const rawEntries = await db
+    .select()
+    .from(bodyMeasurements)
+    .where(and(...conditions))
+    .orderBy(asc(bodyMeasurements.date))
+    .all();
 
   const measurements = rawEntries.map((entry) => {
-    const entryWeightUnit = entry.weight_unit || "kg";
-    const entryLengthUnit = entry.length_unit || "cm";
+    const entryWeightUnit = entry.weightUnit || "kg";
+    const entryLengthUnit = entry.lengthUnit || "cm";
 
-    return Object.assign(entry, {
+    return {
+      ...entry,
       weight: convertWeight(entry.weight, entryWeightUnit, targetWeightUnit),
-      weight_unit: targetWeightUnit,
+      weightUnit: targetWeightUnit,
       chest: convertLength(entry.chest, entryLengthUnit, targetLengthUnit),
       waist: convertLength(entry.waist, entryLengthUnit, targetLengthUnit),
       hips: convertLength(entry.hips, entryLengthUnit, targetLengthUnit),
@@ -56,8 +56,8 @@ bodyMeasurementsRouter.get("/", async (c) => {
       thighs: convertLength(entry.thighs, entryLengthUnit, targetLengthUnit),
       calves: convertLength(entry.calves, entryLengthUnit, targetLengthUnit),
       neck: convertLength(entry.neck, entryLengthUnit, targetLengthUnit),
-      length_unit: targetLengthUnit,
-    });
+      lengthUnit: targetLengthUnit,
+    };
   });
 
   return c.json({ measurements });
@@ -90,47 +90,48 @@ bodyMeasurementsRouter.post("/", async (c) => {
   } = body;
 
   const logDate = date || new Date().toISOString().split("T")[0];
+  const db = getDb(c);
 
-  const settings = await c.env.DB.prepare(
-    "SELECT preferred_weight_unit, preferred_length_unit FROM user_settings WHERE user_id = ?",
-  )
-    .bind(user.userId)
-    .first<{ preferred_weight_unit: string; preferred_length_unit: string }>();
+  const settings = await db
+    .select({
+      preferredWeightUnit: userSettings.preferredWeightUnit,
+      preferredLengthUnit: userSettings.preferredLengthUnit,
+    })
+    .from(userSettings)
+    .where(eq(userSettings.userId, user.userId))
+    .get();
 
-  const wUnit = weight_unit || settings?.preferred_weight_unit || "kg";
-  const lUnit = length_unit || settings?.preferred_length_unit || "cm";
-
+  const wUnit = weight_unit || settings?.preferredWeightUnit || "kg";
+  const lUnit = length_unit || settings?.preferredLengthUnit || "cm";
   const id = `bm_${crypto.randomUUID()}`;
 
-  await c.env.DB.prepare(
-    `INSERT INTO body_measurements (
-      id, user_id, date, weight, weight_unit, body_fat_pct,
-      chest, waist, hips, shoulders, biceps, forearms, thighs, calves, neck, length_unit
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  )
-    .bind(
+  await db
+    .insert(bodyMeasurements)
+    .values({
       id,
-      user.userId,
-      logDate,
-      weight ?? null,
-      wUnit,
-      body_fat_pct ?? null,
-      chest ?? null,
-      waist ?? null,
-      hips ?? null,
-      shoulders ?? null,
-      biceps ?? null,
-      forearms ?? null,
-      thighs ?? null,
-      calves ?? null,
-      neck ?? null,
-      lUnit,
-    )
+      userId: user.userId,
+      date: logDate,
+      weight: weight ?? null,
+      weightUnit: wUnit,
+      bodyFatPct: body_fat_pct ?? null,
+      chest: chest ?? null,
+      waist: waist ?? null,
+      hips: hips ?? null,
+      shoulders: shoulders ?? null,
+      biceps: biceps ?? null,
+      forearms: forearms ?? null,
+      thighs: thighs ?? null,
+      calves: calves ?? null,
+      neck: neck ?? null,
+      lengthUnit: lUnit,
+    })
     .run();
 
-  const measurement = await c.env.DB.prepare("SELECT * FROM body_measurements WHERE id = ?")
-    .bind(id)
-    .first();
+  const measurement = await db
+    .select()
+    .from(bodyMeasurements)
+    .where(eq(bodyMeasurements.id, id))
+    .get();
   return c.json({ message: "Body measurement recorded", measurement }, 201);
 });
 
@@ -138,12 +139,13 @@ bodyMeasurementsRouter.post("/", async (c) => {
 bodyMeasurementsRouter.get("/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
+  const db = getDb(c);
 
-  const measurement = await c.env.DB.prepare(
-    "SELECT * FROM body_measurements WHERE id = ? AND user_id = ?",
-  )
-    .bind(id, user.userId)
-    .first();
+  const measurement = await db
+    .select()
+    .from(bodyMeasurements)
+    .where(and(eq(bodyMeasurements.id, id), eq(bodyMeasurements.userId, user.userId)))
+    .get();
 
   if (!measurement) {
     return c.json({ error: "Body measurement entry not found" }, 404);
@@ -157,12 +159,13 @@ bodyMeasurementsRouter.put("/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
   const body = await c.req.json().catch(() => null);
+  const db = getDb(c);
 
-  const existing = await c.env.DB.prepare(
-    "SELECT * FROM body_measurements WHERE id = ? AND user_id = ?",
-  )
-    .bind(id, user.userId)
-    .first<any>();
+  const existing = await db
+    .select({ id: bodyMeasurements.id })
+    .from(bodyMeasurements)
+    .where(and(eq(bodyMeasurements.id, id), eq(bodyMeasurements.userId, user.userId)))
+    .get();
 
   if (!existing) {
     return c.json({ error: "Body measurement entry not found or unauthorized" }, 404);
@@ -189,46 +192,27 @@ bodyMeasurementsRouter.put("/:id", async (c) => {
     length_unit,
   } = body;
 
-  await c.env.DB.prepare(
-    `UPDATE body_measurements
-     SET date = COALESCE(?, date),
-         weight = COALESCE(?, weight),
-         weight_unit = COALESCE(?, weight_unit),
-         body_fat_pct = COALESCE(?, body_fat_pct),
-         chest = COALESCE(?, chest),
-         waist = COALESCE(?, waist),
-         hips = COALESCE(?, hips),
-         shoulders = COALESCE(?, shoulders),
-         biceps = COALESCE(?, biceps),
-         forearms = COALESCE(?, forearms),
-         thighs = COALESCE(?, thighs),
-         calves = COALESCE(?, calves),
-         neck = COALESCE(?, neck),
-         length_unit = COALESCE(?, length_unit)
-     WHERE id = ?`,
-  )
-    .bind(
-      date ?? null,
-      weight ?? null,
-      weight_unit ?? null,
-      body_fat_pct ?? null,
-      chest ?? null,
-      waist ?? null,
-      hips ?? null,
-      shoulders ?? null,
-      biceps ?? null,
-      forearms ?? null,
-      thighs ?? null,
-      calves ?? null,
-      neck ?? null,
-      length_unit ?? null,
-      id,
-    )
-    .run();
+  const patch: Record<string, unknown> = {};
+  if (date !== undefined) patch.date = date;
+  if (weight !== undefined) patch.weight = weight;
+  if (weight_unit !== undefined) patch.weightUnit = weight_unit;
+  if (body_fat_pct !== undefined) patch.bodyFatPct = body_fat_pct;
+  if (chest !== undefined) patch.chest = chest;
+  if (waist !== undefined) patch.waist = waist;
+  if (hips !== undefined) patch.hips = hips;
+  if (shoulders !== undefined) patch.shoulders = shoulders;
+  if (biceps !== undefined) patch.biceps = biceps;
+  if (forearms !== undefined) patch.forearms = forearms;
+  if (thighs !== undefined) patch.thighs = thighs;
+  if (calves !== undefined) patch.calves = calves;
+  if (neck !== undefined) patch.neck = neck;
+  if (length_unit !== undefined) patch.lengthUnit = length_unit;
 
-  const updated = await c.env.DB.prepare("SELECT * FROM body_measurements WHERE id = ?")
-    .bind(id)
-    .first();
+  if (Object.keys(patch).length > 0) {
+    await db.update(bodyMeasurements).set(patch).where(eq(bodyMeasurements.id, id)).run();
+  }
+
+  const updated = await db.select().from(bodyMeasurements).where(eq(bodyMeasurements.id, id)).get();
   return c.json({ message: "Body measurement updated", measurement: updated });
 });
 
@@ -236,17 +220,18 @@ bodyMeasurementsRouter.put("/:id", async (c) => {
 bodyMeasurementsRouter.delete("/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
+  const db = getDb(c);
 
-  const existing = await c.env.DB.prepare(
-    "SELECT id FROM body_measurements WHERE id = ? AND user_id = ?",
-  )
-    .bind(id, user.userId)
-    .first();
+  const existing = await db
+    .select({ id: bodyMeasurements.id })
+    .from(bodyMeasurements)
+    .where(and(eq(bodyMeasurements.id, id), eq(bodyMeasurements.userId, user.userId)))
+    .get();
 
   if (!existing) {
     return c.json({ error: "Body measurement entry not found or unauthorized" }, 404);
   }
 
-  await c.env.DB.prepare("DELETE FROM body_measurements WHERE id = ?").bind(id).run();
+  await db.delete(bodyMeasurements).where(eq(bodyMeasurements.id, id)).run();
   return c.json({ message: "Body measurement deleted" });
 });

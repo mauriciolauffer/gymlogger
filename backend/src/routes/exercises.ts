@@ -1,14 +1,20 @@
 import { Hono } from "hono";
+import { eq, and, like, or, SQL } from "drizzle-orm";
 import type { Env } from "../index";
 import { authMiddleware } from "../middleware/auth";
+import { getDb } from "../db/schema";
+import { exercises, muscleGroups, exerciseSecondaryMuscles } from "../db/schema";
 
 export const exercisesRouter = new Hono<Env>();
 
 // GET /api/v1/muscle-groups
 exercisesRouter.get("/muscle-groups", async (c) => {
-  const { results } = await c.env.DB.prepare(
-    "SELECT id, name FROM muscle_groups ORDER BY name ASC",
-  ).all();
+  const db = getDb(c);
+  const results = await db
+    .select({ id: muscleGroups.id, name: muscleGroups.name })
+    .from(muscleGroups)
+    .orderBy(muscleGroups.name)
+    .all();
   return c.json({ muscleGroups: results });
 });
 
@@ -19,55 +25,48 @@ exercisesRouter.use("/exercises*", authMiddleware);
 exercisesRouter.get("/exercises", async (c) => {
   const user = c.get("user")!;
   const { q, category, bodyPart, equipment, target, muscleGroupId, custom } = c.req.query();
+  const db = getDb(c);
 
-  let query = `
-    SELECT e.*, mg.name as muscle_group_name
-    FROM exercises e
-    LEFT JOIN muscle_groups mg ON e.muscle_group_id = mg.id
-    WHERE (e.is_custom = FALSE OR e.user_id = ?)
-  `;
-  const params: any[] = [user.userId];
+  const conditions: SQL[] = [or(eq(exercises.isCustom, false), eq(exercises.userId, user.userId))!];
 
   if (custom === "true") {
-    query += ` AND e.is_custom = TRUE AND e.user_id = ?`;
-    params.push(user.userId);
+    conditions.push(eq(exercises.isCustom, true));
+    conditions.push(eq(exercises.userId, user.userId));
   }
+  if (q) conditions.push(like(exercises.name, `%${q}%`));
+  if (category) conditions.push(eq(exercises.category, category));
+  if (bodyPart) conditions.push(eq(exercises.bodyPart, bodyPart));
+  if (equipment) conditions.push(eq(exercises.equipment, equipment));
+  if (target) conditions.push(eq(exercises.target, target));
+  if (muscleGroupId) conditions.push(eq(exercises.muscleGroupId, muscleGroupId));
 
-  if (q) {
-    query += ` AND e.name LIKE ?`;
-    params.push(`%${q}%`);
-  }
-
-  if (category) {
-    query += ` AND e.category = ?`;
-    params.push(category);
-  }
-
-  if (bodyPart) {
-    query += ` AND e.body_part = ?`;
-    params.push(bodyPart);
-  }
-
-  if (equipment) {
-    query += ` AND e.equipment = ?`;
-    params.push(equipment);
-  }
-
-  if (target) {
-    query += ` AND e.target = ?`;
-    params.push(target);
-  }
-
-  if (muscleGroupId) {
-    query += ` AND e.muscle_group_id = ?`;
-    params.push(muscleGroupId);
-  }
-
-  query += ` ORDER BY e.name ASC LIMIT 500`;
-
-  const { results } = await c.env.DB.prepare(query)
-    .bind(...params)
+  const results = await db
+    .select({
+      id: exercises.id,
+      name: exercises.name,
+      category: exercises.category,
+      bodyPart: exercises.bodyPart,
+      equipment: exercises.equipment,
+      instructions: exercises.instructions,
+      instructionSteps: exercises.instructionSteps,
+      muscleGroupId: exercises.muscleGroupId,
+      target: exercises.target,
+      mediaId: exercises.mediaId,
+      image: exercises.image,
+      gifUrl: exercises.gifUrl,
+      attribution: exercises.attribution,
+      isCustom: exercises.isCustom,
+      userId: exercises.userId,
+      createdAt: exercises.createdAt,
+      muscleGroupName: muscleGroups.name,
+    })
+    .from(exercises)
+    .leftJoin(muscleGroups, eq(exercises.muscleGroupId, muscleGroups.id))
+    .where(and(...conditions))
+    .orderBy(exercises.name)
+    .limit(500)
     .all();
+
   return c.json({ exercises: results });
 });
 
@@ -75,28 +74,47 @@ exercisesRouter.get("/exercises", async (c) => {
 exercisesRouter.get("/exercises/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
+  const db = getDb(c);
 
-  const exercise = await c.env.DB.prepare(
-    `SELECT e.*, mg.name as muscle_group_name
-     FROM exercises e
-     LEFT JOIN muscle_groups mg ON e.muscle_group_id = mg.id
-     WHERE e.id = ? AND (e.is_custom = FALSE OR e.user_id = ?)`,
-  )
-    .bind(id, user.userId)
-    .first();
+  const exercise = await db
+    .select({
+      id: exercises.id,
+      name: exercises.name,
+      category: exercises.category,
+      bodyPart: exercises.bodyPart,
+      equipment: exercises.equipment,
+      instructions: exercises.instructions,
+      instructionSteps: exercises.instructionSteps,
+      muscleGroupId: exercises.muscleGroupId,
+      target: exercises.target,
+      mediaId: exercises.mediaId,
+      image: exercises.image,
+      gifUrl: exercises.gifUrl,
+      attribution: exercises.attribution,
+      isCustom: exercises.isCustom,
+      userId: exercises.userId,
+      createdAt: exercises.createdAt,
+      muscleGroupName: muscleGroups.name,
+    })
+    .from(exercises)
+    .leftJoin(muscleGroups, eq(exercises.muscleGroupId, muscleGroups.id))
+    .where(
+      and(
+        eq(exercises.id, id),
+        or(eq(exercises.isCustom, false), eq(exercises.userId, user.userId)),
+      ),
+    )
+    .get();
 
   if (!exercise) {
     return c.json({ error: "Exercise not found" }, 404);
   }
 
-  // Fetch secondary muscles
-  const { results: secondaryMuscles } = await c.env.DB.prepare(
-    `SELECT mg.id, mg.name
-     FROM exercise_secondary_muscles esm
-     JOIN muscle_groups mg ON esm.muscle_group_id = mg.id
-     WHERE esm.exercise_id = ?`,
-  )
-    .bind(id)
+  const secondaryMuscles = await db
+    .select({ id: muscleGroups.id, name: muscleGroups.name })
+    .from(exerciseSecondaryMuscles)
+    .innerJoin(muscleGroups, eq(exerciseSecondaryMuscles.muscleGroupId, muscleGroups.id))
+    .where(eq(exerciseSecondaryMuscles.exerciseId, id))
     .all();
 
   return c.json({ exercise: { ...exercise, secondaryMuscles } });
@@ -124,42 +142,38 @@ exercisesRouter.post("/exercises", async (c) => {
   } = body;
 
   const id = `custom_${crypto.randomUUID()}`;
+  const db = getDb(c);
 
-  await c.env.DB.prepare(
-    `INSERT INTO exercises (
-      id, name, category, body_part, equipment, instructions, instruction_steps,
-      muscle_group_id, target, is_custom, user_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, ?)`,
-  )
-    .bind(
+  await db
+    .insert(exercises)
+    .values({
       id,
       name,
       category,
-      body_part,
-      equipment ?? null,
-      instructions ?? null,
-      instruction_steps ? JSON.stringify(instruction_steps) : null,
-      muscle_group_id ?? null,
-      target ?? null,
-      user.userId,
-    )
+      bodyPart: body_part,
+      equipment: equipment ?? null,
+      instructions: instructions ?? null,
+      instructionSteps: instruction_steps ? JSON.stringify(instruction_steps) : null,
+      muscleGroupId: muscle_group_id ?? null,
+      target: target ?? null,
+      isCustom: true,
+      userId: user.userId,
+    })
     .run();
 
   if (Array.isArray(secondary_muscle_ids)) {
     await Promise.all(
       secondary_muscle_ids.map((mgId: string) =>
-        c.env.DB.prepare(
-          "INSERT OR IGNORE INTO exercise_secondary_muscles (exercise_id, muscle_group_id) VALUES (?, ?)",
-        )
-          .bind(id, mgId)
+        db
+          .insert(exerciseSecondaryMuscles)
+          .values({ exerciseId: id, muscleGroupId: mgId })
+          .onConflictDoNothing()
           .run(),
       ),
     );
   }
 
-  const newExercise = await c.env.DB.prepare("SELECT * FROM exercises WHERE id = ?")
-    .bind(id)
-    .first();
+  const newExercise = await db.select().from(exercises).where(eq(exercises.id, id)).get();
   return c.json({ message: "Custom exercise created", exercise: newExercise }, 201);
 });
 
@@ -168,12 +182,15 @@ exercisesRouter.put("/exercises/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
   const body = await c.req.json().catch(() => null);
+  const db = getDb(c);
 
-  const existing = await c.env.DB.prepare(
-    "SELECT * FROM exercises WHERE id = ? AND user_id = ? AND is_custom = TRUE",
-  )
-    .bind(id, user.userId)
-    .first();
+  const existing = await db
+    .select({ id: exercises.id })
+    .from(exercises)
+    .where(
+      and(eq(exercises.id, id), eq(exercises.userId, user.userId), eq(exercises.isCustom, true)),
+    )
+    .get();
 
   if (!existing) {
     return c.json({ error: "Custom exercise not found or unauthorized" }, 404);
@@ -195,48 +212,37 @@ exercisesRouter.put("/exercises/:id", async (c) => {
     secondary_muscle_ids,
   } = body;
 
-  await c.env.DB.prepare(
-    `UPDATE exercises
-     SET name = COALESCE(?, name),
-         category = COALESCE(?, category),
-         body_part = COALESCE(?, body_part),
-         equipment = COALESCE(?, equipment),
-         instructions = COALESCE(?, instructions),
-         instruction_steps = COALESCE(?, instruction_steps),
-         muscle_group_id = COALESCE(?, muscle_group_id),
-         target = COALESCE(?, target)
-     WHERE id = ? AND user_id = ?`,
-  )
-    .bind(
-      name ?? null,
-      category ?? null,
-      body_part ?? null,
-      equipment ?? null,
-      instructions ?? null,
-      instruction_steps ? JSON.stringify(instruction_steps) : null,
-      muscle_group_id ?? null,
-      target ?? null,
-      id,
-      user.userId,
-    )
-    .run();
+  const patch: Record<string, unknown> = {};
+  if (name !== undefined) patch.name = name;
+  if (category !== undefined) patch.category = category;
+  if (body_part !== undefined) patch.bodyPart = body_part;
+  if (equipment !== undefined) patch.equipment = equipment;
+  if (instructions !== undefined) patch.instructions = instructions;
+  if (instruction_steps !== undefined) patch.instructionSteps = JSON.stringify(instruction_steps);
+  if (muscle_group_id !== undefined) patch.muscleGroupId = muscle_group_id;
+  if (target !== undefined) patch.target = target;
+
+  if (Object.keys(patch).length > 0) {
+    await db.update(exercises).set(patch).where(eq(exercises.id, id)).run();
+  }
 
   if (Array.isArray(secondary_muscle_ids)) {
-    await c.env.DB.prepare("DELETE FROM exercise_secondary_muscles WHERE exercise_id = ?")
-      .bind(id)
+    await db
+      .delete(exerciseSecondaryMuscles)
+      .where(eq(exerciseSecondaryMuscles.exerciseId, id))
       .run();
     await Promise.all(
       secondary_muscle_ids.map((mgId: string) =>
-        c.env.DB.prepare(
-          "INSERT OR IGNORE INTO exercise_secondary_muscles (exercise_id, muscle_group_id) VALUES (?, ?)",
-        )
-          .bind(id, mgId)
+        db
+          .insert(exerciseSecondaryMuscles)
+          .values({ exerciseId: id, muscleGroupId: mgId })
+          .onConflictDoNothing()
           .run(),
       ),
     );
   }
 
-  const updated = await c.env.DB.prepare("SELECT * FROM exercises WHERE id = ?").bind(id).first();
+  const updated = await db.select().from(exercises).where(eq(exercises.id, id)).get();
   return c.json({ message: "Custom exercise updated", exercise: updated });
 });
 
@@ -244,17 +250,20 @@ exercisesRouter.put("/exercises/:id", async (c) => {
 exercisesRouter.delete("/exercises/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
+  const db = getDb(c);
 
-  const existing = await c.env.DB.prepare(
-    "SELECT id FROM exercises WHERE id = ? AND user_id = ? AND is_custom = TRUE",
-  )
-    .bind(id, user.userId)
-    .first();
+  const existing = await db
+    .select({ id: exercises.id })
+    .from(exercises)
+    .where(
+      and(eq(exercises.id, id), eq(exercises.userId, user.userId), eq(exercises.isCustom, true)),
+    )
+    .get();
 
   if (!existing) {
     return c.json({ error: "Custom exercise not found or unauthorized" }, 404);
   }
 
-  await c.env.DB.prepare("DELETE FROM exercises WHERE id = ?").bind(id).run();
+  await db.delete(exercises).where(eq(exercises.id, id)).run();
   return c.json({ message: "Custom exercise deleted" });
 });

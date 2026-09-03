@@ -1,49 +1,58 @@
 import { Hono } from "hono";
+import { eq, and, desc } from "drizzle-orm";
 import type { Env } from "../index";
 import { authMiddleware } from "../middleware/auth";
+import { getDb } from "../db/schema";
+import { workouts, workoutExercises, workoutSets, userSettings } from "../db/schema";
 
 export const liveActivityRouter = new Hono<Env>()
   .use("*", authMiddleware)
   .get("/:id/live", async (c) => {
     const user = c.get("user")!;
     const workoutId = c.req.param("id");
+    const db = getDb(c);
 
-    const workout = await c.env.DB.prepare("SELECT * FROM workouts WHERE id = ? AND user_id = ?")
-      .bind(workoutId, user.userId)
-      .first<any>();
+    const workout = await db
+      .select()
+      .from(workouts)
+      .where(and(eq(workouts.id, workoutId), eq(workouts.userId, user.userId)))
+      .get();
 
     if (!workout) {
       return c.json({ error: "Workout session not found" }, 404);
     }
 
-    const settings = await c.env.DB.prepare(
-      "SELECT rest_timer_duration_seconds FROM user_settings WHERE user_id = ?",
-    )
-      .bind(user.userId)
-      .first<{ rest_timer_duration_seconds: number }>();
+    const settings = await db
+      .select({ restTimerDurationSeconds: userSettings.restTimerDurationSeconds })
+      .from(userSettings)
+      .where(eq(userSettings.userId, user.userId))
+      .get();
 
-    const restDurationSeconds = settings?.rest_timer_duration_seconds ?? 90;
+    const restDurationSeconds = settings?.restTimerDurationSeconds ?? 90;
 
-    const lastSet = await c.env.DB.prepare(
-      `SELECT ws.id, ws.weight, ws.reps, ws.weight_unit
-       FROM workout_sets ws
-       JOIN workout_exercises we ON ws.workout_exercise_id = we.id
-       WHERE we.workout_id = ?
-       ORDER BY ws.rowid DESC
-       LIMIT 1`,
-    )
-      .bind(workoutId)
-      .first<any>();
+    const lastSet = await db
+      .select({
+        id: workoutSets.id,
+        weight: workoutSets.weight,
+        reps: workoutSets.reps,
+        weightUnit: workoutSets.weightUnit,
+      })
+      .from(workoutSets)
+      .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
+      .where(eq(workoutExercises.workoutId, workoutId))
+      .orderBy(desc(workoutSets.orderIndex))
+      .limit(1)
+      .get();
 
-    const startMs = new Date(workout.start_time).getTime();
+    const startMs = new Date(workout.startTime).getTime();
     const nowMs = Date.now();
-    const elapsedSeconds = workout.end_time
-      ? workout.duration_seconds
+    const elapsedSeconds = workout.endTime
+      ? workout.durationSeconds
       : Math.max(0, Math.floor((nowMs - startMs) / 1000));
 
     return c.json({
       workoutId,
-      status: workout.end_time ? "completed" : "active",
+      status: workout.endTime ? "completed" : "active",
       elapsedSeconds,
       restTimerDurationSeconds: restDurationSeconds,
       lastSet: lastSet || null,

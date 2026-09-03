@@ -1,30 +1,38 @@
 import { Hono } from "hono";
+import { eq, and, desc } from "drizzle-orm";
 import type { Env } from "../index";
 import { authMiddleware } from "../middleware/auth";
+import { getDb } from "../db/schema";
+import { personalRecords, exercises } from "../db/schema";
 
 export const personalRecordsRouter = new Hono<Env>()
   .use("*", authMiddleware)
   .get("/", async (c) => {
     const user = c.get("user")!;
     const exerciseId = c.req.query("exerciseId");
+    const db = getDb(c);
 
-    let query = `
-      SELECT pr.*, e.name as exercise_name
-      FROM personal_records pr
-      JOIN exercises e ON pr.exercise_id = e.id
-      WHERE pr.user_id = ?
-    `;
-    const params: any[] = [user.userId];
+    const conditions = [eq(personalRecords.userId, user.userId)];
+    if (exerciseId) conditions.push(eq(personalRecords.exerciseId, exerciseId));
 
-    if (exerciseId) {
-      query += ` AND pr.exercise_id = ?`;
-      params.push(exerciseId);
-    }
-
-    query += ` ORDER BY pr.achieved_at DESC LIMIT 500`;
-
-    const { results: personalRecords } = await c.env.DB.prepare(query)
-      .bind(...params)
+    const results = await db
+      .select({
+        id: personalRecords.id,
+        userId: personalRecords.userId,
+        exerciseId: personalRecords.exerciseId,
+        prType: personalRecords.prType,
+        value: personalRecords.value,
+        valueUnit: personalRecords.valueUnit,
+        achievedAt: personalRecords.achievedAt,
+        workoutSetId: personalRecords.workoutSetId,
+        exerciseName: exercises.name,
+      })
+      .from(personalRecords)
+      .innerJoin(exercises, eq(personalRecords.exerciseId, exercises.id))
+      .where(and(...conditions))
+      .orderBy(desc(personalRecords.achievedAt))
+      .limit(500)
       .all();
-    return c.json({ personalRecords });
+
+    return c.json({ personalRecords: results });
   });
