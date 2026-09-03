@@ -260,8 +260,8 @@ analyticsRouter.get("/consistency", async (c) => {
 
   // Calculate workout streak in consecutive active days/weeks
   const activeDates = Array.from(new Set(workouts.map((w) => w.start_time.split("T")[0])))
-    .sort()
-    .reverse();
+    .toSorted()
+    .toReversed();
 
   let currentStreak = 0;
   let previousDate: Date | null = null;

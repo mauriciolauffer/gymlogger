@@ -7,7 +7,7 @@ export const authMiddleware: MiddlewareHandler<Env> = async (c, next) => {
   const authHeader = c.req.header("Authorization");
 
   try {
-    const authInstance = createAuth(c.env.DB);
+    const authInstance = createAuth(c.env.DB, c.env.JWT_SECRET, c.env.APP_BASE_URL);
     const session = await authInstance.api.getSession({
       headers: c.req.raw.headers,
     });
@@ -23,14 +23,18 @@ export const authMiddleware: MiddlewareHandler<Env> = async (c, next) => {
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.substring(7);
 
-    const payload = await verifyToken(token);
+    const payload = await verifyToken(
+      token,
+      c.env.JWT_SECRET ?? "gymlogger-secret-key-change-in-prod",
+    );
     if (payload) {
       c.set("user", payload);
       return await next();
     }
 
     const sessionRecord = await c.env.DB.prepare(
-      `SELECT s.user_id, u.email FROM session s JOIN user u ON s.user_id = u.id WHERE s.token = ?`,
+      `SELECT s.user_id, u.email FROM session s JOIN user u ON s.user_id = u.id
+       WHERE s.token = ? AND s.expires_at > datetime('now')`,
     )
       .bind(token)
       .first<{ user_id: string; email: string }>();

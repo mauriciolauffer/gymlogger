@@ -16,6 +16,9 @@ import { bodyMeasurementsRouter } from "./routes/body-measurements";
 export type Env = {
   Bindings: {
     DB: D1Database;
+    JWT_SECRET?: string;
+    APP_BASE_URL?: string;
+    CORS_ORIGIN?: string;
   };
   Variables: {
     user?: { userId: string; email: string };
@@ -26,7 +29,14 @@ const app = new Hono<Env>();
 
 // Built-in Middleware for security & CORS
 app.use("*", secureHeaders());
-app.use("*", cors());
+app.use("*", async (c, next) => {
+  return cors({
+    origin: c.env.CORS_ORIGIN ?? "http://localhost:5173",
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  })(c, next);
+});
 
 // Health check endpoints
 app.get("/", (c) => {
@@ -43,7 +53,7 @@ app.get("/health", (c) => {
 
 // Mount Better Auth handler
 app.on(["GET", "POST"], "/api/auth/*", (c) => {
-  return createAuth(c.env.DB).handler(c.req.raw);
+  return createAuth(c.env.DB, c.env.JWT_SECRET, c.env.APP_BASE_URL).handler(c.req.raw);
 });
 
 // Mount API routes

@@ -17,8 +17,8 @@ export const authRouter = new Hono<Env>()
       return c.json({ error: "Valid email is required" }, 400);
     }
 
-    if (!password || typeof password !== "string" || password.length < 6) {
-      return c.json({ error: "Password must be at least 6 characters long" }, 400);
+    if (!password || typeof password !== "string" || password.length < 8) {
+      return c.json({ error: "Password must be at least 8 characters long" }, 400);
     }
 
     const normalizedEmail = email.trim().toLowerCase();
@@ -34,8 +34,10 @@ export const authRouter = new Hono<Env>()
     let userId: string;
     let token: string;
 
+    const secret = c.env.JWT_SECRET ?? "gymlogger-secret-key-change-in-prod";
+
     try {
-      const authInstance = createAuth(c.env.DB);
+      const authInstance = createAuth(c.env.DB, secret, c.env.APP_BASE_URL);
       const baResult = await authInstance.api.signUpEmail({
         body: {
           email: normalizedEmail,
@@ -45,10 +47,10 @@ export const authRouter = new Hono<Env>()
       });
 
       userId = baResult.user.id;
-      token = baResult.token || (await generateToken({ userId, email: normalizedEmail }));
+      token = baResult.token || (await generateToken({ userId, email: normalizedEmail }, secret));
     } catch {
       userId = crypto.randomUUID();
-      token = await generateToken({ userId, email: normalizedEmail });
+      token = await generateToken({ userId, email: normalizedEmail }, secret);
     }
 
     const passwordHash = await hashPassword(password);
@@ -103,22 +105,18 @@ export const authRouter = new Hono<Env>()
       return c.json({ error: "Invalid email or password" }, 401);
     }
 
+    const secret = c.env.JWT_SECRET ?? "gymlogger-secret-key-change-in-prod";
     let token: string | null = null;
 
     try {
-      const authInstance = createAuth(c.env.DB);
+      const authInstance = createAuth(c.env.DB, secret, c.env.APP_BASE_URL);
       const baResult = await authInstance.api.signInEmail({
-        body: {
-          email: normalizedEmail,
-          password,
-        },
+        body: { email: normalizedEmail, password },
       });
       token = baResult.token || null;
-    } catch {
-      const validPassword = await verifyPassword(password, user.password_hash);
-      if (!validPassword) {
-        return c.json({ error: "Invalid email or password" }, 401);
-      }
+    } catch (err) {
+      // Better Auth unavailable — fall through to custom path below
+      console.error(err);
     }
 
     if (!token) {
@@ -126,7 +124,7 @@ export const authRouter = new Hono<Env>()
       if (!validPassword) {
         return c.json({ error: "Invalid email or password" }, 401);
       }
-      token = await generateToken({ userId: user.id, email: user.email });
+      token = await generateToken({ userId: user.id, email: user.email }, secret);
     }
 
     return c.json({
@@ -141,7 +139,7 @@ export const authRouter = new Hono<Env>()
   })
   .post("/logout", authMiddleware, async (c) => {
     try {
-      const authInstance = createAuth(c.env.DB);
+      const authInstance = createAuth(c.env.DB, c.env.JWT_SECRET, c.env.APP_BASE_URL);
       await authInstance.api.signOut({
         headers: c.req.raw.headers,
       });

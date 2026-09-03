@@ -44,8 +44,7 @@ bodyMeasurementsRouter.get("/", async (c) => {
     const entryWeightUnit = entry.weight_unit || "kg";
     const entryLengthUnit = entry.length_unit || "cm";
 
-    return {
-      ...entry,
+    return Object.assign(entry, {
       weight: convertWeight(entry.weight, entryWeightUnit, targetWeightUnit),
       weight_unit: targetWeightUnit,
       chest: convertLength(entry.chest, entryLengthUnit, targetLengthUnit),
@@ -58,7 +57,7 @@ bodyMeasurementsRouter.get("/", async (c) => {
       calves: convertLength(entry.calves, entryLengthUnit, targetLengthUnit),
       neck: convertLength(entry.neck, entryLengthUnit, targetLengthUnit),
       length_unit: targetLengthUnit,
-    };
+    });
   });
 
   return c.json({ measurements });
