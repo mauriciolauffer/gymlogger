@@ -8,15 +8,18 @@ describe("TemplateEditorModal", () => {
   });
 
   it("fetches exercises and handles template save", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((url, opts) => {
-      if (opts?.method === "POST" || opts?.method === "PUT") {
-        return Promise.resolve({ ok: true, json: async () => ({ template: { id: "t1" } }) });
-      }
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({ exercises: [{ id: "ex1", name: "Squat" }] }),
-      });
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url, opts) => {
+        if (opts?.method === "POST" || opts?.method === "PUT") {
+          return Promise.resolve({ ok: true, json: async () => ({ template: { id: "t1" } }) });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ exercises: [{ id: "ex1", name: "Squat" }] }),
+        });
+      }),
+    );
 
     const mockTemplate = {
       id: "t1",

@@ -47,7 +47,7 @@ watch(
       fetchPerformance(newEx.id);
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const formatDate = (iso: string) => {
@@ -68,8 +68,10 @@ const formatDate = (iso: string) => {
   >
     <div class="dialog-content" v-if="exercise">
       <div class="exercise-meta">
-        <span class="badge">{{ exercise.category || 'General' }}</span>
-        <span class="badge" v-if="exercise.primary_muscle_name">{{ exercise.primary_muscle_name }}</span>
+        <span class="badge">{{ exercise.category || "General" }}</span>
+        <span class="badge" v-if="exercise.primary_muscle_name">{{
+          exercise.primary_muscle_name
+        }}</span>
       </div>
 
       <ui5-message-strip v-if="errorMsg" design="Negative" @close="errorMsg = ''">
@@ -82,11 +84,7 @@ const formatDate = (iso: string) => {
         <!-- 1RM Progression Curve -->
         <ui5-panel header-text="1RM Progression Curve (REQ-05)" collapsed="false">
           <div class="curve-list" v-if="analyticsData.oneRmCurve?.length">
-            <div
-              v-for="(point, idx) in analyticsData.oneRmCurve"
-              :key="idx"
-              class="curve-point"
-            >
+            <div v-for="(point, idx) in analyticsData.oneRmCurve" :key="idx" class="curve-point">
               <span class="date">{{ formatDate(point.date) }}</span>
               <span class="val">{{ point.value }} kg</span>
             </div>

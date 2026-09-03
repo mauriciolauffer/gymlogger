@@ -4,15 +4,18 @@ import ExerciseDetailModal from "../ExerciseDetailModal.vue";
 
 describe("ExerciseDetailModal", () => {
   it("fetches exercise performance analytics", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        oneRmCurve: [{ date: "2026-01-01", value: 100 }],
-        maxWeightCurve: [{ date: "2026-01-01", value: 90 }],
-        maxRepsCurve: [{ date: "2026-01-01", value: 10 }],
-        sessions: [],
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          oneRmCurve: [{ date: "2026-01-01", value: 100 }],
+          maxWeightCurve: [{ date: "2026-01-01", value: 90 }],
+          maxRepsCurve: [{ date: "2026-01-01", value: 10 }],
+          sessions: [],
+        }),
       }),
-    }));
+    );
 
     const wrapper = mount(ExerciseDetailModal, {
       props: {

@@ -8,10 +8,13 @@ describe("CreateExerciseModal", () => {
   });
 
   it("handles custom exercise creation", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ exercise: { id: "ex_custom", name: "Incline Cable Fly" } }),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ exercise: { id: "ex_custom", name: "Incline Cable Fly" } }),
+      }),
+    );
 
     const wrapper = mount(CreateExerciseModal, {
       props: {

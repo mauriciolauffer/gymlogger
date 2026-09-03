@@ -53,7 +53,11 @@ const handleLogin = async () => {
 <template>
   <div class="auth-container">
     <ui5-card class="auth-card">
-      <ui5-card-header slot="header" title-text="GymLogger" subtitle-text="Log in to your account" />
+      <ui5-card-header
+        slot="header"
+        title-text="GymLogger"
+        subtitle-text="Log in to your account"
+      />
       <div class="card-content">
         <ui5-message-strip v-if="errorMsg" design="Negative" class="mb-3" @close="errorMsg = ''">
           {{ errorMsg }}
@@ -83,7 +87,7 @@ const handleLogin = async () => {
 
         <div class="actions">
           <ui5-button design="Emphasized" :disabled="loading" @click="handleLogin">
-            {{ loading ? 'Logging in...' : 'Log In' }}
+            {{ loading ? "Logging in..." : "Log In" }}
           </ui5-button>
           <ui5-button design="Transparent" @click="router.push('/register')">
             Need an account? Register

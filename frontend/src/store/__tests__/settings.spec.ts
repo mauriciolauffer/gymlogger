@@ -16,10 +16,13 @@ describe("Settings Store", () => {
       notifications_enabled: true,
     };
 
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ settings: mockSettings }),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ settings: mockSettings }),
+      }),
+    );
 
     await settingsStore.fetchSettings();
 
@@ -29,19 +32,22 @@ describe("Settings Store", () => {
   });
 
   it("updates settings via API", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        settings: {
-          theme: "light",
-          preferred_weight_unit: "kg",
-          preferred_length_unit: "cm",
-          language: "en",
-          rest_timer_duration_seconds: 90,
-          notifications_enabled: false,
-        },
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          settings: {
+            theme: "light",
+            preferred_weight_unit: "kg",
+            preferred_length_unit: "cm",
+            language: "en",
+            rest_timer_duration_seconds: 90,
+            notifications_enabled: false,
+          },
+        }),
       }),
-    }));
+    );
 
     await settingsStore.updateSettings({ theme: "light", notifications_enabled: false });
 

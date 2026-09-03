@@ -77,9 +77,7 @@ onMounted(() => {
         <ui5-title level="H2">Workout Templates</ui5-title>
         <p class="subtitle">Save routine setups for instant workout logging (REQ-08)</p>
       </div>
-      <ui5-button design="Emphasized" @click="handleCreateNew">
-        + Create Template
-      </ui5-button>
+      <ui5-button design="Emphasized" @click="handleCreateNew"> + Create Template </ui5-button>
     </div>
 
     <div v-if="loading" class="loading-state">Loading templates...</div>
@@ -94,7 +92,9 @@ onMounted(() => {
         <div class="card-content">
           <p class="notes" v-if="tpl.notes">{{ tpl.notes }}</p>
           <div class="card-actions">
-            <ui5-button design="Emphasized" @click="handleStartFromTemplate(tpl)">Start Workout</ui5-button>
+            <ui5-button design="Emphasized" @click="handleStartFromTemplate(tpl)"
+              >Start Workout</ui5-button
+            >
             <ui5-button design="Transparent" @click="handleEdit(tpl.id)">Edit</ui5-button>
             <ui5-button design="Negative" @click="handleDelete(tpl.id)">Delete</ui5-button>
           </div>

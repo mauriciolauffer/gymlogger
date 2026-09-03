@@ -8,36 +8,39 @@ describe("SettingsView", () => {
   });
 
   it("fetches, updates controls and saves user settings", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((url, opts) => {
-      if (opts?.method === "PUT") {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url, opts) => {
+        if (opts?.method === "PUT") {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              settings: {
+                theme: "dark",
+                preferred_weight_unit: "lb",
+                preferred_length_unit: "in",
+                language: "en",
+                rest_timer_duration_seconds: 120,
+                notifications_enabled: true,
+              },
+            }),
+          });
+        }
         return Promise.resolve({
           ok: true,
           json: async () => ({
             settings: {
-              theme: "dark",
-              preferred_weight_unit: "lb",
-              preferred_length_unit: "in",
+              theme: "system",
+              preferred_weight_unit: "kg",
+              preferred_length_unit: "cm",
               language: "en",
-              rest_timer_duration_seconds: 120,
+              rest_timer_duration_seconds: 90,
               notifications_enabled: true,
             },
           }),
         });
-      }
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({
-          settings: {
-            theme: "system",
-            preferred_weight_unit: "kg",
-            preferred_length_unit: "cm",
-            language: "en",
-            rest_timer_duration_seconds: 90,
-            notifications_enabled: true,
-          },
-        }),
-      });
-    }));
+      }),
+    );
 
     const wrapper = mount(SettingsView);
     await new Promise((r) => setTimeout(r, 50));

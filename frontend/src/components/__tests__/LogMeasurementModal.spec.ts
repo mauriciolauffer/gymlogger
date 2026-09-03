@@ -8,10 +8,13 @@ describe("LogMeasurementModal", () => {
   });
 
   it("handles body measurement logging", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ measurement: { id: "m1" } }),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ measurement: { id: "m1" } }),
+      }),
+    );
 
     const wrapper = mount(LogMeasurementModal, {
       props: { open: true },

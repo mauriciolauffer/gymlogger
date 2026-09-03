@@ -129,9 +129,7 @@ onMounted(() => {
           {{ ex.name }}
         </ui5-list-item-standard>
       </ui5-list>
-      <div v-else class="empty-state">
-        No exercises found matching criteria.
-      </div>
+      <div v-else class="empty-state">No exercises found matching criteria.</div>
     </ui5-card>
 
     <!-- Modals -->

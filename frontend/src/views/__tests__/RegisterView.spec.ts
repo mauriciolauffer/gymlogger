@@ -14,11 +14,14 @@ describe("RegisterView", () => {
   });
 
   it("handles successful registration", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      status: 201,
-      json: async () => ({ token: "token_reg", user: { id: "u2", email: "new@example.com" } }),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 201,
+        json: async () => ({ token: "token_reg", user: { id: "u2", email: "new@example.com" } }),
+      }),
+    );
 
     const wrapper = mount(RegisterView);
 

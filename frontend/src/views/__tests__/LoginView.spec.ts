@@ -14,10 +14,13 @@ describe("LoginView", () => {
   });
 
   it("renders login form elements and handles successful login", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ token: "token123", user: { id: "u1", email: "athlete@example.com" } }),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ token: "token123", user: { id: "u1", email: "athlete@example.com" } }),
+      }),
+    );
 
     const wrapper = mount(LoginView);
 
@@ -50,11 +53,14 @@ describe("LoginView", () => {
     await buttons[0].trigger("click");
     expect(wrapper.text()).toContain("Please enter both email and password.");
 
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: async () => ({ error: "Invalid credentials" }),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: async () => ({ error: "Invalid credentials" }),
+      }),
+    );
 
     (inputs[0].element as any).value = "test@example.com";
     await inputs[0].trigger("input");

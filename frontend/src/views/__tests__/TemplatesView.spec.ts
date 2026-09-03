@@ -14,35 +14,50 @@ describe("TemplatesView", () => {
   });
 
   it("fetches, creates, edits, deletes and starts workout from template", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((url, opts) => {
-      if (opts?.method === "DELETE") {
-        return Promise.resolve({ ok: true, json: async () => ({ message: "Deleted" }) });
-      }
-      if (url.includes("/start")) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url, opts) => {
+        if (opts?.method === "DELETE") {
+          return Promise.resolve({ ok: true, json: async () => ({ message: "Deleted" }) });
+        }
+        if (url.includes("/start")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              workout: {
+                id: "w_tpl",
+                title: "Push Workout",
+                start_time: new Date().toISOString(),
+                total_volume: 0,
+                set_count: 0,
+                exercises: [],
+              },
+            }),
+          });
+        }
+        if (url.includes("/workout-templates/t1")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              template: {
+                id: "t1",
+                title: "Push Workout",
+                exercise_count: 4,
+                notes: "Chest & shoulders",
+              },
+            }),
+          });
+        }
         return Promise.resolve({
           ok: true,
           json: async () => ({
-            workout: { id: "w_tpl", title: "Push Workout", start_time: new Date().toISOString(), total_volume: 0, set_count: 0, exercises: [] },
+            templates: [
+              { id: "t1", title: "Push Workout", exercise_count: 4, notes: "Chest & shoulders" },
+            ],
           }),
         });
-      }
-      if (url.includes("/workout-templates/t1")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            template: { id: "t1", title: "Push Workout", exercise_count: 4, notes: "Chest & shoulders" },
-          }),
-        });
-      }
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({
-          templates: [
-            { id: "t1", title: "Push Workout", exercise_count: 4, notes: "Chest & shoulders" },
-          ],
-        }),
-      });
-    }));
+      }),
+    );
 
     const wrapper = mount(TemplatesView);
     await new Promise((r) => setTimeout(r, 50));

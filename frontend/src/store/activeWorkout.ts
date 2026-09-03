@@ -105,7 +105,9 @@ export const activeWorkoutStore = {
       title,
       template_id: templateId,
     });
-    const fullWorkout = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${res.workout.id}`);
+    const fullWorkout = await api.get<{ workout: ActiveWorkout }>(
+      `/api/v1/workouts/${res.workout.id}`,
+    );
     if (fullWorkout && fullWorkout.workout) {
       state.workout = fullWorkout.workout;
       state.workout.exercises = state.workout.exercises || [];
@@ -130,12 +132,12 @@ export const activeWorkoutStore = {
     if (!state.workout) return;
     const res = await api.post<{ workoutExercise: ActiveWorkoutExercise }>(
       `/api/v1/workouts/${state.workout.id}/exercises`,
-      { exercise_id: exerciseId, superset_id: supersetId }
+      { exercise_id: exerciseId, superset_id: supersetId },
     );
     let previousSets: any[] = [];
     try {
       const prevData = await api.get<{ sets: any[] }>(
-        `/api/v1/workouts/previous-values?exerciseId=${exerciseId}`
+        `/api/v1/workouts/previous-values?exerciseId=${exerciseId}`,
       );
       previousSets = prevData.sets || [];
     } catch (e) {
@@ -159,7 +161,7 @@ export const activeWorkoutStore = {
       {
         workout_exercise_id: workoutExerciseId,
         ...setData,
-      }
+      },
     );
 
     const exercise = state.workout.exercises?.find((e) => e.id === workoutExerciseId);
@@ -167,7 +169,9 @@ export const activeWorkoutStore = {
       exercise.sets.push(res.set);
     }
 
-    const updated = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${state.workout.id}`);
+    const updated = await api.get<{ workout: ActiveWorkout }>(
+      `/api/v1/workouts/${state.workout.id}`,
+    );
     if (updated && updated.workout) {
       state.workout.total_volume = updated.workout.total_volume;
       state.workout.set_count = updated.workout.set_count;
@@ -185,7 +189,7 @@ export const activeWorkoutStore = {
     if (!state.workout) return null;
     const res = await api.put<{ set: ActiveWorkoutSet; isPr: boolean; prTypes: string[] }>(
       `/api/v1/workouts/${state.workout.id}/sets/${setId}`,
-      setData
+      setData,
     );
 
     if (state.workout.exercises) {
@@ -198,7 +202,9 @@ export const activeWorkoutStore = {
       }
     }
 
-    const updated = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${state.workout.id}`);
+    const updated = await api.get<{ workout: ActiveWorkout }>(
+      `/api/v1/workouts/${state.workout.id}`,
+    );
     if (updated && updated.workout) {
       state.workout.total_volume = updated.workout.total_volume;
       state.workout.set_count = updated.workout.set_count;
@@ -218,7 +224,9 @@ export const activeWorkoutStore = {
       }
     }
 
-    const updated = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${state.workout.id}`);
+    const updated = await api.get<{ workout: ActiveWorkout }>(
+      `/api/v1/workouts/${state.workout.id}`,
+    );
     if (updated && updated.workout) {
       state.workout.total_volume = updated.workout.total_volume;
       state.workout.set_count = updated.workout.set_count;
@@ -229,9 +237,12 @@ export const activeWorkoutStore = {
 
   async finishWorkout(notes?: string) {
     if (!state.workout) return;
-    const res = await api.put<{ workout: ActiveWorkout }>(`/api/v1/workouts/${state.workout.id}/finish`, {
-      notes,
-    });
+    const res = await api.put<{ workout: ActiveWorkout }>(
+      `/api/v1/workouts/${state.workout.id}/finish`,
+      {
+        notes,
+      },
+    );
     this.stopDurationTimer();
     this.stopRestTimer();
     state.workout = null;

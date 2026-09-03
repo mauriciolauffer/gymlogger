@@ -156,11 +156,7 @@ const handleFinishWorkout = async () => {
 
     <!-- Exercises List -->
     <div class="exercises-list">
-      <ui5-card
-        v-for="(ex, exIdx) in workout.exercises"
-        :key="ex.id"
-        class="exercise-card"
-      >
+      <ui5-card v-for="(ex, exIdx) in workout.exercises" :key="ex.id" class="exercise-card">
         <ui5-card-header
           slot="header"
           :title-text="`${exIdx + 1}. ${ex.exercise_name || 'Exercise'}`"
@@ -176,16 +172,9 @@ const handleFinishWorkout = async () => {
 
         <div class="card-content">
           <!-- Previous Reference Display -->
-          <div
-            v-if="ex.previousSets && ex.previousSets.length"
-            class="previous-reference"
-          >
+          <div v-if="ex.previousSets && ex.previousSets.length" class="previous-reference">
             <span class="ref-title">Last Session Reference (REQ-02):</span>
-            <span
-              v-for="(ps, pIdx) in ex.previousSets"
-              :key="pIdx"
-              class="ref-chip"
-            >
+            <span v-for="(ps, pIdx) in ex.previousSets" :key="pIdx" class="ref-chip">
               {{ ps.weight }}kg × {{ ps.reps }}
             </span>
           </div>
@@ -200,11 +189,7 @@ const handleFinishWorkout = async () => {
               <span>ACTIONS</span>
             </div>
 
-            <div
-              v-for="(set, sIdx) in ex.sets"
-              :key="set.id"
-              class="table-row"
-            >
+            <div v-for="(set, sIdx) in ex.sets" :key="set.id" class="table-row">
               <span class="set-num">{{ sIdx + 1 }}</span>
 
               <ui5-select
@@ -214,7 +199,9 @@ const handleFinishWorkout = async () => {
                 <ui5-option value="normal" :selected="set.set_type === 'normal'">Normal</ui5-option>
                 <ui5-option value="warmup" :selected="set.set_type === 'warmup'">Warmup</ui5-option>
                 <ui5-option value="drop" :selected="set.set_type === 'drop'">Drop</ui5-option>
-                <ui5-option value="failure" :selected="set.set_type === 'failure'">Failure</ui5-option>
+                <ui5-option value="failure" :selected="set.set_type === 'failure'"
+                  >Failure</ui5-option
+                >
               </ui5-select>
 
               <ui5-input
@@ -232,21 +219,12 @@ const handleFinishWorkout = async () => {
               />
 
               <div class="row-actions">
-                <ui5-button
-                  design="Transparent"
-                  @click="handleDeleteSet(set.id)"
-                >
-                  ✕
-                </ui5-button>
+                <ui5-button design="Transparent" @click="handleDeleteSet(set.id)"> ✕ </ui5-button>
               </div>
             </div>
           </div>
 
-          <ui5-button
-            design="Transparent"
-            class="add-set-btn"
-            @click="handleAddSet(ex)"
-          >
+          <ui5-button design="Transparent" class="add-set-btn" @click="handleAddSet(ex)">
             + Add Set
           </ui5-button>
         </div>
@@ -255,9 +233,7 @@ const handleFinishWorkout = async () => {
 
     <!-- Add Exercise Action -->
     <div class="bottom-actions">
-      <ui5-button design="Emphasized" @click="handleAddExerciseClick">
-        + Add Exercise
-      </ui5-button>
+      <ui5-button design="Emphasized" @click="handleAddExerciseClick"> + Add Exercise </ui5-button>
     </div>
 
     <!-- Modals & Widgets -->
@@ -282,7 +258,10 @@ const handleFinishWorkout = async () => {
       @close="showAddExerciseModal = false"
     >
       <div class="dialog-content">
-        <ui5-select class="full-width" @change="selectedExerciseId = $event.target.selectedOption.value">
+        <ui5-select
+          class="full-width"
+          @change="selectedExerciseId = $event.target.selectedOption.value"
+        >
           <ui5-option value="">Select Exercise</ui5-option>
           <ui5-option
             v-for="e in availableExercises"

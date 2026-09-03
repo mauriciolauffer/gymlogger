@@ -97,7 +97,14 @@ onMounted(() => {
 
 <style>
 :root {
-  font-family: var(--sapFontFamily, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-family: var(
+    --sapFontFamily,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif
+  );
 }
 
 body {

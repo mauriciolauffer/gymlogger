@@ -66,7 +66,11 @@ const handleClose = () => {
 
       <div class="form-group">
         <ui5-label required>Exercise Name</ui5-label>
-        <ui5-input :value="name" @input="name = $event.target.value" placeholder="e.g. Incline Cable Fly" />
+        <ui5-input
+          :value="name"
+          @input="name = $event.target.value"
+          placeholder="e.g. Incline Cable Fly"
+        />
       </div>
 
       <div class="form-group">
@@ -76,7 +80,9 @@ const handleClose = () => {
           <ui5-option value="dumbbell" :selected="category === 'dumbbell'">Dumbbell</ui5-option>
           <ui5-option value="machine" :selected="category === 'machine'">Machine</ui5-option>
           <ui5-option value="cable" :selected="category === 'cable'">Cable</ui5-option>
-          <ui5-option value="bodyweight" :selected="category === 'bodyweight'">Bodyweight</ui5-option>
+          <ui5-option value="bodyweight" :selected="category === 'bodyweight'"
+            >Bodyweight</ui5-option
+          >
           <ui5-option value="other" :selected="category === 'other'">Other</ui5-option>
         </ui5-select>
       </div>
@@ -98,14 +104,18 @@ const handleClose = () => {
 
       <div class="form-group">
         <ui5-label>Target Muscle / Body Part</ui5-label>
-        <ui5-input :value="target" @input="target = $event.target.value" placeholder="e.g. Upper Chest" />
+        <ui5-input
+          :value="target"
+          @input="target = $event.target.value"
+          placeholder="e.g. Upper Chest"
+        />
       </div>
     </div>
 
     <div slot="footer" class="dialog-footer">
       <ui5-button design="Transparent" @click="handleClose">Cancel</ui5-button>
       <ui5-button design="Emphasized" :disabled="loading" @click="handleCreate">
-        {{ loading ? 'Creating...' : 'Create' }}
+        {{ loading ? "Creating..." : "Create" }}
       </ui5-button>
     </div>
   </ui5-dialog>

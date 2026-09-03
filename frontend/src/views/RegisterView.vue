@@ -21,10 +21,18 @@ const confirmPassword = ref("");
 const errorMsg = ref("");
 const loading = ref(false);
 
-const handleNameInput = (e: any) => { name.value = e.target.value; };
-const handleEmailInput = (e: any) => { email.value = e.target.value; };
-const handlePasswordInput = (e: any) => { password.value = e.target.value; };
-const handleConfirmInput = (e: any) => { confirmPassword.value = e.target.value; };
+const handleNameInput = (e: any) => {
+  name.value = e.target.value;
+};
+const handleEmailInput = (e: any) => {
+  email.value = e.target.value;
+};
+const handlePasswordInput = (e: any) => {
+  password.value = e.target.value;
+};
+const handleConfirmInput = (e: any) => {
+  confirmPassword.value = e.target.value;
+};
 
 const handleRegister = async () => {
   errorMsg.value = "";
@@ -112,7 +120,7 @@ const handleRegister = async () => {
 
         <div class="actions">
           <ui5-button design="Emphasized" :disabled="loading" @click="handleRegister">
-            {{ loading ? 'Creating Account...' : 'Register' }}
+            {{ loading ? "Creating Account..." : "Register" }}
           </ui5-button>
           <ui5-button design="Transparent" @click="router.push('/login')">
             Already have an account? Log In

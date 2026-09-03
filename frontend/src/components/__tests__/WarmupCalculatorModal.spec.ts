@@ -8,15 +8,18 @@ describe("WarmupCalculatorModal", () => {
   });
 
   it("calculates warmup sets on target weight change", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        warmupSets: [
-          { percentage: 50, weight: 50, reps: 10, notes: "Bar only / light" },
-          { percentage: 70, weight: 70, reps: 5, notes: "Moderate" },
-        ],
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          warmupSets: [
+            { percentage: 50, weight: 50, reps: 10, notes: "Bar only / light" },
+            { percentage: 70, weight: 70, reps: 5, notes: "Moderate" },
+          ],
+        }),
       }),
-    }));
+    );
 
     const wrapper = mount(WarmupCalculatorModal, {
       props: { open: true, targetWeight: 100 },

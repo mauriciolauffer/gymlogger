@@ -53,12 +53,14 @@ Morgan is a 32-year-old intermediate lifter following a structured program. Morg
 ### For Sam (Recreational Athlete):
 
 **Goals:**
+
 - Start and complete a workout session quickly without pre-configuration
 - Record every set with weight, reps, and type without interrupting workout rhythm
 - Know immediately whether a set is a personal record
 - Review what was done last session before starting the next one
 
 **Key Tasks:**
+
 - Launch an empty workout and add exercises from the searchable library
 - Log sets with weight, reps, set type (Normal/Warmup/Drop Set/Failure), and optional RPE
 - See previous session's values for each exercise automatically populated
@@ -68,11 +70,13 @@ Morgan is a 32-year-old intermediate lifter following a structured program. Morg
 ### For Morgan (Dedicated Lifter):
 
 **Goals:**
+
 - Analyze strength progression per exercise over time
 - Track weekly volume per muscle group against hypertrophy targets
 - Monitor body composition trends alongside training data
 
 **Key Tasks:**
+
 - View 1RM progression curves, weight progression curves, and max rep history per exercise
 - Check weekly sets per muscle group versus target ranges (e.g., 10–20 sets/week)
 - Review monthly summary: total workouts, total volume, top PRs, most trained muscles
@@ -180,6 +184,7 @@ A serverless edge application consisting of a Hono (TypeScript) backend deployed
 User-level preferences (theme, weight unit, length unit, language) are configurable via the settings screen in the application without any deployment changes.
 
 **Master Data:**
+
 - Global exercise library — seeded at deployment; extended by user-defined custom exercises.
 - `units` lookup table — seeded with `kg`, `lbs`, `cm`, `in`; referenced by all weight and measurement records as a foreign key.
 - User profile and settings — owned and managed by each authenticated user.

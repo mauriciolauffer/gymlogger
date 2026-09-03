@@ -13,8 +13,8 @@
     "dev:frontend": "pnpm --filter frontend dev",
     "build": "pnpm --filter frontend build",
     "test": "pnpm --filter backend test",
-    "lint": "oxlint",
-    "fmt": "oxfmt --write backend frontend *.json *.yaml"
+    "lint": "oxfmt --check && oxlint",
+    "format": "oxfmt"
   },
   "devDependencies": {
     "oxfmt": "^0.65.0",

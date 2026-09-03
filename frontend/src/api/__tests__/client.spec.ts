@@ -46,12 +46,21 @@ describe("API Client", () => {
     vi.stubGlobal("fetch", mockFetch);
 
     await api.post("/api/v1/items", { name: "item1" });
-    expect(mockFetch).toHaveBeenCalledWith("/api/v1/items", expect.objectContaining({ method: "POST" }));
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/v1/items",
+      expect.objectContaining({ method: "POST" }),
+    );
 
     await api.put("/api/v1/items/1", { name: "updated" });
-    expect(mockFetch).toHaveBeenCalledWith("/api/v1/items/1", expect.objectContaining({ method: "PUT" }));
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/v1/items/1",
+      expect.objectContaining({ method: "PUT" }),
+    );
 
     await api.delete("/api/v1/items/1");
-    expect(mockFetch).toHaveBeenCalledWith("/api/v1/items/1", expect.objectContaining({ method: "DELETE" }));
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/v1/items/1",
+      expect.objectContaining({ method: "DELETE" }),
+    );
   });
 });

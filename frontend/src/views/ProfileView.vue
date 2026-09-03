@@ -78,7 +78,11 @@ onMounted(() => {
 <template>
   <div class="profile-container">
     <ui5-card class="profile-card">
-      <ui5-card-header slot="header" title-text="User Profile" subtitle-text="Manage your personal details (REQ-12)" />
+      <ui5-card-header
+        slot="header"
+        title-text="User Profile"
+        subtitle-text="Manage your personal details (REQ-12)"
+      />
 
       <div class="card-content" v-if="!loading">
         <ui5-message-strip
@@ -97,18 +101,29 @@ onMounted(() => {
 
         <div class="form-group">
           <ui5-label required>Name</ui5-label>
-          <ui5-input :value="profile.name" @input="profile.name = $event.target.value" placeholder="Athlete Name" />
+          <ui5-input
+            :value="profile.name"
+            @input="profile.name = $event.target.value"
+            placeholder="Athlete Name"
+          />
         </div>
 
         <div class="form-grid">
           <div class="form-group">
             <ui5-label>Location</ui5-label>
-            <ui5-input :value="profile.location" @input="profile.location = $event.target.value" placeholder="City, Country" />
+            <ui5-input
+              :value="profile.location"
+              @input="profile.location = $event.target.value"
+              placeholder="City, Country"
+            />
           </div>
 
           <div class="form-group">
             <ui5-label>Date of Birth</ui5-label>
-            <ui5-date-picker :value="profile.birthday" @change="profile.birthday = $event.target.value" />
+            <ui5-date-picker
+              :value="profile.birthday"
+              @change="profile.birthday = $event.target.value"
+            />
           </div>
         </div>
 
@@ -116,7 +131,9 @@ onMounted(() => {
           <div class="form-group">
             <ui5-label>Sex</ui5-label>
             <ui5-select @change="profile.sex = $event.target.selectedOption.value">
-              <ui5-option value="unspecified" :selected="profile.sex === 'unspecified'">Unspecified</ui5-option>
+              <ui5-option value="unspecified" :selected="profile.sex === 'unspecified'"
+                >Unspecified</ui5-option
+              >
               <ui5-option value="male" :selected="profile.sex === 'male'">Male</ui5-option>
               <ui5-option value="female" :selected="profile.sex === 'female'">Female</ui5-option>
               <ui5-option value="other" :selected="profile.sex === 'other'">Other</ui5-option>
@@ -152,7 +169,7 @@ onMounted(() => {
 
         <div class="actions">
           <ui5-button design="Emphasized" :disabled="saving" @click="handleSave">
-            {{ saving ? 'Saving...' : 'Save Profile' }}
+            {{ saving ? "Saving..." : "Save Profile" }}
           </ui5-button>
         </div>
       </div>

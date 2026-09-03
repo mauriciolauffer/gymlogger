@@ -70,7 +70,12 @@ const handleSave = async () => {
         <div class="form-group">
           <ui5-label>Body Weight</ui5-label>
           <div class="row-inputs">
-            <ui5-input type="Number" :value="weight" @input="weight = $event.target.value" placeholder="75.0" />
+            <ui5-input
+              type="Number"
+              :value="weight"
+              @input="weight = $event.target.value"
+              placeholder="75.0"
+            />
             <ui5-select @change="weightUnit = $event.target.selectedOption.value">
               <ui5-option value="kg" :selected="weightUnit === 'kg'">kg</ui5-option>
               <ui5-option value="lb" :selected="weightUnit === 'lb'">lb</ui5-option>
@@ -80,7 +85,12 @@ const handleSave = async () => {
 
         <div class="form-group">
           <ui5-label>Body Fat %</ui5-label>
-          <ui5-input type="Number" :value="bodyFatPct" @input="bodyFatPct = $event.target.value" placeholder="15.0" />
+          <ui5-input
+            type="Number"
+            :value="bodyFatPct"
+            @input="bodyFatPct = $event.target.value"
+            placeholder="15.0"
+          />
         </div>
       </div>
 
@@ -88,7 +98,9 @@ const handleSave = async () => {
       <div class="form-group">
         <ui5-label>Unit</ui5-label>
         <ui5-select @change="circumferenceUnit = $event.target.selectedOption.value">
-          <ui5-option value="cm" :selected="circumferenceUnit === 'cm'">Centimeters (cm)</ui5-option>
+          <ui5-option value="cm" :selected="circumferenceUnit === 'cm'"
+            >Centimeters (cm)</ui5-option
+          >
           <ui5-option value="in" :selected="circumferenceUnit === 'in'">Inches (in)</ui5-option>
         </ui5-select>
       </div>
@@ -96,35 +108,59 @@ const handleSave = async () => {
       <div class="form-grid">
         <div class="form-group">
           <ui5-label>Chest</ui5-label>
-          <ui5-input type="Number" :value="chest" @input="chest = $event.target.value" placeholder="100" />
+          <ui5-input
+            type="Number"
+            :value="chest"
+            @input="chest = $event.target.value"
+            placeholder="100"
+          />
         </div>
 
         <div class="form-group">
           <ui5-label>Waist</ui5-label>
-          <ui5-input type="Number" :value="waist" @input="waist = $event.target.value" placeholder="80" />
+          <ui5-input
+            type="Number"
+            :value="waist"
+            @input="waist = $event.target.value"
+            placeholder="80"
+          />
         </div>
 
         <div class="form-group">
           <ui5-label>Biceps</ui5-label>
-          <ui5-input type="Number" :value="biceps" @input="biceps = $event.target.value" placeholder="38" />
+          <ui5-input
+            type="Number"
+            :value="biceps"
+            @input="biceps = $event.target.value"
+            placeholder="38"
+          />
         </div>
 
         <div class="form-group">
           <ui5-label>Thighs</ui5-label>
-          <ui5-input type="Number" :value="thighs" @input="thighs = $event.target.value" placeholder="60" />
+          <ui5-input
+            type="Number"
+            :value="thighs"
+            @input="thighs = $event.target.value"
+            placeholder="60"
+          />
         </div>
       </div>
 
       <div class="form-group">
         <ui5-label>Progress Photo URL (Optional - REQ-10)</ui5-label>
-        <ui5-input :value="photoUrl" @input="photoUrl = $event.target.value" placeholder="https://example.com/photo.jpg" />
+        <ui5-input
+          :value="photoUrl"
+          @input="photoUrl = $event.target.value"
+          placeholder="https://example.com/photo.jpg"
+        />
       </div>
     </div>
 
     <div slot="footer" class="dialog-footer">
       <ui5-button design="Transparent" @click="emit('close')">Cancel</ui5-button>
       <ui5-button design="Emphasized" :disabled="loading" @click="handleSave">
-        {{ loading ? 'Saving...' : 'Save Log' }}
+        {{ loading ? "Saving..." : "Save Log" }}
       </ui5-button>
     </div>
   </ui5-dialog>

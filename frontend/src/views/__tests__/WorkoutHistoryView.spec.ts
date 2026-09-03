@@ -14,41 +14,51 @@ describe("WorkoutHistoryView", () => {
   });
 
   it("fetches workout history, views detail modal, deletes workout and starts empty workout", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((url, opts) => {
-      if (opts?.method === "DELETE") {
-        return Promise.resolve({ ok: true, json: async () => ({ message: "Deleted" }) });
-      }
-      if (url.includes("/start")) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url, opts) => {
+        if (opts?.method === "DELETE") {
+          return Promise.resolve({ ok: true, json: async () => ({ message: "Deleted" }) });
+        }
+        if (url.includes("/start")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              workout: {
+                id: "w_new",
+                title: "Empty Session",
+                start_time: new Date().toISOString(),
+                total_volume: 0,
+                set_count: 0,
+                exercises: [],
+              },
+            }),
+          });
+        }
+        if (url.includes("/workouts/w1")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              workout: { id: "w1", title: "Upper Body Hypertrophy", exercises: [] },
+            }),
+          });
+        }
         return Promise.resolve({
           ok: true,
           json: async () => ({
-            workout: { id: "w_new", title: "Empty Session", start_time: new Date().toISOString(), total_volume: 0, set_count: 0, exercises: [] },
+            workouts: [
+              {
+                id: "w1",
+                title: "Upper Body Hypertrophy",
+                start_time: "2026-01-01T10:00:00Z",
+                duration_seconds: 2700,
+                total_volume: 8500,
+              },
+            ],
           }),
         });
-      }
-      if (url.includes("/workouts/w1")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            workout: { id: "w1", title: "Upper Body Hypertrophy", exercises: [] },
-          }),
-        });
-      }
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({
-          workouts: [
-            {
-              id: "w1",
-              title: "Upper Body Hypertrophy",
-              start_time: "2026-01-01T10:00:00Z",
-              duration_seconds: 2700,
-              total_volume: 8500,
-            },
-          ],
-        }),
-      });
-    }));
+      }),
+    );
 
     const wrapper = mount(WorkoutHistoryView);
     await new Promise((r) => setTimeout(r, 50));

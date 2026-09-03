@@ -1,7 +1,4 @@
-export async function apiFetch<T = any>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
+export async function apiFetch<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem("gymlogger_token");
 
   const headers: Record<string, string> = {

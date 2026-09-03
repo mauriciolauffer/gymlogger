@@ -52,7 +52,7 @@ watch(
       selectedExercises.value = [];
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 onMounted(() => {
@@ -125,18 +125,29 @@ const handleSave = async () => {
 
       <div class="form-group">
         <ui5-label required>Template Title</ui5-label>
-        <ui5-input :value="title" @input="title = $event.target.value" placeholder="e.g. Upper Body Hypertrophy" />
+        <ui5-input
+          :value="title"
+          @input="title = $event.target.value"
+          placeholder="e.g. Upper Body Hypertrophy"
+        />
       </div>
 
       <div class="form-group">
         <ui5-label>Notes / Description</ui5-label>
-        <ui5-input :value="notes" @input="notes = $event.target.value" placeholder="Focus on progressive overload..." />
+        <ui5-input
+          :value="notes"
+          @input="notes = $event.target.value"
+          placeholder="Focus on progressive overload..."
+        />
       </div>
 
       <div class="form-group">
         <ui5-label>Add Exercise</ui5-label>
         <div class="add-row">
-          <ui5-select class="flex-1" @change="selectedExerciseToAdd = $event.target.selectedOption.value">
+          <ui5-select
+            class="flex-1"
+            @change="selectedExerciseToAdd = $event.target.selectedOption.value"
+          >
             <ui5-option value="">Choose Exercise</ui5-option>
             <ui5-option
               v-for="ex in availableExercises"
@@ -154,12 +165,15 @@ const handleSave = async () => {
       <div class="form-group">
         <ui5-label>Selected Exercises ({{ selectedExercises.length }})</ui5-label>
         <ui5-list v-if="selectedExercises.length">
-          <ui5-list-item-standard
-            v-for="(ex, idx) in selectedExercises"
-            :key="idx"
-          >
+          <ui5-list-item-standard v-for="(ex, idx) in selectedExercises" :key="idx">
             {{ idx + 1 }}. {{ ex.name }}
-            <ui5-button slot="endContent" design="Transparent" icon="delete" @click="handleRemoveExercise(idx)">Remove</ui5-button>
+            <ui5-button
+              slot="endContent"
+              design="Transparent"
+              icon="delete"
+              @click="handleRemoveExercise(idx)"
+              >Remove</ui5-button
+            >
           </ui5-list-item-standard>
         </ui5-list>
         <p v-else class="empty-text">No exercises added to template yet.</p>
@@ -169,7 +183,7 @@ const handleSave = async () => {
     <div slot="footer" class="dialog-footer">
       <ui5-button design="Transparent" @click="emit('close')">Cancel</ui5-button>
       <ui5-button design="Emphasized" :disabled="loading" @click="handleSave">
-        {{ loading ? 'Saving...' : 'Save Template' }}
+        {{ loading ? "Saving..." : "Save Template" }}
       </ui5-button>
     </div>
   </ui5-dialog>

@@ -48,12 +48,12 @@ const formatDate = (iso: string) => {
 
 const formatMetrics = (item: any) => {
   const parts: string[] = [];
-  if (item.weight) parts.push(`Weight: ${item.weight} ${item.weight_unit || 'kg'}`);
+  if (item.weight) parts.push(`Weight: ${item.weight} ${item.weight_unit || "kg"}`);
   if (item.body_fat_pct) parts.push(`Body Fat: ${item.body_fat_pct}%`);
-  if (item.chest) parts.push(`Chest: ${item.chest}${item.circumference_unit || 'cm'}`);
-  if (item.waist) parts.push(`Waist: ${item.waist}${item.circumference_unit || 'cm'}`);
-  if (item.biceps) parts.push(`Biceps: ${item.biceps}${item.circumference_unit || 'cm'}`);
-  if (item.thighs) parts.push(`Thighs: ${item.thighs}${item.circumference_unit || 'cm'}`);
+  if (item.chest) parts.push(`Chest: ${item.chest}${item.circumference_unit || "cm"}`);
+  if (item.waist) parts.push(`Waist: ${item.waist}${item.circumference_unit || "cm"}`);
+  if (item.biceps) parts.push(`Biceps: ${item.biceps}${item.circumference_unit || "cm"}`);
+  if (item.thighs) parts.push(`Thighs: ${item.thighs}${item.circumference_unit || "cm"}`);
   return parts.join(" • ");
 };
 
@@ -69,9 +69,7 @@ onMounted(() => {
         <ui5-title level="H2">Body Measurements & Progress</ui5-title>
         <p class="subtitle">Track composition changes over time (REQ-07, REQ-09, REQ-10)</p>
       </div>
-      <ui5-button design="Emphasized" @click="showLogModal = true">
-        + Log Measurement
-      </ui5-button>
+      <ui5-button design="Emphasized" @click="showLogModal = true"> + Log Measurement </ui5-button>
     </div>
 
     <div v-if="loading" class="loading-state">Loading measurements...</div>

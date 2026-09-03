@@ -111,7 +111,9 @@ onMounted(() => {
       </ui5-list>
 
       <div v-else class="empty-state">
-        <p>No workout sessions logged yet. Tap "Start Empty Workout" to begin your first session!</p>
+        <p>
+          No workout sessions logged yet. Tap "Start Empty Workout" to begin your first session!
+        </p>
       </div>
     </ui5-card>
 

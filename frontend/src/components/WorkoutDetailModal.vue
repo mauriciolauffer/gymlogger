@@ -43,21 +43,13 @@ const formatDuration = (secs: number) => {
       <p class="notes" v-if="workout.notes">Notes: {{ workout.notes }}</p>
 
       <div class="exercises-container">
-        <div
-          v-for="ex in workout.exercises"
-          :key="ex.id"
-          class="exercise-block"
-        >
+        <div v-for="ex in workout.exercises" :key="ex.id" class="exercise-block">
           <ui5-title level="H4" class="ex-title">{{ ex.exercise_name }}</ui5-title>
 
           <div class="sets-list">
-            <div
-              v-for="(s, idx) in ex.sets"
-              :key="s.id"
-              class="set-item"
-            >
+            <div v-for="(s, idx) in ex.sets" :key="s.id" class="set-item">
               <span class="set-idx">Set {{ idx + 1 }}:</span>
-              <span>{{ s.weight }} {{ s.weight_unit || 'kg' }} × {{ s.reps }} reps</span>
+              <span>{{ s.weight }} {{ s.weight_unit || "kg" }} × {{ s.reps }} reps</span>
               <span class="set-type" v-if="s.set_type && s.set_type !== 'normal'">
                 ({{ s.set_type }})
               </span>

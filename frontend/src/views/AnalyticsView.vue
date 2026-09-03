@@ -24,7 +24,12 @@ const report = ref<{
   totalDurationSeconds: number;
   topPrs: Array<{ exercise_name: string; pr_type: string; value: number }>;
   muscleDistribution: Array<{ muscle_name: string; set_count: number; percentage: number }>;
-  weeklyMuscleTargetProgress: Array<{ muscle_name: string; weekly_sets: number; target_min: number; target_max: number }>;
+  weeklyMuscleTargetProgress: Array<{
+    muscle_name: string;
+    weekly_sets: number;
+    target_min: number;
+    target_max: number;
+  }>;
 } | null>(null);
 
 const consistencyData = ref<any>(null);
@@ -49,7 +54,7 @@ const fetchAnalytics = async () => {
   loading.value = true;
   try {
     const reportData = await api.get(
-      `/api/v1/analytics/monthly-report?year=${selectedYear.value}&month=${selectedMonth.value}`
+      `/api/v1/analytics/monthly-report?year=${selectedYear.value}&month=${selectedMonth.value}`,
     );
     report.value = reportData;
 
@@ -182,7 +187,9 @@ onMounted(() => {
               <div class="progress-track">
                 <div
                   class="progress-fill target-fill"
-                  :style="{ width: Math.min(100, (item.weekly_sets / item.target_max) * 100) + '%' }"
+                  :style="{
+                    width: Math.min(100, (item.weekly_sets / item.target_max) * 100) + '%',
+                  }"
                 ></div>
               </div>
             </div>

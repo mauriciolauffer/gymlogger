@@ -18,13 +18,17 @@ const emit = defineEmits(["close"]);
 
 const weightInput = ref(props.targetWeight ? String(props.targetWeight) : "100");
 const loading = ref(false);
-const warmupSets = ref<Array<{ percentage: number; weight: number; reps: number; notes: string }>>([]);
+const warmupSets = ref<Array<{ percentage: number; weight: number; reps: number; notes: string }>>(
+  [],
+);
 
 const fetchWarmup = async (w: number) => {
   if (!w || w <= 0) return;
   loading.value = true;
   try {
-    const data = await api.get<{ warmupSets: any[] }>(`/api/v1/calculators/warmup?targetWeight=${w}`);
+    const data = await api.get<{ warmupSets: any[] }>(
+      `/api/v1/calculators/warmup?targetWeight=${w}`,
+    );
     warmupSets.value = data.warmupSets || [];
   } catch (err) {
     console.error("Failed to calculate warmups", err);
@@ -42,7 +46,7 @@ watch(
       }
       fetchWarmup(Number(weightInput.value));
     }
-  }
+  },
 );
 
 const handleCalculate = () => {

@@ -39,7 +39,11 @@ const handleSave = async () => {
 <template>
   <div class="settings-container">
     <ui5-card class="settings-card">
-      <ui5-card-header slot="header" title-text="System Settings" subtitle-text="Configure app preferences (REQ-13)" />
+      <ui5-card-header
+        slot="header"
+        title-text="System Settings"
+        subtitle-text="Configure app preferences (REQ-13)"
+      />
 
       <div class="card-content">
         <ui5-message-strip
@@ -54,23 +58,33 @@ const handleSave = async () => {
         <div class="form-group">
           <ui5-label>Preferred Weight Unit</ui5-label>
           <ui5-select @change="settings.preferred_weight_unit = $event.target.selectedOption.value">
-            <ui5-option value="kg" :selected="settings.preferred_weight_unit === 'kg'">Kilograms (kg)</ui5-option>
-            <ui5-option value="lb" :selected="settings.preferred_weight_unit === 'lb'">Pounds (lb)</ui5-option>
+            <ui5-option value="kg" :selected="settings.preferred_weight_unit === 'kg'"
+              >Kilograms (kg)</ui5-option
+            >
+            <ui5-option value="lb" :selected="settings.preferred_weight_unit === 'lb'"
+              >Pounds (lb)</ui5-option
+            >
           </ui5-select>
         </div>
 
         <div class="form-group">
           <ui5-label>Preferred Distance / Length Unit</ui5-label>
           <ui5-select @change="settings.preferred_length_unit = $event.target.selectedOption.value">
-            <ui5-option value="cm" :selected="settings.preferred_length_unit === 'cm'">Centimeters (cm)</ui5-option>
-            <ui5-option value="in" :selected="settings.preferred_length_unit === 'in'">Inches (in)</ui5-option>
+            <ui5-option value="cm" :selected="settings.preferred_length_unit === 'cm'"
+              >Centimeters (cm)</ui5-option
+            >
+            <ui5-option value="in" :selected="settings.preferred_length_unit === 'in'"
+              >Inches (in)</ui5-option
+            >
           </ui5-select>
         </div>
 
         <div class="form-group">
           <ui5-label>Theme</ui5-label>
           <ui5-select @change="settings.theme = $event.target.selectedOption.value">
-            <ui5-option value="system" :selected="settings.theme === 'system'">System Default</ui5-option>
+            <ui5-option value="system" :selected="settings.theme === 'system'"
+              >System Default</ui5-option
+            >
             <ui5-option value="light" :selected="settings.theme === 'light'">Light Mode</ui5-option>
             <ui5-option value="dark" :selected="settings.theme === 'dark'">Dark Mode</ui5-option>
           </ui5-select>
@@ -97,7 +111,7 @@ const handleSave = async () => {
 
         <div class="actions">
           <ui5-button design="Emphasized" :disabled="saving" @click="handleSave">
-            {{ saving ? 'Saving...' : 'Save Settings' }}
+            {{ saving ? "Saving..." : "Save Settings" }}
           </ui5-button>
         </div>
       </div>

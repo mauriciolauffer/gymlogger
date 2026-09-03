@@ -8,22 +8,25 @@ describe("ExercisesView", () => {
   });
 
   it("fetches, searches, filters exercises and opens detail modal", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((url) => {
-      if (url.includes("/muscle-groups")) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url) => {
+        if (url.includes("/muscle-groups")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ muscleGroups: [{ id: "mg1", name: "Chest" }] }),
+          });
+        }
         return Promise.resolve({
           ok: true,
-          json: async () => ({ muscleGroups: [{ id: "mg1", name: "Chest" }] }),
+          json: async () => ({
+            exercises: [
+              { id: "e1", name: "Bench Press", category: "barbell", primary_muscle_name: "Chest" },
+            ],
+          }),
         });
-      }
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({
-          exercises: [
-            { id: "e1", name: "Bench Press", category: "barbell", primary_muscle_name: "Chest" },
-          ],
-        }),
-      });
-    }));
+      }),
+    );
 
     const wrapper = mount(ExercisesView);
     await new Promise((r) => setTimeout(r, 50));

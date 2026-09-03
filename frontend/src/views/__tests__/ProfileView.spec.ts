@@ -8,26 +8,29 @@ describe("ProfileView", () => {
   });
 
   it("fetches, updates and saves profile", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((url, opts) => {
-      if (opts?.method === "PUT") {
-        return Promise.resolve({ ok: true, json: async () => ({ message: "Profile updated" }) });
-      }
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({
-          profile: {
-            email: "athlete@example.com",
-            name: "John Athlete",
-            location: "New York",
-            birthday: "1995-05-15",
-            sex: "male",
-            height: 180,
-            height_unit: "cm",
-            bio: "Passionate lifter",
-          },
-        }),
-      });
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url, opts) => {
+        if (opts?.method === "PUT") {
+          return Promise.resolve({ ok: true, json: async () => ({ message: "Profile updated" }) });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            profile: {
+              email: "athlete@example.com",
+              name: "John Athlete",
+              location: "New York",
+              birthday: "1995-05-15",
+              sex: "male",
+              height: 180,
+              height_unit: "cm",
+              bio: "Passionate lifter",
+            },
+          }),
+        });
+      }),
+    );
 
     const wrapper = mount(ProfileView);
     await new Promise((r) => setTimeout(r, 50));

@@ -22,12 +22,15 @@ describe("Active Workout Store", () => {
       exercises: [],
     };
 
-    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => {
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({ workout: mockWorkout }),
-      });
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ workout: mockWorkout }),
+        });
+      }),
+    );
 
     await activeWorkoutStore.startWorkout("Leg Day");
 
@@ -61,44 +64,47 @@ describe("Active Workout Store", () => {
       exercises: [],
     };
 
-    vi.stubGlobal("fetch", vi.fn().mockImplementation((url, opts) => {
-      if (url.includes("/previous-values")) {
-        return Promise.resolve({ ok: true, json: async () => ({ sets: [] }) });
-      }
-      if (opts?.method === "POST" && url.includes("/exercises")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ workoutExercise: { id: "we1", exercise_id: "ex1", sets: [] } }),
-        });
-      }
-      if (opts?.method === "POST" && url.includes("/sets")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            set: { id: "s1", weight: 60, reps: 8, set_type: "normal" },
-            isPr: true,
-            prTypes: ["1rm"],
-          }),
-        });
-      }
-      if (opts?.method === "PUT" && url.includes("/sets/s1")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            set: { id: "s1", weight: 70, reps: 8, set_type: "normal" },
-            isPr: false,
-            prTypes: [],
-          }),
-        });
-      }
-      if (opts?.method === "DELETE" && url.includes("/sets/s1")) {
-        return Promise.resolve({ ok: true, json: async () => ({ message: "Set deleted" }) });
-      }
-      if (opts?.method === "PUT" && url.includes("/finish")) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url, opts) => {
+        if (url.includes("/previous-values")) {
+          return Promise.resolve({ ok: true, json: async () => ({ sets: [] }) });
+        }
+        if (opts?.method === "POST" && url.includes("/exercises")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ workoutExercise: { id: "we1", exercise_id: "ex1", sets: [] } }),
+          });
+        }
+        if (opts?.method === "POST" && url.includes("/sets")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              set: { id: "s1", weight: 60, reps: 8, set_type: "normal" },
+              isPr: true,
+              prTypes: ["1rm"],
+            }),
+          });
+        }
+        if (opts?.method === "PUT" && url.includes("/sets/s1")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              set: { id: "s1", weight: 70, reps: 8, set_type: "normal" },
+              isPr: false,
+              prTypes: [],
+            }),
+          });
+        }
+        if (opts?.method === "DELETE" && url.includes("/sets/s1")) {
+          return Promise.resolve({ ok: true, json: async () => ({ message: "Set deleted" }) });
+        }
+        if (opts?.method === "PUT" && url.includes("/finish")) {
+          return Promise.resolve({ ok: true, json: async () => ({ workout: mockWorkout }) });
+        }
         return Promise.resolve({ ok: true, json: async () => ({ workout: mockWorkout }) });
-      }
-      return Promise.resolve({ ok: true, json: async () => ({ workout: mockWorkout }) });
-    }));
+      }),
+    );
 
     await activeWorkoutStore.fetchActiveWorkout("w1");
     expect(activeWorkoutStore.workout?.id).toBe("w1");
