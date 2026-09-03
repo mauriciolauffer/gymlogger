@@ -25,18 +25,22 @@ export const user = sqliteTable("user", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 
-export const session = sqliteTable("session", {
-  id: text("id").primaryKey(),
-  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
-  token: text("token").notNull().unique(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id),
-});
+export const session = sqliteTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+    token: text("token").notNull().unique(),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+  },
+  (table) => [index("idx_session_user_id").on(table.userId)],
+);
 
 export const account = sqliteTable("account", {
   id: text("id").primaryKey(),
@@ -76,7 +80,7 @@ export const units = sqliteTable("units", {
   symbol: text("symbol").notNull(),
 });
 
-export const usersProfile = sqliteTable("users", {
+export const usersProfile = sqliteTable("user_profile", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash"),
@@ -154,14 +158,21 @@ export const workoutTemplates = sqliteTable(
   (table) => [index("idx_workout_templates_user_id").on(table.userId)],
 );
 
-export const workoutTemplateExercises = sqliteTable("workout_template_exercises", {
-  id: text("id").primaryKey(),
-  templateId: text("template_id").notNull(),
-  exerciseId: text("exercise_id").notNull(),
-  supersetId: text("superset_id"),
-  notes: text("notes"),
-  orderIndex: integer("order_index").notNull(),
-});
+export const workoutTemplateExercises = sqliteTable(
+  "workout_template_exercises",
+  {
+    id: text("id").primaryKey(),
+    templateId: text("template_id").notNull(),
+    exerciseId: text("exercise_id").notNull(),
+    supersetId: text("superset_id"),
+    notes: text("notes"),
+    orderIndex: integer("order_index").notNull(),
+  },
+  (table) => [
+    index("idx_workout_template_exercises_template_id").on(table.templateId),
+    index("idx_workout_template_exercises_exercise_id").on(table.exerciseId),
+  ],
+);
 
 export const workouts = sqliteTable(
   "workouts",
@@ -196,7 +207,10 @@ export const workoutExercises = sqliteTable(
     notes: text("notes"),
     orderIndex: integer("order_index").notNull(),
   },
-  (table) => [index("idx_workout_exercises_workout_id").on(table.workoutId)],
+  (table) => [
+    index("idx_workout_exercises_workout_id").on(table.workoutId),
+    index("idx_workout_exercises_exercise_id").on(table.exerciseId),
+  ],
 );
 
 export const workoutSets = sqliteTable(
@@ -233,6 +247,7 @@ export const personalRecords = sqliteTable(
   (table) => [
     uniqueIndex("idx_personal_records_unique").on(table.userId, table.exerciseId, table.prType),
     index("idx_personal_records_user_exercise").on(table.userId, table.exerciseId),
+    index("idx_personal_records_achieved_at").on(table.userId, table.achievedAt),
   ],
 );
 
