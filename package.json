@@ -8,11 +8,11 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter backend dev",
-    "dev:backend": "pnpm --filter backend dev",
-    "dev:frontend": "pnpm --filter frontend dev",
-    "build": "pnpm --filter frontend build",
-    "test": "pnpm --filter backend test",
+    "dev:api": "pnpm --filter backend dev",
+    "dev:ui": "pnpm --filter frontend dev",
+    "test": "pnpm test:api && pnpm test:ui",
+    "test:api": "pnpm --filter backend test",
+    "test:ui": "pnpm --filter frontend test",
     "lint": "oxfmt --check && oxlint",
     "format": "oxfmt"
   },

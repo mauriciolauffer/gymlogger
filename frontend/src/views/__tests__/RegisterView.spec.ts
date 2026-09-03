@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import RegisterView from "../RegisterView.vue";
 import { authStore } from "../../store/auth";
 
-const mockPush = vi.fn();
+const mockPush = vi.fn<() => void>();
 vi.mock("vue-router", () => ({
   useRouter: () => ({ push: mockPush }),
 }));

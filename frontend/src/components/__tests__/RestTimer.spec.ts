@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
 import RestTimer from "../RestTimer.vue";
 import { activeWorkoutStore } from "../../store/activeWorkout";
@@ -16,9 +16,8 @@ describe("RestTimer", () => {
     const wrapper = mount(RestTimer);
 
     const button = wrapper.find("ui5-button");
-    if (button.exists()) {
-      await button.trigger("click");
-      expect(activeWorkoutStore.restTimer.active).toBe(false);
-    }
+    expect(button.exists()).toBe(true);
+    await button.trigger("click");
+    expect(activeWorkoutStore.restTimer.active).toBe(false);
   });
 });

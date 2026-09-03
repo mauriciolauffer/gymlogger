@@ -140,7 +140,7 @@ export const activeWorkoutStore = {
         `/api/v1/workouts/previous-values?exerciseId=${exerciseId}`,
       );
       previousSets = prevData.sets || [];
-    } catch (e) {
+    } catch {
       // non-fatal
     }
 

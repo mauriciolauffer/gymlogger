@@ -3,7 +3,7 @@ import { mount } from "@vue/test-utils";
 import ActiveWorkoutView from "../ActiveWorkoutView.vue";
 import { activeWorkoutStore } from "../../store/activeWorkout";
 
-const mockPush = vi.fn();
+const mockPush = vi.fn<() => void>();
 vi.mock("vue-router", () => ({
   useRouter: () => ({ push: mockPush }),
 }));

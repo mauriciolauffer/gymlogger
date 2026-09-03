@@ -18,10 +18,12 @@ describe("Auth Store", () => {
   it("logs out user and clears localStorage", async () => {
     authStore.setAuth("token123", { id: "u1", email: "test@example.com" });
 
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ message: "Logout successful" }),
-    });
+    const mockFetch = vi
+      .fn<() => Promise<{ ok: boolean; json: () => Promise<unknown> }>>()
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ message: "Logout successful" }),
+      });
     vi.stubGlobal("fetch", mockFetch);
 
     await authStore.logout();

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount } from "@vue/test-utils";
 import TemplatesView from "../TemplatesView.vue";
 
-const mockPush = vi.fn();
+const mockPush = vi.fn<() => void>();
 vi.mock("vue-router", () => ({
   useRouter: () => ({ push: mockPush }),
 }));

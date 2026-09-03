@@ -14,9 +14,8 @@ describe("PrNotificationDialog", () => {
     expect(wrapper.text()).toContain("1RM, MAX_WEIGHT");
 
     const button = wrapper.find("ui5-button");
-    if (button.exists()) {
-      await button.trigger("click");
-      expect(wrapper.emitted("close")).toBeTruthy();
-    }
+    expect(button.exists()).toBe(true);
+    await button.trigger("click");
+    expect(wrapper.emitted("close")).toBeTruthy();
   });
 });

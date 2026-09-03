@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { api, apiFetch } from "../client";
+import { api } from "../client";
 
 describe("API Client", () => {
   beforeEach(() => {
@@ -9,10 +9,12 @@ describe("API Client", () => {
 
   it("adds Authorization header when token exists in localStorage", async () => {
     localStorage.setItem("gymlogger_token", "test-token");
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ status: "ok" }),
-    });
+    const mockFetch = vi
+      .fn<() => Promise<{ ok: boolean; json: () => Promise<unknown> }>>()
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ status: "ok" }),
+      });
     vi.stubGlobal("fetch", mockFetch);
 
     const res = await api.get("/api/v1/test");
@@ -28,21 +30,25 @@ describe("API Client", () => {
   });
 
   it("throws error with message on non-ok response", async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 400,
-      json: async () => ({ error: "Bad Request" }),
-    });
+    const mockFetch = vi
+      .fn<() => Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }>>()
+      .mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: "Bad Request" }),
+      });
     vi.stubGlobal("fetch", mockFetch);
 
     await expect(api.post("/api/v1/test", { a: 1 })).rejects.toThrow("Bad Request");
   });
 
   it("supports post, put, delete methods", async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ success: true }),
-    });
+    const mockFetch = vi
+      .fn<() => Promise<{ ok: boolean; json: () => Promise<unknown> }>>()
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
     vi.stubGlobal("fetch", mockFetch);
 
     await api.post("/api/v1/items", { name: "item1" });

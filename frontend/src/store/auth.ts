@@ -36,8 +36,8 @@ export const authStore = {
       if (state.token) {
         await api.post("/api/v1/auth/logout");
       }
-    } catch (e) {
-      console.error("Logout API call failed", e);
+    } catch (err) {
+      console.error("Logout API call failed", err);
     } finally {
       state.token = null;
       state.user = null;
