@@ -9,7 +9,7 @@ describe("Settings Store", () => {
   it("fetches settings from API", async () => {
     const mockSettings = {
       theme: "dark" as const,
-      preferred_weight_unit: "lb" as const,
+      preferred_weight_unit: "lbs" as const,
       preferred_length_unit: "in" as const,
       language: "en",
       rest_timer_duration_seconds: 120,
@@ -27,7 +27,7 @@ describe("Settings Store", () => {
     await settingsStore.fetchSettings();
 
     expect(settingsStore.settings.theme).toBe("dark");
-    expect(settingsStore.settings.preferred_weight_unit).toBe("lb");
+    expect(settingsStore.settings.preferred_weight_unit).toBe("lbs");
     expect(settingsStore.settings.rest_timer_duration_seconds).toBe(120);
   });
 

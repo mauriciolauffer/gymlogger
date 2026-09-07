@@ -39,7 +39,7 @@ const fetchProfile = async () => {
         ...res.profile,
         height: res.profile.height ?? 0,
         sex: res.profile.sex || "unspecified",
-        height_unit: res.profile.height_unit || "cm",
+        height_unit: res.profile.heightUnit || res.profile.height_unit || "cm",
       };
     }
   } catch (err: any) {

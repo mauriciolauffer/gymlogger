@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
@@ -6,7 +5,6 @@ import vue from "@vitejs/plugin-vue";
 export default defineConfig({
   plugins: [
     vue({
-      vapor: true,
       template: {
         compilerOptions: {
           isCustomElement: (tag) => tag.startsWith("ui5-"),
@@ -45,16 +43,10 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: "playwright",
-      instances: [
-        {
-          browser: "chromium",
-          headless: true,
-          launch: process.env.CHROMIUM_PATH
-            ? { executablePath: process.env.CHROMIUM_PATH }
-            : undefined,
-        },
-      ],
+      headless: true,
+      instances: [{ browser: "chromium" }],
     },
+    exclude: ["**/node_modules/**", "**/dist/**", "**/*.integration.spec.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

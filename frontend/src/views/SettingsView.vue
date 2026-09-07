@@ -61,8 +61,8 @@ const handleSave = async () => {
             <ui5-option value="kg" :selected="settings.preferred_weight_unit === 'kg'"
               >Kilograms (kg)</ui5-option
             >
-            <ui5-option value="lb" :selected="settings.preferred_weight_unit === 'lb'"
-              >Pounds (lb)</ui5-option
+            <ui5-option value="lbs" :selected="settings.preferred_weight_unit === 'lbs'"
+              >Pounds (lbs)</ui5-option
             >
           </ui5-select>
         </div>

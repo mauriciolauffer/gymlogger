@@ -50,10 +50,10 @@ const formatMetrics = (item: any) => {
   const parts: string[] = [];
   if (item.weight) parts.push(`Weight: ${item.weight} ${item.weight_unit || "kg"}`);
   if (item.body_fat_pct) parts.push(`Body Fat: ${item.body_fat_pct}%`);
-  if (item.chest) parts.push(`Chest: ${item.chest}${item.circumference_unit || "cm"}`);
-  if (item.waist) parts.push(`Waist: ${item.waist}${item.circumference_unit || "cm"}`);
-  if (item.biceps) parts.push(`Biceps: ${item.biceps}${item.circumference_unit || "cm"}`);
-  if (item.thighs) parts.push(`Thighs: ${item.thighs}${item.circumference_unit || "cm"}`);
+  if (item.chest) parts.push(`Chest: ${item.chest}${item.length_unit || "cm"}`);
+  if (item.waist) parts.push(`Waist: ${item.waist}${item.length_unit || "cm"}`);
+  if (item.biceps) parts.push(`Biceps: ${item.biceps}${item.length_unit || "cm"}`);
+  if (item.thighs) parts.push(`Thighs: ${item.thighs}${item.length_unit || "cm"}`);
   return parts.join(" • ");
 };
 
@@ -78,7 +78,7 @@ onMounted(() => {
       <ui5-card v-for="item in logs" :key="item.id" class="log-card">
         <ui5-card-header
           slot="header"
-          :title-text="formatDate(item.created_at || item.recorded_at)"
+          :title-text="formatDate(item.date || item.created_at)"
           :subtitle-text="formatMetrics(item)"
         >
           <ui5-button

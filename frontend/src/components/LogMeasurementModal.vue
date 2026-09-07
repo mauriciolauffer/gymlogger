@@ -46,7 +46,7 @@ const handleSave = async () => {
       waist: waist.value ? Number(waist.value) : undefined,
       biceps: biceps.value ? Number(biceps.value) : undefined,
       thighs: thighs.value ? Number(thighs.value) : undefined,
-      circumference_unit: circumferenceUnit.value,
+      length_unit: circumferenceUnit.value,
       photo_url: photoUrl.value || undefined,
     });
     emit("saved");
@@ -78,7 +78,7 @@ const handleSave = async () => {
             />
             <ui5-select @change="weightUnit = $event.target.selectedOption.value">
               <ui5-option value="kg" :selected="weightUnit === 'kg'">kg</ui5-option>
-              <ui5-option value="lb" :selected="weightUnit === 'lb'">lb</ui5-option>
+              <ui5-option value="lbs" :selected="weightUnit === 'lbs'">lbs</ui5-option>
             </ui5-select>
           </div>
         </div>

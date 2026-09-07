@@ -3,7 +3,7 @@ import { api } from "../api/client";
 
 export interface UserSettings {
   theme: "system" | "light" | "dark";
-  preferred_weight_unit: "kg" | "lb";
+  preferred_weight_unit: "kg" | "lbs";
   preferred_length_unit: "cm" | "in";
   language: string;
   rest_timer_duration_seconds: number;
@@ -12,7 +12,7 @@ export interface UserSettings {
 
 const state = reactive<UserSettings>({
   theme: "system",
-  preferred_weight_unit: "kg",
+  preferred_weight_unit: "kg" as "kg" | "lbs",
   preferred_length_unit: "cm",
   language: "en",
   rest_timer_duration_seconds: 90,

@@ -25,7 +25,7 @@ describe("MeasurementsView", () => {
                 weight_unit: "kg",
                 body_fat_pct: 14.5,
                 waist: 82,
-                circumference_unit: "cm",
+                length_unit: "cm",
                 photo_url: "https://example.com/photo.jpg",
               },
             ],

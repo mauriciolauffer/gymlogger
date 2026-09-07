@@ -17,7 +17,7 @@ describe("SettingsView", () => {
             json: async () => ({
               settings: {
                 theme: "dark",
-                preferred_weight_unit: "lb",
+                preferred_weight_unit: "lbs",
                 preferred_length_unit: "in",
                 language: "en",
                 rest_timer_duration_seconds: 120,
