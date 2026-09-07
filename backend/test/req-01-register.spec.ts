@@ -1,14 +1,11 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
+import { env } from "cloudflare:test";
 import app from "../src/index";
-import { createMockD1 } from "../src/db/d1-mock";
+import { user, usersProfile, userSettings } from "../src/db/schema";
 
 describe("REQ-01: Account Creation", () => {
-  let db: D1Database;
-
-  beforeEach(() => {
-    db = createMockD1();
-  });
-
   it("registers a new user successfully and initializes user_settings", async () => {
     const res = await app.request(
       "/api/v1/auth/register",
@@ -21,7 +18,7 @@ describe("REQ-01: Account Creation", () => {
           password: "securepassword123",
         }),
       },
-      { DB: db },
+      env,
     );
 
     expect(res.status).toBe(201);
@@ -32,19 +29,25 @@ describe("REQ-01: Account Creation", () => {
     expect(data.user.name).toBe("Alex Athlete");
     expect(data.user.id).toBeDefined();
 
-    const userInDb = await db
-      .prepare("SELECT * FROM users WHERE id = ?")
-      .bind(data.user.id)
-      .first();
+    const db = drizzle(env.DB);
+    const userInDb = await db.select().from(user).where(eq(user.id, data.user.id)).get();
     expect(userInDb).toBeDefined();
     expect(userInDb?.email).toBe("alex@example.com");
 
+    const profileInDb = await db
+      .select()
+      .from(usersProfile)
+      .where(eq(usersProfile.id, data.user.id))
+      .get();
+    expect(profileInDb).toBeDefined();
+
     const settingsInDb = await db
-      .prepare("SELECT * FROM user_settings WHERE user_id = ?")
-      .bind(data.user.id)
-      .first();
+      .select()
+      .from(userSettings)
+      .where(eq(userSettings.userId, data.user.id))
+      .get();
     expect(settingsInDb).toBeDefined();
-    expect(settingsInDb?.preferred_weight_unit).toBe("kg");
+    expect(settingsInDb?.preferredWeightUnit).toBe("kg");
   });
 
   it("rejects registration with duplicate email", async () => {
@@ -61,7 +64,7 @@ describe("REQ-01: Account Creation", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       },
-      { DB: db },
+      env,
     );
 
     const res = await app.request(
@@ -71,7 +74,7 @@ describe("REQ-01: Account Creation", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       },
-      { DB: db },
+      env,
     );
 
     expect(res.status).toBe(400);
@@ -87,7 +90,7 @@ describe("REQ-01: Account Creation", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: "notanemail", password: "password123" }),
       },
-      { DB: db },
+      env,
     );
     expect(resInvalidEmail.status).toBe(400);
 
@@ -98,7 +101,7 @@ describe("REQ-01: Account Creation", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: "valid@example.com", password: "123" }),
       },
-      { DB: db },
+      env,
     );
     expect(resWeakPassword.status).toBe(400);
   });

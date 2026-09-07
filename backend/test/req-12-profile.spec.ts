@@ -1,15 +1,14 @@
 import { describe, expect, it, beforeEach } from "vitest";
+import { env } from "cloudflare:test";
 import app from "../src/index";
-import { createMockD1 } from "../src/db/d1-mock";
 
 describe("REQ-12: User Profile Setup", () => {
-  let db: D1Database;
   let token: string;
 
   beforeEach(async () => {
-    db = createMockD1();
     const regRes = await app.request(
-      new Request("http://localhost/api/v1/auth/register", {
+      "/api/v1/auth/register",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -17,9 +16,8 @@ describe("REQ-12: User Profile Setup", () => {
           email: "taylor@example.com",
           password: "password123",
         }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
     const data = await regRes.json();
     token = data.token;
@@ -27,11 +25,9 @@ describe("REQ-12: User Profile Setup", () => {
 
   it("fetches initial user profile details", async () => {
     const res = await app.request(
-      new Request("http://localhost/api/v1/users/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      {},
-      { DB: db },
+      "/api/v1/users/profile",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
     );
 
     expect(res.status).toBe(200);
@@ -42,7 +38,8 @@ describe("REQ-12: User Profile Setup", () => {
 
   it("updates profile information successfully and persists", async () => {
     const updateRes = await app.request(
-      new Request("http://localhost/api/v1/users/profile", {
+      "/api/v1/users/profile",
+      {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -56,9 +53,8 @@ describe("REQ-12: User Profile Setup", () => {
           height_unit: "cm",
           bio: "Powerlifter and fitness enthusiast.",
         }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
 
     expect(updateRes.status).toBe(200);
@@ -69,13 +65,10 @@ describe("REQ-12: User Profile Setup", () => {
     expect(data.profile.height).toBe(172);
     expect(data.profile.bio).toBe("Powerlifter and fitness enthusiast.");
 
-    // Fetch again to verify persistence
     const fetchRes = await app.request(
-      new Request("http://localhost/api/v1/users/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      {},
-      { DB: db },
+      "/api/v1/users/profile",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
     );
     const fetch = await fetchRes.json();
     expect(fetch.profile.location).toBe("New York, USA");
@@ -84,30 +77,30 @@ describe("REQ-12: User Profile Setup", () => {
 
   it("validates invalid profile update fields", async () => {
     const resInvalidSex = await app.request(
-      new Request("http://localhost/api/v1/users/profile", {
+      "/api/v1/users/profile",
+      {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ sex: "invalid_sex" }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
     expect(resInvalidSex.status).toBe(400);
 
     const resInvalidHeight = await app.request(
-      new Request("http://localhost/api/v1/users/profile", {
+      "/api/v1/users/profile",
+      {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ height: -10 }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
     expect(resInvalidHeight.status).toBe(400);
   });

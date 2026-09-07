@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { env } from "cloudflare:test";
 import app from "../src/index";
 
 describe("GymLogger Boilerplate API", () => {
   it("GET / returns API metadata", async () => {
-    const res = await app.request("/");
+    const res = await app.request("/", {}, env);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({
@@ -14,14 +15,14 @@ describe("GymLogger Boilerplate API", () => {
   });
 
   it("GET /health returns healthy status", async () => {
-    const res = await app.request("/health");
+    const res = await app.request("/health", {}, env);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ status: "healthy" });
   });
 
   it("HEAD /health returns status 200 without body", async () => {
-    const res = await app.request("/health", { method: "HEAD" });
+    const res = await app.request("/health", { method: "HEAD" }, env);
     expect(res.status).toBe(200);
     expect(res.body).toBeNull();
   });

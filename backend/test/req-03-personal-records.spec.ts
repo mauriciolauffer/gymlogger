@@ -1,15 +1,14 @@
 import { describe, expect, it, beforeEach } from "vitest";
+import { env } from "cloudflare:test";
 import app from "../src/index";
-import { createMockD1 } from "../src/db/d1-mock";
 
 describe("REQ-03: Live Personal Record Detection", () => {
-  let db: D1Database;
   let token: string;
 
   beforeEach(async () => {
-    db = createMockD1();
     const regRes = await app.request(
-      new Request("http://localhost/api/v1/auth/register", {
+      "/api/v1/auth/register",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -17,48 +16,45 @@ describe("REQ-03: Live Personal Record Detection", () => {
           email: "pr@example.com",
           password: "password123",
         }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
     const data = await regRes.json();
     token = data.token;
   });
 
   it("detects PR when a new record is set and stores in personal_records", async () => {
-    // Start workout session
     const startRes = await app.request(
-      new Request("http://localhost/api/v1/workouts/start", {
+      "/api/v1/workouts/start",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ title: "Bench Day" }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
     const { workout } = await startRes.json();
 
-    // Add bench press
     const addExRes = await app.request(
-      new Request(`http://localhost/api/v1/workouts/${workout.id}/exercises`, {
+      `/api/v1/workouts/${workout.id}/exercises`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ exercise_id: "ex_bench_press" }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
     const { workoutExercise } = await addExRes.json();
 
-    // Log Set 1: 100kg x 5 reps -> new PR
     const set1Res = await app.request(
-      new Request(`http://localhost/api/v1/workouts/${workout.id}/sets`, {
+      `/api/v1/workouts/${workout.id}/sets`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,9 +65,8 @@ describe("REQ-03: Live Personal Record Detection", () => {
           weight: 100,
           reps: 5,
         }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
 
     expect(set1Res.status).toBe(201);
@@ -79,22 +74,19 @@ describe("REQ-03: Live Personal Record Detection", () => {
     expect(set1Data.isPr).toBe(true);
     expect(set1Data.set.is_pr).toBe(1);
 
-    // Query personal records
     const prRes = await app.request(
-      new Request("http://localhost/api/v1/personal-records?exerciseId=ex_bench_press", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      {},
-      { DB: db },
+      "/api/v1/personal-records?exerciseId=ex_bench_press",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
     );
 
     expect(prRes.status).toBe(200);
     const prData = await prRes.json();
     expect(prData.personalRecords.length).toBeGreaterThan(0);
 
-    // Log Set 2: 120kg x 5 reps -> Beats previous PR!
     const set2Res = await app.request(
-      new Request(`http://localhost/api/v1/workouts/${workout.id}/sets`, {
+      `/api/v1/workouts/${workout.id}/sets`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -105,17 +97,16 @@ describe("REQ-03: Live Personal Record Detection", () => {
           weight: 120,
           reps: 5,
         }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
 
     const set2Data = await set2Res.json();
     expect(set2Data.isPr).toBe(true);
 
-    // Log Set 3: 110kg x 5 reps -> Does NOT beat 120kg PR!
     const set3Res = await app.request(
-      new Request(`http://localhost/api/v1/workouts/${workout.id}/sets`, {
+      `/api/v1/workouts/${workout.id}/sets`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,9 +117,8 @@ describe("REQ-03: Live Personal Record Detection", () => {
           weight: 110,
           reps: 5,
         }),
-      }),
-      {},
-      { DB: db },
+      },
+      env,
     );
 
     const set3Data = await set3Res.json();

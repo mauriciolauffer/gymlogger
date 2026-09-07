@@ -1,12 +1,9 @@
 import { describe, expect, it, beforeEach } from "vitest";
+import { env } from "cloudflare:test";
 import app from "../src/index";
-import { createMockD1 } from "../src/db/d1-mock";
 
 describe("REQ-11: Log In", () => {
-  let db: D1Database;
-
   beforeEach(async () => {
-    db = createMockD1();
     await app.request(
       "/api/v1/auth/register",
       {
@@ -18,7 +15,7 @@ describe("REQ-11: Log In", () => {
           password: "password123",
         }),
       },
-      { DB: db },
+      env,
     );
   });
 
@@ -33,7 +30,7 @@ describe("REQ-11: Log In", () => {
           password: "password123",
         }),
       },
-      { DB: db },
+      env,
     );
 
     expect(res.status).toBe(200);
@@ -54,7 +51,7 @@ describe("REQ-11: Log In", () => {
           password: "wrongpassword",
         }),
       },
-      { DB: db },
+      env,
     );
 
     expect(res.status).toBe(401);
@@ -73,7 +70,7 @@ describe("REQ-11: Log In", () => {
           password: "password123",
         }),
       },
-      { DB: db },
+      env,
     );
 
     expect(res.status).toBe(401);
@@ -89,7 +86,7 @@ describe("REQ-11: Log In", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: "sam@example.com", password: "password123" }),
       },
-      { DB: db },
+      env,
     );
     const { token } = await loginRes.json();
 
@@ -99,7 +96,7 @@ describe("REQ-11: Log In", () => {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       },
-      { DB: db },
+      env,
     );
 
     expect(logoutRes.status).toBe(200);
@@ -114,7 +111,7 @@ describe("REQ-11: Log In", () => {
         method: "POST",
         headers: { Authorization: "Bearer invalidtoken" },
       },
-      { DB: db },
+      env,
     );
 
     expect(res.status).toBe(401);
