@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import type { Env } from "../index";
 import { authMiddleware } from "../middleware/auth";
 import { getDb } from "../db/schema";
-import { usersProfile, userSettings } from "../db/schema";
+import { user, usersProfile, userSettings } from "../db/schema";
 
 const VALID_WEIGHT_UNITS = new Set(["kg", "lbs"]);
 const VALID_LENGTH_UNITS = new Set(["cm", "in"]);
@@ -11,14 +11,12 @@ const VALID_LENGTH_UNITS = new Set(["cm", "in"]);
 export const usersRouter = new Hono<Env>()
   .use("*", authMiddleware)
   .get("/profile", async (c) => {
-    const user = c.get("user")!;
+    const sessionUser = c.get("user")!;
     const db = getDb(c);
 
     const profile = await db
       .select({
         id: usersProfile.id,
-        email: usersProfile.email,
-        name: usersProfile.name,
         location: usersProfile.location,
         birthday: usersProfile.birthday,
         sex: usersProfile.sex,
@@ -26,9 +24,12 @@ export const usersRouter = new Hono<Env>()
         heightUnit: usersProfile.heightUnit,
         bio: usersProfile.bio,
         createdAt: usersProfile.createdAt,
+        email: user.email,
+        name: user.name,
       })
       .from(usersProfile)
-      .where(eq(usersProfile.id, user.userId))
+      .innerJoin(user, eq(user.id, usersProfile.id))
+      .where(eq(usersProfile.id, sessionUser.userId))
       .get();
 
     if (!profile) {
@@ -38,7 +39,7 @@ export const usersRouter = new Hono<Env>()
     return c.json({ profile });
   })
   .put("/profile", async (c) => {
-    const user = c.get("user")!;
+    const sessionUser = c.get("user")!;
     const body = await c.req.json().catch(() => null);
 
     if (!body) {
@@ -70,7 +71,6 @@ export const usersRouter = new Hono<Env>()
 
     const current = await db
       .select({
-        name: usersProfile.name,
         location: usersProfile.location,
         birthday: usersProfile.birthday,
         sex: usersProfile.sex,
@@ -79,7 +79,7 @@ export const usersRouter = new Hono<Env>()
         bio: usersProfile.bio,
       })
       .from(usersProfile)
-      .where(eq(usersProfile.id, user.userId))
+      .where(eq(usersProfile.id, sessionUser.userId))
       .get();
 
     if (!current) {
@@ -89,7 +89,6 @@ export const usersRouter = new Hono<Env>()
     await db
       .update(usersProfile)
       .set({
-        name: name !== undefined ? name : current.name,
         location: location !== undefined ? location : current.location,
         birthday: birthday !== undefined ? birthday : current.birthday,
         sex: sex !== undefined ? sex : current.sex,
@@ -97,14 +96,16 @@ export const usersRouter = new Hono<Env>()
         heightUnit: height_unit !== undefined ? height_unit : current.heightUnit,
         bio: bio !== undefined ? bio : current.bio,
       })
-      .where(eq(usersProfile.id, user.userId))
+      .where(eq(usersProfile.id, sessionUser.userId))
       .run();
+
+    if (name !== undefined) {
+      await db.update(user).set({ name }).where(eq(user.id, sessionUser.userId)).run();
+    }
 
     const profile = await db
       .select({
         id: usersProfile.id,
-        email: usersProfile.email,
-        name: usersProfile.name,
         location: usersProfile.location,
         birthday: usersProfile.birthday,
         sex: usersProfile.sex,
@@ -112,15 +113,18 @@ export const usersRouter = new Hono<Env>()
         heightUnit: usersProfile.heightUnit,
         bio: usersProfile.bio,
         createdAt: usersProfile.createdAt,
+        email: user.email,
+        name: user.name,
       })
       .from(usersProfile)
-      .where(eq(usersProfile.id, user.userId))
+      .innerJoin(user, eq(user.id, usersProfile.id))
+      .where(eq(usersProfile.id, sessionUser.userId))
       .get();
 
     return c.json({ message: "Profile updated successfully", profile });
   })
   .get("/settings", async (c) => {
-    const user = c.get("user")!;
+    const sessionUser = c.get("user")!;
     const db = getDb(c);
 
     let settings = await db
@@ -134,14 +138,14 @@ export const usersRouter = new Hono<Env>()
         updatedAt: userSettings.updatedAt,
       })
       .from(userSettings)
-      .where(eq(userSettings.userId, user.userId))
+      .where(eq(userSettings.userId, sessionUser.userId))
       .get();
 
     if (!settings) {
       await db
         .insert(userSettings)
         .values({
-          userId: user.userId,
+          userId: sessionUser.userId,
           theme: "system",
           preferredWeightUnit: "kg",
           preferredLengthUnit: "cm",
@@ -163,14 +167,26 @@ export const usersRouter = new Hono<Env>()
           updatedAt: userSettings.updatedAt,
         })
         .from(userSettings)
-        .where(eq(userSettings.userId, user.userId))
+        .where(eq(userSettings.userId, sessionUser.userId))
         .get();
     }
 
-    return c.json({ settings });
+    return c.json({
+      settings: settings
+        ? {
+            theme: settings.theme,
+            preferred_weight_unit: settings.preferredWeightUnit,
+            preferred_length_unit: settings.preferredLengthUnit,
+            language: settings.language,
+            rest_timer_duration_seconds: settings.restTimerDurationSeconds,
+            notifications_enabled: settings.notificationsEnabled,
+            updated_at: settings.updatedAt,
+          }
+        : null,
+    });
   })
   .put("/settings", async (c) => {
-    const user = c.get("user")!;
+    const sessionUser = c.get("user")!;
     const body = await c.req.json().catch(() => null);
 
     if (!body) {
@@ -222,7 +238,7 @@ export const usersRouter = new Hono<Env>()
         notificationsEnabled: userSettings.notificationsEnabled,
       })
       .from(userSettings)
-      .where(eq(userSettings.userId, user.userId))
+      .where(eq(userSettings.userId, sessionUser.userId))
       .get();
 
     const newTheme = theme !== undefined ? theme : (current?.theme ?? "system");
@@ -247,7 +263,7 @@ export const usersRouter = new Hono<Env>()
     await db
       .insert(userSettings)
       .values({
-        userId: user.userId,
+        userId: sessionUser.userId,
         theme: newTheme,
         preferredWeightUnit: newWeightUnit,
         preferredLengthUnit: newLengthUnit,
@@ -281,8 +297,21 @@ export const usersRouter = new Hono<Env>()
         updatedAt: userSettings.updatedAt,
       })
       .from(userSettings)
-      .where(eq(userSettings.userId, user.userId))
+      .where(eq(userSettings.userId, sessionUser.userId))
       .get();
 
-    return c.json({ message: "Settings updated successfully", settings });
+    return c.json({
+      message: "Settings updated successfully",
+      settings: settings
+        ? {
+            theme: settings.theme,
+            preferred_weight_unit: settings.preferredWeightUnit,
+            preferred_length_unit: settings.preferredLengthUnit,
+            language: settings.language,
+            rest_timer_duration_seconds: settings.restTimerDurationSeconds,
+            notifications_enabled: settings.notificationsEnabled,
+            updated_at: settings.updatedAt,
+          }
+        : null,
+    });
   });

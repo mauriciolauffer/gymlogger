@@ -1,11 +1,10 @@
 import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import type { Env } from "../index";
-import { createAuth } from "../lib/auth";
-import { generateToken, hashPassword, verifyPassword } from "../utils/crypto";
+import { hashPassword, verifyPassword, signJWT } from "better-auth/crypto";
 import { authMiddleware } from "../middleware/auth";
 import { getDb } from "../db/schema";
-import { user, usersProfile, userSettings } from "../db/schema";
+import { user, usersProfile, userSettings, account } from "../db/schema";
 
 export const authRouter = new Hono<Env>()
   .post("/register", async (c) => {
@@ -43,38 +42,38 @@ export const authRouter = new Hono<Env>()
       return c.json({ error: "Email is already registered" }, 400);
     }
 
-    let userId: string;
-    let token: string;
-
     const secret = c.env.JWT_SECRET ?? "gymlogger-secret-key-change-in-prod";
-
-    try {
-      const authInstance = createAuth(c.env.DB, secret, c.env.APP_BASE_URL);
-      const baResult = await authInstance.api.signUpEmail({
-        body: {
-          email: normalizedEmail,
-          password,
-          name: name || "Athlete",
-        },
-      });
-
-      userId = baResult.user.id;
-      token = baResult.token || (await generateToken({ userId, email: normalizedEmail }, secret));
-    } catch {
-      userId = crypto.randomUUID();
-      token = await generateToken({ userId, email: normalizedEmail }, secret);
-    }
-
-    const passwordHash = await hashPassword(password);
+    const userId = crypto.randomUUID();
+    const now = new Date();
+    const displayName = name || "Athlete";
+    const hashedPassword = await hashPassword(password);
 
     await db
-      .insert(usersProfile)
-      .values({ id: userId, email: normalizedEmail, passwordHash, name: name ?? null })
-      .onConflictDoUpdate({
-        target: usersProfile.id,
-        set: { email: normalizedEmail, passwordHash, name: name ?? null },
+      .insert(user)
+      .values({
+        id: userId,
+        email: normalizedEmail,
+        name: displayName,
+        emailVerified: false,
+        createdAt: now,
+        updatedAt: now,
       })
       .run();
+
+    await db
+      .insert(account)
+      .values({
+        id: crypto.randomUUID(),
+        accountId: userId,
+        providerId: "credential",
+        userId,
+        password: hashedPassword,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+
+    await db.insert(usersProfile).values({ id: userId }).onConflictDoNothing().run();
 
     await db
       .insert(userSettings)
@@ -88,6 +87,8 @@ export const authRouter = new Hono<Env>()
       })
       .onConflictDoNothing()
       .run();
+
+    const token = await signJWT({ userId, email: normalizedEmail }, secret, 2592000);
 
     return c.json(
       {
@@ -119,13 +120,12 @@ export const authRouter = new Hono<Env>()
 
     const userRow = await db
       .select({
-        id: usersProfile.id,
-        email: usersProfile.email,
-        passwordHash: usersProfile.passwordHash,
-        name: usersProfile.name,
+        id: user.id,
+        email: user.email,
+        name: user.name,
       })
-      .from(usersProfile)
-      .where(eq(usersProfile.email, normalizedEmail))
+      .from(user)
+      .where(eq(user.email, normalizedEmail))
       .get();
 
     if (!userRow) {
@@ -133,26 +133,23 @@ export const authRouter = new Hono<Env>()
     }
 
     const secret = c.env.JWT_SECRET ?? "gymlogger-secret-key-change-in-prod";
-    let token: string | null = null;
 
-    try {
-      const authInstance = createAuth(c.env.DB, secret, c.env.APP_BASE_URL);
-      const baResult = await authInstance.api.signInEmail({
-        body: { email: normalizedEmail, password },
-      });
-      token = baResult.token || null;
-    } catch (err) {
-      // Better Auth unavailable — fall through to custom path below
-      console.error(err);
+    const accountRow = await db
+      .select({ password: account.password })
+      .from(account)
+      .where(eq(account.userId, userRow.id))
+      .get();
+
+    if (!accountRow?.password) {
+      return c.json({ error: "Invalid email or password" }, 401);
     }
 
-    if (!token) {
-      const validPassword = await verifyPassword(password, userRow.passwordHash!);
-      if (!validPassword) {
-        return c.json({ error: "Invalid email or password" }, 401);
-      }
-      token = await generateToken({ userId: userRow.id, email: userRow.email }, secret);
+    const valid = await verifyPassword({ hash: accountRow.password, password });
+    if (!valid) {
+      return c.json({ error: "Invalid email or password" }, 401);
     }
+
+    const token = await signJWT({ userId: userRow.id, email: userRow.email }, secret, 2592000);
 
     return c.json({
       message: "Login successful",
@@ -165,13 +162,5 @@ export const authRouter = new Hono<Env>()
     });
   })
   .post("/logout", authMiddleware, async (c) => {
-    try {
-      const authInstance = createAuth(c.env.DB, c.env.JWT_SECRET, c.env.APP_BASE_URL);
-      await authInstance.api.signOut({
-        headers: c.req.raw.headers,
-      });
-    } catch {
-      // proceed
-    }
     return c.json({ message: "Logout successful" });
   });

@@ -1,4 +1,4 @@
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { calculate1RM } from "./calculator";
 import type { DrizzleDb } from "../db/schema";
 import { personalRecords, workoutSets, workoutExercises, workouts } from "../db/schema";

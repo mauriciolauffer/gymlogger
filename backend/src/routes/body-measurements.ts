@@ -44,9 +44,12 @@ bodyMeasurementsRouter.get("/", async (c) => {
     const entryLengthUnit = entry.lengthUnit || "cm";
 
     return {
-      ...entry,
+      id: entry.id,
+      user_id: entry.userId,
+      date: entry.date,
       weight: convertWeight(entry.weight, entryWeightUnit, targetWeightUnit),
-      weightUnit: targetWeightUnit,
+      weight_unit: targetWeightUnit,
+      body_fat_pct: entry.bodyFatPct,
       chest: convertLength(entry.chest, entryLengthUnit, targetLengthUnit),
       waist: convertLength(entry.waist, entryLengthUnit, targetLengthUnit),
       hips: convertLength(entry.hips, entryLengthUnit, targetLengthUnit),
@@ -56,7 +59,9 @@ bodyMeasurementsRouter.get("/", async (c) => {
       thighs: convertLength(entry.thighs, entryLengthUnit, targetLengthUnit),
       calves: convertLength(entry.calves, entryLengthUnit, targetLengthUnit),
       neck: convertLength(entry.neck, entryLengthUnit, targetLengthUnit),
-      lengthUnit: targetLengthUnit,
+      length_unit: targetLengthUnit,
+      photo_url: entry.photoUrl,
+      created_at: entry.createdAt,
     };
   });
 

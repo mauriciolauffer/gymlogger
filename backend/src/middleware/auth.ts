@@ -1,36 +1,18 @@
 import type { MiddlewareHandler } from "hono";
 import type { Env } from "../index";
-import { createAuth } from "../lib/auth";
-import { verifyToken } from "../utils/crypto";
+import { verifyJWT } from "better-auth/crypto";
 import { eq, and, gt } from "drizzle-orm";
 import { getDb, session as sessionTable, user as userTable } from "../db/schema";
 
 export const authMiddleware: MiddlewareHandler<Env> = async (c, next) => {
   const authHeader = c.req.header("Authorization");
 
-  try {
-    const authInstance = createAuth(c.env.DB, c.env.JWT_SECRET, c.env.APP_BASE_URL);
-    const session = await authInstance.api.getSession({
-      headers: c.req.raw.headers,
-    });
-
-    if (session) {
-      c.set("user", { userId: session.user.id, email: session.user.email });
-      return await next();
-    }
-  } catch {
-    // Fall back to token check
-  }
-
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.substring(7);
-
-    const payload = await verifyToken(
-      token,
-      c.env.JWT_SECRET ?? "gymlogger-secret-key-change-in-prod",
-    );
+    // @ts-expect-error: Argument of type 'string | undefined' is not assignable to parameter of type 'string'
+    const payload = await verifyJWT<{ userId: string; email: string }>(token, c.env.JWT_SECRET);
     if (payload) {
-      c.set("user", payload);
+      c.set("user", { userId: payload.userId, email: payload.email });
       return await next();
     }
 

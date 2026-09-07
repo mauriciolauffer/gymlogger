@@ -49,6 +49,7 @@ export const account = sqliteTable("account", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id),
+  issuer: text("issuer"),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
@@ -82,9 +83,6 @@ export const units = sqliteTable("units", {
 
 export const usersProfile = sqliteTable("user_profile", {
   id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  passwordHash: text("password_hash"),
-  name: text("name"),
   location: text("location"),
   birthday: text("birthday"),
   sex: text("sex"),

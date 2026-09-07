@@ -293,7 +293,22 @@ workoutsRouter.post("/:id/sets", async (c) => {
   return c.json(
     {
       message: "Set logged successfully",
-      set: loggedSet,
+      set: loggedSet
+        ? {
+            id: loggedSet.id,
+            workout_exercise_id: loggedSet.workoutExerciseId,
+            set_type: loggedSet.setType,
+            weight: loggedSet.weight,
+            weight_unit: loggedSet.weightUnit,
+            reps: loggedSet.reps,
+            rpe: loggedSet.rpe,
+            estimated_1rm: loggedSet.estimated1rm,
+            estimated_1rm_formula: loggedSet.estimated1rmFormula,
+            is_pr: loggedSet.isPr ? 1 : 0,
+            pr_type: loggedSet.prType,
+            order_index: loggedSet.orderIndex,
+          }
+        : null,
       isPr: prResult.isPr,
       prTypes: prResult.prTypes,
     },
@@ -434,7 +449,26 @@ workoutsRouter.put("/:id/finish", async (c) => {
     .run();
 
   const finishedWorkout = await db.select().from(workouts).where(eq(workouts.id, workoutId)).get();
-  return c.json({ message: "Workout completed", workout: finishedWorkout });
+  return c.json({
+    message: "Workout completed",
+    workout: finishedWorkout
+      ? {
+          id: finishedWorkout.id,
+          user_id: finishedWorkout.userId,
+          template_id: finishedWorkout.templateId,
+          title: finishedWorkout.title,
+          start_time: finishedWorkout.startTime,
+          end_time: finishedWorkout.endTime,
+          duration_seconds: finishedWorkout.durationSeconds,
+          total_volume: finishedWorkout.totalVolume,
+          volume_unit: finishedWorkout.volumeUnit,
+          set_count: finishedWorkout.setCount,
+          has_pr: finishedWorkout.hasPr,
+          notes: finishedWorkout.notes,
+          created_at: finishedWorkout.createdAt,
+        }
+      : null,
+  });
 });
 
 // GET /api/v1/workouts

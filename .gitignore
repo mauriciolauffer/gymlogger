@@ -133,6 +133,8 @@ test-results/
 
 # Cloudflare Workers / Wrangler
 .wrangler/
+.dev.vars
+.dev.vars.*
 
 .claude/
 agent/

@@ -1,8 +1,8 @@
 {
-  "$schema": "../node_modules/wrangler/config-schema.json",
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "gymlogger",
   "main": "src/index.ts",
-  "compatibility_date": "2025-02-14",
+  "compatibility_date": "2026-08-04",
   "d1_databases": [
     {
       "binding": "DB",
@@ -10,4 +10,7 @@
       "database_id": "gymlogger-db-id",
     },
   ],
+  "secrets": {
+    "required": ["JWT_SECRET", "APP_BASE_URL"],
+  },
 }

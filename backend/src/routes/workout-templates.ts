@@ -40,7 +40,7 @@ workoutTemplatesRouter.get("/", async (c) => {
         .where(eq(workoutTemplateExercises.templateId, t.id))
         .orderBy(asc(workoutTemplateExercises.orderIndex))
         .all();
-      return { ...t, exercises: templateExercises };
+      return Object.assign({}, t, { exercises: templateExercises });
     }),
   );
 
