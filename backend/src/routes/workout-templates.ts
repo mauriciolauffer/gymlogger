@@ -1,13 +1,11 @@
 import { Hono } from "hono";
 import { eq, and, desc, asc } from "drizzle-orm";
 import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
 import { getDb } from "../db/schema";
 import { workoutTemplates, workoutTemplateExercises, exercises } from "../db/schema";
 
 export const workoutTemplatesRouter = new Hono<Env>();
 
-workoutTemplatesRouter.use("*", authMiddleware);
 
 // GET /api/v1/workout-templates
 workoutTemplatesRouter.get("/", async (c) => {

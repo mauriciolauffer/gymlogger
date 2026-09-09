@@ -1,17 +1,10 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { requestId } from 'hono/request-id'
 import { secureHeaders } from "hono/secure-headers";
 import { createAuth } from "./lib/auth";
-import { authRouter } from "./routes/auth";
-import { usersRouter } from "./routes/users";
-import { exercisesRouter } from "./routes/exercises";
-import { workoutsRouter } from "./routes/workouts";
-import { workoutTemplatesRouter } from "./routes/workout-templates";
-import { personalRecordsRouter } from "./routes/personal-records";
-import { calculatorsRouter } from "./routes/calculators";
-import { liveActivityRouter } from "./routes/live-activity";
-import { analyticsRouter } from "./routes/analytics";
-import { bodyMeasurementsRouter } from "./routes/body-measurements";
+import { publicRoutes } from "./routes/public";
+import { privateRoutes } from "./routes/private";
 
 export type Env = {
   Bindings: {
@@ -26,6 +19,8 @@ export type Env = {
 };
 
 const app = new Hono<Env>();
+
+app.use('*', requestId())
 
 // Built-in Middleware for security & CORS
 app.use("*", secureHeaders());
@@ -58,16 +53,8 @@ app.on(["GET", "POST"], "/api/auth/*", (c) => {
 
 // Mount API routes
 const routes = app
-  .route("/api/v1/auth", authRouter)
-  .route("/api/v1/users", usersRouter)
-  .route("/api/v1", exercisesRouter)
-  .route("/api/v1/workouts", workoutsRouter)
-  .route("/api/v1/workout-templates", workoutTemplatesRouter)
-  .route("/api/v1/workouts", liveActivityRouter)
-  .route("/api/v1/personal-records", personalRecordsRouter)
-  .route("/api/v1/calculators", calculatorsRouter)
-  .route("/api/v1/analytics", analyticsRouter)
-  .route("/api/v1/body-measurements", bodyMeasurementsRouter);
+  .route("/", publicRoutes)
+  .route("/", privateRoutes);
 
 // Global Not Found handler
 app.notFound((c) => {

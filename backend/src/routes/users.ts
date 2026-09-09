@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
 import { getDb } from "../db/schema";
 import { user, usersProfile, userSettings } from "../db/schema";
 
@@ -9,7 +8,6 @@ const VALID_WEIGHT_UNITS = new Set(["kg", "lbs"]);
 const VALID_LENGTH_UNITS = new Set(["cm", "in"]);
 
 export const usersRouter = new Hono<Env>()
-  .use("*", authMiddleware)
   .get("/profile", async (c) => {
     const sessionUser = c.get("user")!;
     const db = getDb(c);

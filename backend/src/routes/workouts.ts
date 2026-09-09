@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { eq, and, gte, lte, desc, asc, max, sql, inArray } from "drizzle-orm";
 import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
 import { calculate1RM } from "../utils/calculator";
 import { checkAndUpdatePR } from "../utils/pr-detector";
 import { getDb } from "../db/schema";
@@ -16,8 +15,6 @@ import {
 } from "../db/schema";
 
 export const workoutsRouter = new Hono<Env>();
-
-workoutsRouter.use("*", authMiddleware);
 
 // GET /api/v1/workouts/previous-values?exerciseId=:id
 workoutsRouter.get("/previous-values", async (c) => {

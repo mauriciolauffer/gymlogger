@@ -24,7 +24,7 @@ describe("REQ-02: Start & Log a Workout Session", () => {
   });
 
   it("lists muscle groups and exercise library", async () => {
-    const mgRes = await app.request("/api/v1/muscle-groups", {}, env);
+    const mgRes = await app.request("/api/v1/muscle-groups", { headers: { Authorization: `Bearer ${token}` } }, env);
     expect(mgRes.status).toBe(200);
     const mgData = await mgRes.json();
     expect(mgData.muscleGroups.length).toBeGreaterThan(0);

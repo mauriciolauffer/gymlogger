@@ -1,27 +1,20 @@
 import { Hono } from "hono";
 import { eq, and, like, or, SQL } from "drizzle-orm";
 import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
 import { getDb } from "../db/schema";
 import { exercises, muscleGroups, exerciseSecondaryMuscles } from "../db/schema";
 
-export const exercisesRouter = new Hono<Env>();
+export const exercisesRouter = new Hono<Env>()
+  .get("/muscle-groups", async (c) => {
+    const db = getDb(c);
+    const results = await db
+      .select({ id: muscleGroups.id, name: muscleGroups.name })
+      .from(muscleGroups)
+      .orderBy(muscleGroups.name)
+      .all();
+    return c.json({ muscleGroups: results });
+  });
 
-// GET /api/v1/muscle-groups
-exercisesRouter.get("/muscle-groups", async (c) => {
-  const db = getDb(c);
-  const results = await db
-    .select({ id: muscleGroups.id, name: muscleGroups.name })
-    .from(muscleGroups)
-    .orderBy(muscleGroups.name)
-    .all();
-  return c.json({ muscleGroups: results });
-});
-
-// Protected exercise routes
-exercisesRouter.use("/exercises*", authMiddleware);
-
-// GET /api/v1/exercises
 exercisesRouter.get("/exercises", async (c) => {
   const user = c.get("user")!;
   const { q, category, bodyPart, equipment, target, muscleGroupId, custom } = c.req.query();
@@ -70,7 +63,6 @@ exercisesRouter.get("/exercises", async (c) => {
   return c.json({ exercises: results });
 });
 
-// GET /api/v1/exercises/:id
 exercisesRouter.get("/exercises/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
@@ -120,7 +112,6 @@ exercisesRouter.get("/exercises/:id", async (c) => {
   return c.json({ exercise: { ...exercise, secondaryMuscles } });
 });
 
-// POST /api/v1/exercises (Custom exercise creation)
 exercisesRouter.post("/exercises", async (c) => {
   const user = c.get("user")!;
   const body = await c.req.json().catch(() => null);
@@ -177,7 +168,6 @@ exercisesRouter.post("/exercises", async (c) => {
   return c.json({ message: "Custom exercise created", exercise: newExercise }, 201);
 });
 
-// PUT /api/v1/exercises/:id
 exercisesRouter.put("/exercises/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
@@ -246,7 +236,6 @@ exercisesRouter.put("/exercises/:id", async (c) => {
   return c.json({ message: "Custom exercise updated", exercise: updated });
 });
 
-// DELETE /api/v1/exercises/:id
 exercisesRouter.delete("/exercises/:id", async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");

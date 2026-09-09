@@ -1,12 +1,10 @@
 import { Hono } from "hono";
 import { eq, and, desc } from "drizzle-orm";
 import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
 import { getDb } from "../db/schema";
 import { personalRecords, exercises } from "../db/schema";
 
 export const personalRecordsRouter = new Hono<Env>()
-  .use("*", authMiddleware)
   .get("/", async (c) => {
     const user = c.get("user")!;
     const exerciseId = c.req.query("exerciseId");

@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { eq, and, gte, lte, desc, asc, sql, count } from "drizzle-orm";
 import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
 import { getDb } from "../db/schema";
 import type { DrizzleDb } from "../db/schema";
 import {
@@ -14,8 +13,6 @@ import {
 } from "../db/schema";
 
 export const analyticsRouter = new Hono<Env>();
-
-analyticsRouter.use("*", authMiddleware);
 
 async function muscleSetCounts(
   db: DrizzleDb,

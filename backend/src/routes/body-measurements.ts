@@ -1,14 +1,11 @@
 import { Hono } from "hono";
 import { eq, and, gte, lte, asc } from "drizzle-orm";
 import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
 import { convertLength, convertWeight } from "../utils/unit-converter";
 import { getDb } from "../db/schema";
 import { bodyMeasurements, userSettings } from "../db/schema";
 
 export const bodyMeasurementsRouter = new Hono<Env>();
-
-bodyMeasurementsRouter.use("*", authMiddleware);
 
 // GET /api/v1/body-measurements
 bodyMeasurementsRouter.get("/", async (c) => {

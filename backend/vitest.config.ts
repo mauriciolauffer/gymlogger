@@ -20,7 +20,6 @@ export default defineConfig({
       coverage: {
         provider: "istanbul",
         include: ["src/**/*.ts"],
-        exclude: ["src/index.ts", "src/lib/auth.ts"],
         reporter: ["text", "lcov"],
         thresholds: {
           statements: 90,

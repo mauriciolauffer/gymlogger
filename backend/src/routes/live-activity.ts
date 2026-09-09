@@ -1,12 +1,10 @@
 import { Hono } from "hono";
 import { eq, and, desc } from "drizzle-orm";
 import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
 import { getDb } from "../db/schema";
 import { workouts, workoutExercises, workoutSets, userSettings } from "../db/schema";
 
 export const liveActivityRouter = new Hono<Env>()
-  .use("*", authMiddleware)
   .get("/:id/live", async (c) => {
     const user = c.get("user")!;
     const workoutId = c.req.param("id");

@@ -1,9 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
 
 export const calculatorsRouter = new Hono<Env>()
-  .use("*", authMiddleware)
   .get("/warmup", async (c) => {
     const targetWeightStr = c.req.query("targetWeight");
     const targetWeight = parseFloat(targetWeightStr || "0");
