@@ -61,7 +61,10 @@ describe("RegisterView", () => {
     (confirmInput.element as HTMLInputElement).value = "secret123";
     await confirmInput.trigger("input");
 
-    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Register"))!.trigger("click");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Register"))!
+      .trigger("click");
     await flushPromises();
 
     expect(mockPush).toHaveBeenCalledWith("/workouts");
@@ -70,7 +73,10 @@ describe("RegisterView", () => {
   it("shows error when email or password is empty", async () => {
     const wrapper = mount(RegisterView);
 
-    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Register"))!.trigger("click");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Register"))!
+      .trigger("click");
 
     expect(wrapper.text()).toContain("Email and password are required.");
   });
@@ -86,7 +92,10 @@ describe("RegisterView", () => {
     (passwordInput.element as HTMLInputElement).value = "123";
     await passwordInput.trigger("input");
 
-    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Register"))!.trigger("click");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Register"))!
+      .trigger("click");
 
     expect(wrapper.text()).toContain("Password must be at least 8 characters long.");
   });
@@ -106,7 +115,10 @@ describe("RegisterView", () => {
     (confirmInput.element as HTMLInputElement).value = "diff1234";
     await confirmInput.trigger("input");
 
-    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Register"))!.trigger("click");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Register"))!
+      .trigger("click");
 
     expect(wrapper.text()).toContain("Passwords do not match.");
   });

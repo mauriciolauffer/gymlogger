@@ -5,7 +5,12 @@ import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../db/schema.js";
 import { usersProfile, userSettings } from "../db/schema.js";
 
-export const createAuth = (db: D1Database, secret: string, baseURL: string) => {
+export const createAuth = (
+  db: D1Database,
+  secret: string,
+  baseURL: string,
+  corsOrigin: string,
+) => {
   const drizzleDb = drizzle(db, { schema });
 
   return betterAuth({
@@ -20,8 +25,14 @@ export const createAuth = (db: D1Database, secret: string, baseURL: string) => {
       minPasswordLength: 8,
     },
     plugins: [bearer()],
+    // secrets: [{ version: 1, value: secret }],
     secret,
     baseURL,
+    // Requests arrive through frontend service binding, so this is the browser's origin
+    trustedOrigins: [corsOrigin],
+    advanced: {
+      useSecureCookies: true
+    },
     databaseHooks: {
       user: {
         create: {

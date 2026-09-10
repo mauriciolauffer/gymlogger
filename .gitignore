@@ -138,3 +138,8 @@ test-results/
 
 .claude/
 agent/
+
+# Playwright E2E
+playwright/.auth/
+playwright-report/
+test-results/

@@ -16,7 +16,6 @@ const state = reactive<{
 });
 
 export const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8787",
   fetchOptions: {
     onResponse(context) {
       const token = context.response.headers.get("set-auth-token");

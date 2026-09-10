@@ -6,6 +6,48 @@ import app from "../src/index";
 import { user, usersProfile, userSettings } from "../src/db/schema";
 
 describe("Account creation", () => {
+  it("accepts signup requests from the local frontend origin", async () => {
+    const res = await app.request(
+      "/api/auth/sign-up/email",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "http://localhost:5173",
+        },
+        body: JSON.stringify({
+          name: "Frontend Athlete",
+          email: "frontend-origin@example.com",
+          password: "securepassword123",
+        }),
+      },
+      env,
+    );
+
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects signup requests from an untrusted origin", async () => {
+    const res = await app.request(
+      "/api/auth/sign-up/email",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "https://untrusted.example",
+        },
+        body: JSON.stringify({
+          name: "Untrusted Athlete",
+          email: "untrusted-origin@example.com",
+          password: "securepassword123",
+        }),
+      },
+      env,
+    );
+
+    expect(res.status).toBe(403);
+  });
+
   it("registers a new user and initializes profile and settings", async () => {
     const res = await app.request(
       "/api/auth/sign-up/email",
@@ -53,13 +95,21 @@ describe("Account creation", () => {
     const payload = { name: "User One", email: "duplicate@example.com", password: "password123" };
     await app.request(
       "/api/auth/sign-up/email",
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
       env,
     );
 
     const res = await app.request(
       "/api/auth/sign-up/email",
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) },
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
       env,
     );
     expect(res.status).toBe(422);

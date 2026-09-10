@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
 import { publicRoutes } from "./routes/public";
@@ -10,7 +9,7 @@ export type Env = {
     DB: D1Database;
     JWT_SECRET: string;
     APP_BASE_URL: string;
-    CORS_ORIGIN?: string;
+    CORS_ORIGIN: string;
   };
   Variables: {
     user?: { userId: string; email: string };
@@ -21,14 +20,6 @@ const app = new Hono<Env>();
 
 app.use("*", requestId());
 app.use("*", secureHeaders());
-app.use("*", async (c, next) => {
-  return cors({
-    origin: c.env.CORS_ORIGIN ?? "http://localhost:5173",
-    allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
-  })(c, next);
-});
 
 const routes = app.route("/", publicRoutes).route("/", privateRoutes);
 

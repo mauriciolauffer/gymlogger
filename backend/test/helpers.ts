@@ -20,10 +20,7 @@ export async function registerUser(
   return { token, userId: data.user.id };
 }
 
-export async function loginUser(
-  email: string,
-  password: string,
-): Promise<{ token: string }> {
+export async function loginUser(email: string, password: string): Promise<{ token: string }> {
   const res = await app.request(
     "/api/auth/sign-in/email",
     {

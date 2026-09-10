@@ -52,7 +52,10 @@ describe("LoginView", () => {
     (passwordInput.element as HTMLInputElement).value = "password123";
     await passwordInput.trigger("input");
 
-    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Log In"))!.trigger("click");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Log In"))!
+      .trigger("click");
     await flushPromises();
 
     expect(mockPush).toHaveBeenCalledWith("/workouts");
@@ -61,7 +64,10 @@ describe("LoginView", () => {
   it("shows validation error when fields are empty", async () => {
     const wrapper = mount(LoginView);
 
-    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Log In"))!.trigger("click");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Log In"))!
+      .trigger("click");
 
     expect(wrapper.text()).toContain("Please enter both email and password.");
   });
@@ -82,7 +88,10 @@ describe("LoginView", () => {
     (passwordInput.element as HTMLInputElement).value = "wrongpass";
     await passwordInput.trigger("input");
 
-    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Log In"))!.trigger("click");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Log In"))!
+      .trigger("click");
     await flushPromises();
 
     expect(wrapper.text()).toContain("Invalid email or password");

@@ -1,10 +1,14 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import * as compiler from "vue/compiler-sfc"; // 1. Import the compiler directly
+import { cloudflare } from "@cloudflare/vite-plugin";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    cloudflare(),
     vue({
+      compiler: compiler,
       template: {
         compilerOptions: {
           isCustomElement: (tag) => tag.startsWith("ui5-"),
@@ -28,15 +32,6 @@ export default defineConfig({
       "@ui5/webcomponents/dist/List.js",
       "@ui5/webcomponents/dist/ListItemStandard.js",
     ],
-  },
-  server: {
-    port: 3000,
-    proxy: {
-      "/api": {
-        target: "http://localhost:8787",
-        changeOrigin: true,
-      },
-    },
   },
   test: {
     globals: true,
