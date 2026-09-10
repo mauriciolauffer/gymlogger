@@ -9,8 +9,7 @@ import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/Label.js";
 
-import { api } from "../api/client";
-import { authStore } from "../store/auth";
+import { authClient, authStore } from "../store/auth";
 
 const router = useRouter();
 
@@ -51,15 +50,18 @@ const handleRegister = async () => {
 
   loading.value = true;
   try {
-    const res = await api.post<{ token: string; user: Record<string, unknown> }>(
-      "/api/v1/auth/register",
-      {
-        name: name.value || "Athlete",
-        email: email.value,
-        password: password.value,
-      },
-    );
-    authStore.setAuth(res.token, res.user);
+    const { data, error } = await authClient.signUp.email({
+      name: name.value || "Athlete",
+      email: email.value,
+      password: password.value,
+    });
+    if (error) {
+      errorMsg.value = error.message ?? "Registration failed. Please try again.";
+      return;
+    }
+    if (data?.user) {
+      authStore.setUser({ id: data.user.id, email: data.user.email, name: data.user.name });
+    }
     router.push("/workouts");
   } catch (err) {
     errorMsg.value = err instanceof Error ? err.message : "Registration failed. Please try again.";

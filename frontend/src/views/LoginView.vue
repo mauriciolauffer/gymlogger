@@ -9,8 +9,7 @@ import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/Label.js";
 
-import { api } from "../api/client";
-import { authStore } from "../store/auth";
+import { authClient, authStore } from "../store/auth";
 
 const router = useRouter();
 
@@ -36,14 +35,17 @@ const handleLogin = async () => {
 
   loading.value = true;
   try {
-    const res = await api.post<{ token: string; user: Record<string, unknown> }>(
-      "/api/v1/auth/login",
-      {
-        email: email.value,
-        password: password.value,
-      },
-    );
-    authStore.setAuth(res.token, res.user);
+    const { data, error } = await authClient.signIn.email({
+      email: email.value,
+      password: password.value,
+    });
+    if (error) {
+      errorMsg.value = error.message ?? "Login failed. Please check your credentials.";
+      return;
+    }
+    if (data?.user) {
+      authStore.setUser({ id: data.user.id, email: data.user.email, name: data.user.name });
+    }
     router.push("/workouts");
   } catch (err) {
     errorMsg.value =

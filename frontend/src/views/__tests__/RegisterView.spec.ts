@@ -8,9 +8,25 @@ vi.mock("vue-router", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+vi.mock("../../store/auth", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../../store/auth")>();
+  return {
+    ...original,
+    authClient: {
+      signUp: {
+        email: vi.fn(),
+      },
+    },
+  };
+});
+
+import { authClient } from "../../store/auth";
+
 describe("RegisterView", () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
+    authStore.clearAuth();
+    mockPush.mockClear();
   });
 
   it("renders registration form", () => {
@@ -21,15 +37,11 @@ describe("RegisterView", () => {
     expect(wrapper.find("ui5-input#confirm-password-input").exists()).toBe(true);
   });
 
-  it("handles successful registration", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        status: 201,
-        json: async () => ({ token: "token_reg", user: { id: "u2", email: "new@example.com" } }),
-      }),
-    );
+  it("handles successful registration and navigates", async () => {
+    vi.mocked(authClient.signUp.email).mockResolvedValue({
+      data: { user: { id: "u2", email: "new@example.com", name: "New Athlete" } } as any,
+      error: null,
+    });
 
     const wrapper = mount(RegisterView);
 
@@ -49,23 +61,16 @@ describe("RegisterView", () => {
     (confirmInput.element as HTMLInputElement).value = "secret123";
     await confirmInput.trigger("input");
 
-    await wrapper
-      .findAll("ui5-button")
-      .find((b) => b.text().includes("Register"))!
-      .trigger("click");
+    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Register"))!.trigger("click");
     await flushPromises();
 
-    expect(authStore.token).toBe("token_reg");
     expect(mockPush).toHaveBeenCalledWith("/workouts");
   });
 
   it("shows error when email or password is empty", async () => {
     const wrapper = mount(RegisterView);
 
-    await wrapper
-      .findAll("ui5-button")
-      .find((b) => b.text().includes("Register"))!
-      .trigger("click");
+    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Register"))!.trigger("click");
 
     expect(wrapper.text()).toContain("Email and password are required.");
   });
@@ -81,10 +86,7 @@ describe("RegisterView", () => {
     (passwordInput.element as HTMLInputElement).value = "123";
     await passwordInput.trigger("input");
 
-    await wrapper
-      .findAll("ui5-button")
-      .find((b) => b.text().includes("Register"))!
-      .trigger("click");
+    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Register"))!.trigger("click");
 
     expect(wrapper.text()).toContain("Password must be at least 8 characters long.");
   });
@@ -104,10 +106,7 @@ describe("RegisterView", () => {
     (confirmInput.element as HTMLInputElement).value = "diff1234";
     await confirmInput.trigger("input");
 
-    await wrapper
-      .findAll("ui5-button")
-      .find((b) => b.text().includes("Register"))!
-      .trigger("click");
+    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Register"))!.trigger("click");
 
     expect(wrapper.text()).toContain("Passwords do not match.");
   });

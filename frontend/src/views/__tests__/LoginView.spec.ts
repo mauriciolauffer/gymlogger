@@ -8,9 +8,25 @@ vi.mock("vue-router", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+vi.mock("../../store/auth", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../../store/auth")>();
+  return {
+    ...original,
+    authClient: {
+      signIn: {
+        email: vi.fn(),
+      },
+    },
+  };
+});
+
+import { authClient } from "../../store/auth";
+
 describe("LoginView", () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
+    authStore.clearAuth();
+    mockPush.mockClear();
   });
 
   it("renders the login form", () => {
@@ -20,14 +36,11 @@ describe("LoginView", () => {
     expect(wrapper.find("ui5-input#password-input").exists()).toBe(true);
   });
 
-  it("handles successful login", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ token: "token123", user: { id: "u1", email: "athlete@example.com" } }),
-      }),
-    );
+  it("handles successful login and navigates", async () => {
+    vi.mocked(authClient.signIn.email).mockResolvedValue({
+      data: { user: { id: "u1", email: "athlete@example.com", name: "Athlete" } } as any,
+      error: null,
+    });
 
     const wrapper = mount(LoginView);
 
@@ -39,36 +52,25 @@ describe("LoginView", () => {
     (passwordInput.element as HTMLInputElement).value = "password123";
     await passwordInput.trigger("input");
 
-    await wrapper
-      .findAll("ui5-button")
-      .find((b) => b.text().includes("Log In"))!
-      .trigger("click");
+    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Log In"))!.trigger("click");
     await flushPromises();
 
-    expect(authStore.token).toBe("token123");
     expect(mockPush).toHaveBeenCalledWith("/workouts");
   });
 
   it("shows validation error when fields are empty", async () => {
     const wrapper = mount(LoginView);
 
-    await wrapper
-      .findAll("ui5-button")
-      .find((b) => b.text().includes("Log In"))!
-      .trigger("click");
+    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Log In"))!.trigger("click");
 
     expect(wrapper.text()).toContain("Please enter both email and password.");
   });
 
   it("shows server error on failed login", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: false,
-        status: 401,
-        json: async () => ({ error: "Invalid credentials" }),
-      }),
-    );
+    vi.mocked(authClient.signIn.email).mockResolvedValue({
+      data: null,
+      error: { message: "Invalid email or password" } as any,
+    });
 
     const wrapper = mount(LoginView);
 
@@ -77,16 +79,13 @@ describe("LoginView", () => {
     await emailInput.trigger("input");
 
     const passwordInput = wrapper.find("ui5-input#password-input");
-    (passwordInput.element as HTMLInputElement).value = "wrong";
+    (passwordInput.element as HTMLInputElement).value = "wrongpass";
     await passwordInput.trigger("input");
 
-    await wrapper
-      .findAll("ui5-button")
-      .find((b) => b.text().includes("Log In"))!
-      .trigger("click");
+    await wrapper.findAll("ui5-button").find((b) => b.text().includes("Log In"))!.trigger("click");
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Invalid credentials");
+    expect(wrapper.text()).toContain("Invalid email or password");
   });
 
   it("navigates to register page on register button click", async () => {

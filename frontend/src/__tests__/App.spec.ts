@@ -6,7 +6,8 @@ import { authStore } from "../store/auth";
 
 describe("App Shell", () => {
   it("renders shellbar and route views", async () => {
-    authStore.setAuth("token_app", { id: "u1", email: "test@example.com" });
+    localStorage.setItem("gymlogger_token", "token_app");
+    authStore.setUser({ id: "u1", email: "test@example.com" });
     const wrapper = mount(App, {
       global: {
         plugins: [router],
