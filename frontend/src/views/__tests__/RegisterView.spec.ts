@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import RegisterView from "../RegisterView.vue";
 import { authStore } from "../../store/auth";
 
@@ -11,6 +11,14 @@ vi.mock("vue-router", () => ({
 describe("RegisterView", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("renders registration form", () => {
+    const wrapper = mount(RegisterView);
+
+    expect(wrapper.find("ui5-input#email-input").exists()).toBe(true);
+    expect(wrapper.find("ui5-input#password-input").exists()).toBe(true);
+    expect(wrapper.find("ui5-input#confirm-password-input").exists()).toBe(true);
   });
 
   it("handles successful registration", async () => {
@@ -25,54 +33,93 @@ describe("RegisterView", () => {
 
     const wrapper = mount(RegisterView);
 
-    const inputs = wrapper.findAll("ui5-input");
-    (inputs[0].element as any).value = "New Athlete";
-    await inputs[0].trigger("input");
+    const nameInput = wrapper.find("ui5-input#name-input");
+    (nameInput.element as HTMLInputElement).value = "New Athlete";
+    await nameInput.trigger("input");
 
-    (inputs[1].element as any).value = "new@example.com";
-    await inputs[1].trigger("input");
+    const emailInput = wrapper.find("ui5-input#email-input");
+    (emailInput.element as HTMLInputElement).value = "new@example.com";
+    await emailInput.trigger("input");
 
-    (inputs[2].element as any).value = "secret123";
-    await inputs[2].trigger("input");
+    const passwordInput = wrapper.find("ui5-input#password-input");
+    (passwordInput.element as HTMLInputElement).value = "secret123";
+    await passwordInput.trigger("input");
 
-    (inputs[3].element as any).value = "secret123";
-    await inputs[3].trigger("input");
+    const confirmInput = wrapper.find("ui5-input#confirm-password-input");
+    (confirmInput.element as HTMLInputElement).value = "secret123";
+    await confirmInput.trigger("input");
 
-    const buttons = wrapper.findAll("ui5-button");
-    await buttons[0].trigger("click");
-    await new Promise((r) => setTimeout(r, 50));
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Register"))!
+      .trigger("click");
+    await flushPromises();
 
     expect(authStore.token).toBe("token_reg");
     expect(mockPush).toHaveBeenCalledWith("/workouts");
   });
 
-  it("validates form inputs", async () => {
+  it("shows error when email or password is empty", async () => {
     const wrapper = mount(RegisterView);
-    const buttons = wrapper.findAll("ui5-button");
-    const inputs = wrapper.findAll("ui5-input");
 
-    await buttons[0].trigger("click");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Register"))!
+      .trigger("click");
+
     expect(wrapper.text()).toContain("Email and password are required.");
+  });
 
-    (inputs[1].element as any).value = "test@example.com";
-    await inputs[1].trigger("input");
-    (inputs[2].element as any).value = "123";
-    await inputs[2].trigger("input");
-    await buttons[0].trigger("click");
-    expect(wrapper.text()).toContain("Password must be at least 6 characters long.");
+  it("shows error when password is too short", async () => {
+    const wrapper = mount(RegisterView);
 
-    (inputs[2].element as any).value = "secret123";
-    await inputs[2].trigger("input");
-    (inputs[3].element as any).value = "diff1234";
-    await inputs[3].trigger("input");
-    await buttons[0].trigger("click");
+    const emailInput = wrapper.find("ui5-input#email-input");
+    (emailInput.element as HTMLInputElement).value = "test@example.com";
+    await emailInput.trigger("input");
+
+    const passwordInput = wrapper.find("ui5-input#password-input");
+    (passwordInput.element as HTMLInputElement).value = "123";
+    await passwordInput.trigger("input");
+
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Register"))!
+      .trigger("click");
+
+    expect(wrapper.text()).toContain("Password must be at least 8 characters long.");
+  });
+
+  it("shows error when passwords do not match", async () => {
+    const wrapper = mount(RegisterView);
+
+    const emailInput = wrapper.find("ui5-input#email-input");
+    (emailInput.element as HTMLInputElement).value = "test@example.com";
+    await emailInput.trigger("input");
+
+    const passwordInput = wrapper.find("ui5-input#password-input");
+    (passwordInput.element as HTMLInputElement).value = "secret123";
+    await passwordInput.trigger("input");
+
+    const confirmInput = wrapper.find("ui5-input#confirm-password-input");
+    (confirmInput.element as HTMLInputElement).value = "diff1234";
+    await confirmInput.trigger("input");
+
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Register"))!
+      .trigger("click");
+
     expect(wrapper.text()).toContain("Passwords do not match.");
   });
 
-  it("navigates to login page on click", async () => {
+  it("navigates to login page on login button click", async () => {
     const wrapper = mount(RegisterView);
-    const buttons = wrapper.findAll("ui5-button");
-    await buttons[1].trigger("click");
+
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Log In"))!
+      .trigger("click");
+
     expect(mockPush).toHaveBeenCalledWith("/login");
   });
 });

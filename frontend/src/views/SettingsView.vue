@@ -28,8 +28,9 @@ const handleSave = async () => {
   try {
     await settingsStore.updateSettings(settings.value);
     message.value = { text: "Preferences saved successfully!", type: "Positive" };
-  } catch (err: any) {
-    message.value = { text: err.message || "Failed to save settings", type: "Negative" };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to save settings";
+    message.value = { text: msg, type: "Negative" };
   } finally {
     saving.value = false;
   }
@@ -42,7 +43,7 @@ const handleSave = async () => {
       <ui5-card-header
         slot="header"
         title-text="System Settings"
-        subtitle-text="Configure app preferences (REQ-13)"
+        subtitle-text="Configure app preferences"
       />
 
       <div class="card-content">

@@ -8,20 +8,29 @@ import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
+import { formatDate, formatDuration } from "../utils/formatters";
 import { api } from "../api/client";
 import { activeWorkoutStore } from "../store/activeWorkout";
 import WorkoutDetailModal from "../components/WorkoutDetailModal.vue";
 
+interface WorkoutSummary {
+  id: string;
+  title: string;
+  start_time: string;
+  duration_seconds: number;
+  total_volume?: number;
+}
+
 const router = useRouter();
 
-const workouts = ref<any[]>([]);
+const workouts = ref<WorkoutSummary[]>([]);
 const loading = ref(false);
-const selectedWorkout = ref<any | null>(null);
+const selectedWorkout = ref<WorkoutSummary | null>(null);
 
 const fetchWorkouts = async () => {
   loading.value = true;
   try {
-    const res = await api.get<{ workouts: any[] }>("/api/v1/workouts");
+    const res = await api.get<{ workouts: WorkoutSummary[] }>("/api/v1/workouts");
     workouts.value = res.workouts || [];
   } catch (err) {
     console.error("Failed to fetch workouts history", err);
@@ -37,7 +46,7 @@ const handleStartNewWorkout = async () => {
 
 const handleViewWorkout = async (workoutId: string) => {
   try {
-    const res = await api.get<{ workout: any }>(`/api/v1/workouts/${workoutId}`);
+    const res = await api.get<{ workout: WorkoutSummary }>(`/api/v1/workouts/${workoutId}`);
     selectedWorkout.value = res.workout;
   } catch (err) {
     console.error("Failed to load workout details", err);
@@ -53,22 +62,6 @@ const handleDeleteWorkout = async (workoutId: string, event: Event) => {
   } catch (err) {
     console.error("Failed to delete workout", err);
   }
-};
-
-const formatDate = (iso: string) => {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString(undefined, {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const formatDuration = (secs: number) => {
-  if (!secs) return "0m";
-  const m = Math.floor(secs / 60);
-  return `${m}m`;
 };
 
 onMounted(() => {

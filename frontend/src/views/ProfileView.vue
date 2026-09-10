@@ -19,7 +19,7 @@ const profile = ref({
   name: "",
   location: "",
   birthday: "",
-  sex: "unspecified",
+  sex: "prefer_not_to_say",
   height: 0,
   height_unit: "cm",
   bio: "",
@@ -32,18 +32,19 @@ const message = ref<{ text: string; type: "Positive" | "Negative" } | null>(null
 const fetchProfile = async () => {
   loading.value = true;
   try {
-    const res = await api.get<{ profile: any }>("/api/v1/users/profile");
+    const res = await api.get<{ profile: typeof profile.value }>("/api/v1/users/profile");
     if (res.profile) {
       profile.value = {
         ...profile.value,
         ...res.profile,
         height: res.profile.height ?? 0,
-        sex: res.profile.sex || "unspecified",
+        sex: res.profile.sex || "prefer_not_to_say",
         height_unit: res.profile.heightUnit || res.profile.height_unit || "cm",
       };
     }
-  } catch (err: any) {
-    message.value = { text: err.message || "Failed to load profile", type: "Negative" };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to load profile";
+    message.value = { text: msg, type: "Negative" };
   } finally {
     loading.value = false;
   }
@@ -63,8 +64,9 @@ const handleSave = async () => {
       bio: profile.value.bio,
     });
     message.value = { text: "Profile updated successfully!", type: "Positive" };
-  } catch (err: any) {
-    message.value = { text: err.message || "Failed to update profile", type: "Negative" };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to update profile";
+    message.value = { text: msg, type: "Negative" };
   } finally {
     saving.value = false;
   }
@@ -81,7 +83,7 @@ onMounted(() => {
       <ui5-card-header
         slot="header"
         title-text="User Profile"
-        subtitle-text="Manage your personal details (REQ-12)"
+        subtitle-text="Manage your personal details"
       />
 
       <div class="card-content" v-if="!loading">
@@ -131,8 +133,8 @@ onMounted(() => {
           <div class="form-group">
             <ui5-label>Sex</ui5-label>
             <ui5-select @change="profile.sex = $event.target.selectedOption.value">
-              <ui5-option value="unspecified" :selected="profile.sex === 'unspecified'"
-                >Unspecified</ui5-option
+              <ui5-option value="prefer_not_to_say" :selected="profile.sex === 'prefer_not_to_say'"
+                >Prefer not to say</ui5-option
               >
               <ui5-option value="male" :selected="profile.sex === 'male'">Male</ui5-option>
               <ui5-option value="female" :selected="profile.sex === 'female'">Female</ui5-option>

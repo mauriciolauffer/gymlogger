@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import WarmupCalculatorModal from "../WarmupCalculatorModal.vue";
 
 describe("WarmupCalculatorModal", () => {
@@ -7,7 +7,7 @@ describe("WarmupCalculatorModal", () => {
     vi.restoreAllMocks();
   });
 
-  it("calculates warmup sets on target weight change", async () => {
+  it("shows warmup sets after calculate click", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -24,14 +24,36 @@ describe("WarmupCalculatorModal", () => {
     const wrapper = mount(WarmupCalculatorModal, {
       props: { open: true, targetWeight: 100 },
     });
+    await flushPromises();
 
-    await new Promise((r) => setTimeout(r, 50));
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Calculate"))!
+      .trigger("click");
+    await flushPromises();
 
-    const calcBtn = wrapper.find("ui5-button");
-    await calcBtn.trigger("click");
-
-    await new Promise((r) => setTimeout(r, 50));
     expect(wrapper.text()).toContain("Suggested Warm-Up Progression");
     expect(wrapper.text()).toContain("Set 1: 50 kg × 10 reps");
+  });
+
+  it("emits 'close' when close button is clicked", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ warmupSets: [] }),
+      }),
+    );
+
+    const wrapper = mount(WarmupCalculatorModal, {
+      props: { open: true, targetWeight: 100 },
+    });
+
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Close"))!
+      .trigger("click");
+
+    expect(wrapper.emitted("close")).toBeTruthy();
   });
 });

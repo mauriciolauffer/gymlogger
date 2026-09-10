@@ -40,12 +40,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    browser: {
-      enabled: true,
-      provider: "playwright",
-      headless: true,
-      instances: [{ browser: "chromium" }],
-    },
+    environment: "jsdom",
     exclude: ["**/node_modules/**", "**/dist/**", "**/*.integration.spec.ts"],
     coverage: {
       provider: "v8",

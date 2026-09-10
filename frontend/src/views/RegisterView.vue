@@ -21,17 +21,17 @@ const confirmPassword = ref("");
 const errorMsg = ref("");
 const loading = ref(false);
 
-const handleNameInput = (e: any) => {
-  name.value = e.target.value;
+const handleNameInput = (e: Event) => {
+  name.value = (e.target as HTMLInputElement).value;
 };
-const handleEmailInput = (e: any) => {
-  email.value = e.target.value;
+const handleEmailInput = (e: Event) => {
+  email.value = (e.target as HTMLInputElement).value;
 };
-const handlePasswordInput = (e: any) => {
-  password.value = e.target.value;
+const handlePasswordInput = (e: Event) => {
+  password.value = (e.target as HTMLInputElement).value;
 };
-const handleConfirmInput = (e: any) => {
-  confirmPassword.value = e.target.value;
+const handleConfirmInput = (e: Event) => {
+  confirmPassword.value = (e.target as HTMLInputElement).value;
 };
 
 const handleRegister = async () => {
@@ -40,8 +40,8 @@ const handleRegister = async () => {
     errorMsg.value = "Email and password are required.";
     return;
   }
-  if (password.value.length < 6) {
-    errorMsg.value = "Password must be at least 6 characters long.";
+  if (password.value.length < 8) {
+    errorMsg.value = "Password must be at least 8 characters long.";
     return;
   }
   if (password.value !== confirmPassword.value) {
@@ -51,15 +51,18 @@ const handleRegister = async () => {
 
   loading.value = true;
   try {
-    const res = await api.post<{ token: string; user: any }>("/api/v1/auth/register", {
-      name: name.value || "Athlete",
-      email: email.value,
-      password: password.value,
-    });
+    const res = await api.post<{ token: string; user: Record<string, unknown> }>(
+      "/api/v1/auth/register",
+      {
+        name: name.value || "Athlete",
+        email: email.value,
+        password: password.value,
+      },
+    );
     authStore.setAuth(res.token, res.user);
     router.push("/workouts");
-  } catch (err: any) {
-    errorMsg.value = err.message || "Registration failed. Please try again.";
+  } catch (err) {
+    errorMsg.value = err instanceof Error ? err.message : "Registration failed. Please try again.";
   } finally {
     loading.value = false;
   }
@@ -97,7 +100,7 @@ const handleRegister = async () => {
         </div>
 
         <div class="form-group">
-          <ui5-label required for="password-input">Password (min 6 chars)</ui5-label>
+          <ui5-label required for="password-input">Password (min 8 chars)</ui5-label>
           <ui5-input
             id="password-input"
             type="Password"

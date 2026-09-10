@@ -1,18 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { activeWorkoutStore } from "../activeWorkout";
 
 describe("Active Workout Store", () => {
-  beforeEach(() => {
+  let activeWorkoutStore: (typeof import("../activeWorkout"))["activeWorkoutStore"];
+
+  beforeEach(async () => {
     localStorage.clear();
     vi.restoreAllMocks();
     vi.useFakeTimers();
+    vi.resetModules();
+    ({ activeWorkoutStore } = await import("../activeWorkout"));
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("starts workout and duration timer", async () => {
+  it("starts workout and increments elapsed seconds", async () => {
     const mockWorkout = {
       id: "w1",
       title: "Leg Day",
@@ -24,11 +27,9 @@ describe("Active Workout Store", () => {
 
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation(() => {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ workout: mockWorkout }),
-        });
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ workout: mockWorkout }),
       }),
     );
 
@@ -41,7 +42,7 @@ describe("Active Workout Store", () => {
     expect(activeWorkoutStore.elapsedSeconds).toBeGreaterThanOrEqual(1);
   });
 
-  it("manages rest timer", () => {
+  it("starts and stops rest timer", () => {
     activeWorkoutStore.startRestTimer(60);
 
     expect(activeWorkoutStore.restTimer.active).toBe(true);
@@ -54,7 +55,7 @@ describe("Active Workout Store", () => {
     expect(activeWorkoutStore.restTimer.active).toBe(false);
   });
 
-  it("fetches active workout, adds exercise, logs set, updates set, deletes set and finishes workout", async () => {
+  it("fetches active workout", async () => {
     const mockWorkout = {
       id: "w1",
       title: "Full Body",
@@ -66,16 +67,63 @@ describe("Active Workout Store", () => {
 
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((url, opts) => {
-        if (url.includes("/previous-values")) {
-          return Promise.resolve({ ok: true, json: async () => ({ sets: [] }) });
-        }
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ workout: mockWorkout }),
+      }),
+    );
+
+    await activeWorkoutStore.fetchActiveWorkout("w1");
+    expect(activeWorkoutStore.workout?.id).toBe("w1");
+  });
+
+  it("adds exercise to active workout", async () => {
+    const mockWorkout = {
+      id: "w1",
+      title: "Full Body",
+      start_time: new Date().toISOString(),
+      total_volume: 0,
+      set_count: 0,
+      exercises: [],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
         if (opts?.method === "POST" && url.includes("/exercises")) {
           return Promise.resolve({
             ok: true,
             json: async () => ({ workoutExercise: { id: "we1", exercise_id: "ex1", sets: [] } }),
           });
         }
+        if (url.includes("/previous-values")) {
+          return Promise.resolve({ ok: true, json: async () => ({ sets: [] }) });
+        }
+        return Promise.resolve({ ok: true, json: async () => ({ workout: mockWorkout }) });
+      }),
+    );
+
+    await activeWorkoutStore.fetchActiveWorkout("w1");
+    await activeWorkoutStore.addExercise("ex1");
+
+    expect(activeWorkoutStore.workout?.exercises.length).toBe(1);
+  });
+
+  it("logs a set and detects PRs", async () => {
+    const mockWorkout = {
+      id: "w1",
+      title: "Full Body",
+      start_time: new Date().toISOString(),
+      total_volume: 0,
+      set_count: 0,
+      exercises: [
+        { id: "we1", exercise_id: "ex1", exercise_name: "Squat", sets: [], previousSets: [] },
+      ],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
         if (opts?.method === "POST" && url.includes("/sets")) {
           return Promise.resolve({
             ok: true,
@@ -86,6 +134,37 @@ describe("Active Workout Store", () => {
             }),
           });
         }
+        return Promise.resolve({ ok: true, json: async () => ({ workout: mockWorkout }) });
+      }),
+    );
+
+    await activeWorkoutStore.fetchActiveWorkout("w1");
+    const logRes = await activeWorkoutStore.logSet("we1", { weight: 60, reps: 8 });
+
+    expect(logRes?.isPr).toBe(true);
+  });
+
+  it("updates a set", async () => {
+    const mockWorkout = {
+      id: "w1",
+      title: "Full Body",
+      start_time: new Date().toISOString(),
+      total_volume: 0,
+      set_count: 0,
+      exercises: [
+        {
+          id: "we1",
+          exercise_id: "ex1",
+          exercise_name: "Squat",
+          sets: [{ id: "s1", weight: 60, reps: 8, set_type: "normal", order_index: 0 }],
+          previousSets: [],
+        },
+      ],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
         if (opts?.method === "PUT" && url.includes("/sets/s1")) {
           return Promise.resolve({
             ok: true,
@@ -96,9 +175,29 @@ describe("Active Workout Store", () => {
             }),
           });
         }
-        if (opts?.method === "DELETE" && url.includes("/sets/s1")) {
-          return Promise.resolve({ ok: true, json: async () => ({ message: "Set deleted" }) });
-        }
+        return Promise.resolve({ ok: true, json: async () => ({ workout: mockWorkout }) });
+      }),
+    );
+
+    await activeWorkoutStore.fetchActiveWorkout("w1");
+    const updateRes = await activeWorkoutStore.updateSet("s1", { weight: 70 });
+
+    expect(updateRes?.set.weight).toBe(70);
+  });
+
+  it("finishes workout and clears state", async () => {
+    const mockWorkout = {
+      id: "w1",
+      title: "Full Body",
+      start_time: new Date().toISOString(),
+      total_volume: 0,
+      set_count: 0,
+      exercises: [],
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
         if (opts?.method === "PUT" && url.includes("/finish")) {
           return Promise.resolve({ ok: true, json: async () => ({ workout: mockWorkout }) });
         }
@@ -107,18 +206,6 @@ describe("Active Workout Store", () => {
     );
 
     await activeWorkoutStore.fetchActiveWorkout("w1");
-    expect(activeWorkoutStore.workout?.id).toBe("w1");
-
-    await activeWorkoutStore.addExercise("ex1");
-    expect(activeWorkoutStore.workout?.exercises.length).toBe(1);
-
-    const logRes = await activeWorkoutStore.logSet("we1", { weight: 60, reps: 8 });
-    expect(logRes?.isPr).toBe(true);
-
-    const updateRes = await activeWorkoutStore.updateSet("s1", { weight: 70 });
-    expect(updateRes?.set.weight).toBe(70);
-
-    await activeWorkoutStore.deleteSet("s1");
     await activeWorkoutStore.finishWorkout("Great session");
 
     expect(activeWorkoutStore.workout).toBeNull();

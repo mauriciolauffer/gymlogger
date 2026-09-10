@@ -8,16 +8,30 @@ import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
 import { api } from "../api/client";
+import { formatDate } from "../utils/formatters";
 import LogMeasurementModal from "../components/LogMeasurementModal.vue";
 
-const logs = ref<any[]>([]);
+interface MeasurementLog {
+  id: string;
+  logged_at: string;
+  weight?: number;
+  weight_unit?: string;
+  body_fat_pct?: number;
+  chest?: number;
+  waist?: number;
+  biceps?: number;
+  thighs?: number;
+  length_unit?: string;
+}
+
+const logs = ref<MeasurementLog[]>([]);
 const loading = ref(false);
 const showLogModal = ref(false);
 
 const fetchMeasurements = async () => {
   loading.value = true;
   try {
-    const res = await api.get<{ measurements: any[] }>("/api/v1/body-measurements");
+    const res = await api.get<{ measurements: MeasurementLog[] }>("/api/v1/body-measurements");
     logs.value = res.measurements || [];
   } catch (err) {
     console.error("Failed to fetch body measurements", err);
@@ -37,16 +51,7 @@ const handleDelete = async (id: string, event: Event) => {
   }
 };
 
-const formatDate = (iso: string) => {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const formatMetrics = (item: any) => {
+const formatMetrics = (item: MeasurementLog) => {
   const parts: string[] = [];
   if (item.weight) parts.push(`Weight: ${item.weight} ${item.weight_unit || "kg"}`);
   if (item.body_fat_pct) parts.push(`Body Fat: ${item.body_fat_pct}%`);
@@ -67,7 +72,7 @@ onMounted(() => {
     <div class="header-actions">
       <div>
         <ui5-title level="H2">Body Measurements & Progress</ui5-title>
-        <p class="subtitle">Track composition changes over time (REQ-07, REQ-09, REQ-10)</p>
+        <p class="subtitle">Track composition changes over time</p>
       </div>
       <ui5-button design="Emphasized" @click="showLogModal = true"> + Log Measurement </ui5-button>
     </div>

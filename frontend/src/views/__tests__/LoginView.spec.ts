@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import LoginView from "../LoginView.vue";
 import { authStore } from "../../store/auth";
 
@@ -13,7 +13,14 @@ describe("LoginView", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders login form elements and handles successful login", async () => {
+  it("renders the login form", () => {
+    const wrapper = mount(LoginView);
+
+    expect(wrapper.find("ui5-input#email-input").exists()).toBe(true);
+    expect(wrapper.find("ui5-input#password-input").exists()).toBe(true);
+  });
+
+  it("handles successful login", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -24,35 +31,36 @@ describe("LoginView", () => {
 
     const wrapper = mount(LoginView);
 
-    const inputs = wrapper.findAll("ui5-input");
-    (inputs[0].element as any).value = "athlete@example.com";
-    await inputs[0].trigger("input");
+    const emailInput = wrapper.find("ui5-input#email-input");
+    (emailInput.element as HTMLInputElement).value = "athlete@example.com";
+    await emailInput.trigger("input");
 
-    (inputs[1].element as any).value = "password123";
-    await inputs[1].trigger("input");
+    const passwordInput = wrapper.find("ui5-input#password-input");
+    (passwordInput.element as HTMLInputElement).value = "password123";
+    await passwordInput.trigger("input");
 
-    const buttons = wrapper.findAll("ui5-button");
-    await buttons[0].trigger("click");
-
-    await new Promise((r) => setTimeout(r, 50));
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Log In"))!
+      .trigger("click");
+    await flushPromises();
 
     expect(authStore.token).toBe("token123");
     expect(mockPush).toHaveBeenCalledWith("/workouts");
   });
 
-  it("displays error message on invalid input or login failure", async () => {
+  it("shows validation error when fields are empty", async () => {
     const wrapper = mount(LoginView);
-    const buttons = wrapper.findAll("ui5-button");
 
-    const inputs = wrapper.findAll("ui5-input");
-    (inputs[0].element as any).value = "";
-    await inputs[0].trigger("input");
-    (inputs[1].element as any).value = "";
-    await inputs[1].trigger("input");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Log In"))!
+      .trigger("click");
 
-    await buttons[0].trigger("click");
     expect(wrapper.text()).toContain("Please enter both email and password.");
+  });
 
+  it("shows server error on failed login", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -62,22 +70,33 @@ describe("LoginView", () => {
       }),
     );
 
-    (inputs[0].element as any).value = "test@example.com";
-    await inputs[0].trigger("input");
-    (inputs[1].element as any).value = "wrong";
-    await inputs[1].trigger("input");
+    const wrapper = mount(LoginView);
 
-    await buttons[0].trigger("click");
+    const emailInput = wrapper.find("ui5-input#email-input");
+    (emailInput.element as HTMLInputElement).value = "test@example.com";
+    await emailInput.trigger("input");
 
-    await new Promise((r) => setTimeout(r, 50));
+    const passwordInput = wrapper.find("ui5-input#password-input");
+    (passwordInput.element as HTMLInputElement).value = "wrong";
+    await passwordInput.trigger("input");
+
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Log In"))!
+      .trigger("click");
+    await flushPromises();
+
     expect(wrapper.text()).toContain("Invalid credentials");
   });
 
   it("navigates to register page on register button click", async () => {
     const wrapper = mount(LoginView);
-    const buttons = wrapper.findAll("ui5-button");
 
-    await buttons[1].trigger("click");
+    await wrapper
+      .findAll("ui5-button")
+      .find((b) => b.text().includes("Register"))!
+      .trigger("click");
+
     expect(mockPush).toHaveBeenCalledWith("/register");
   });
 });

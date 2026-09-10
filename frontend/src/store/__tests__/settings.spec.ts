@@ -7,20 +7,20 @@ describe("Settings Store", () => {
   });
 
   it("fetches settings from API", async () => {
-    const mockSettings = {
-      theme: "dark" as const,
-      preferred_weight_unit: "lbs" as const,
-      preferred_length_unit: "in" as const,
-      language: "en",
-      rest_timer_duration_seconds: 120,
-      notifications_enabled: true,
-    };
-
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ settings: mockSettings }),
+        json: async () => ({
+          settings: {
+            theme: "dark",
+            preferred_weight_unit: "lbs",
+            preferred_length_unit: "in",
+            language: "en",
+            rest_timer_duration_seconds: 120,
+            notifications_enabled: true,
+          },
+        }),
       }),
     );
 
@@ -53,5 +53,20 @@ describe("Settings Store", () => {
 
     expect(settingsStore.settings.theme).toBe("light");
     expect(settingsStore.settings.notifications_enabled).toBe(false);
+  });
+
+  it("throws when updateSettings API call fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: "Internal Server Error" }),
+      }),
+    );
+
+    await expect(settingsStore.updateSettings({ theme: "dark" })).rejects.toThrow(
+      "Internal Server Error",
+    );
   });
 });

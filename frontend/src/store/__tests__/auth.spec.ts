@@ -4,6 +4,7 @@ import { authStore } from "../auth";
 describe("Auth Store", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it("sets auth token and user", () => {
@@ -18,13 +19,13 @@ describe("Auth Store", () => {
   it("logs out user and clears localStorage", async () => {
     authStore.setAuth("token123", { id: "u1", email: "test@example.com" });
 
-    const mockFetch = vi
-      .fn<() => Promise<{ ok: boolean; json: () => Promise<unknown> }>>()
-      .mockResolvedValue({
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ message: "Logout successful" }),
-      });
-    vi.stubGlobal("fetch", mockFetch);
+      }),
+    );
 
     await authStore.logout();
 
@@ -32,5 +33,24 @@ describe("Auth Store", () => {
     expect(authStore.user).toBeNull();
     expect(authStore.isAuthenticated.value).toBe(false);
     expect(localStorage.getItem("gymlogger_token")).toBeNull();
+  });
+
+  it("isAuthenticated transitions correctly through logout and re-login", async () => {
+    authStore.setAuth("token-a", { id: "u1", email: "a@example.com" });
+    expect(authStore.isAuthenticated.value).toBe(true);
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ message: "Logout successful" }),
+      }),
+    );
+    await authStore.logout();
+    expect(authStore.isAuthenticated.value).toBe(false);
+
+    authStore.setAuth("token-b", { id: "u2", email: "b@example.com" });
+    expect(authStore.isAuthenticated.value).toBe(true);
+    expect(authStore.token).toBe("token-b");
   });
 });

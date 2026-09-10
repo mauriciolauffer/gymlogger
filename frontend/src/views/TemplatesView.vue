@@ -12,17 +12,23 @@ import { api } from "../api/client";
 import { activeWorkoutStore } from "../store/activeWorkout";
 import TemplateEditorModal from "../components/TemplateEditorModal.vue";
 
+interface WorkoutTemplate {
+  id: string;
+  title: string;
+  exercise_count?: number;
+}
+
 const router = useRouter();
 
-const templates = ref<any[]>([]);
+const templates = ref<WorkoutTemplate[]>([]);
 const loading = ref(false);
-const editingTemplate = ref<any | null>(null);
+const editingTemplate = ref<WorkoutTemplate | null>(null);
 const showEditorModal = ref(false);
 
 const fetchTemplates = async () => {
   loading.value = true;
   try {
-    const res = await api.get<{ templates: any[] }>("/api/v1/workout-templates");
+    const res = await api.get<{ templates: WorkoutTemplate[] }>("/api/v1/workout-templates");
     templates.value = res.templates || [];
   } catch (err) {
     console.error("Failed to fetch templates", err);
@@ -38,7 +44,7 @@ const handleCreateNew = () => {
 
 const handleEdit = async (tplId: string) => {
   try {
-    const res = await api.get<{ template: any }>(`/api/v1/workout-templates/${tplId}`);
+    const res = await api.get<{ template: WorkoutTemplate }>(`/api/v1/workout-templates/${tplId}`);
     editingTemplate.value = res.template;
     showEditorModal.value = true;
   } catch (err) {
@@ -56,7 +62,7 @@ const handleDelete = async (tplId: string) => {
   }
 };
 
-const handleStartFromTemplate = async (tpl: any) => {
+const handleStartFromTemplate = async (tpl: WorkoutTemplate) => {
   try {
     await activeWorkoutStore.startWorkout(tpl.title, tpl.id);
     router.push("/active-workout");
@@ -75,7 +81,7 @@ onMounted(() => {
     <div class="header-actions">
       <div>
         <ui5-title level="H2">Workout Templates</ui5-title>
-        <p class="subtitle">Save routine setups for instant workout logging (REQ-08)</p>
+        <p class="subtitle">Save routine setups for instant workout logging</p>
       </div>
       <ui5-button design="Emphasized" @click="handleCreateNew"> + Create Template </ui5-button>
     </div>
@@ -92,11 +98,18 @@ onMounted(() => {
         <div class="card-content">
           <p class="notes" v-if="tpl.notes">{{ tpl.notes }}</p>
           <div class="card-actions">
-            <ui5-button design="Emphasized" @click="handleStartFromTemplate(tpl)"
+            <ui5-button
+              design="Emphasized"
+              data-action="start"
+              @click="handleStartFromTemplate(tpl)"
               >Start Workout</ui5-button
             >
-            <ui5-button design="Transparent" @click="handleEdit(tpl.id)">Edit</ui5-button>
-            <ui5-button design="Negative" @click="handleDelete(tpl.id)">Delete</ui5-button>
+            <ui5-button design="Transparent" data-action="edit" @click="handleEdit(tpl.id)"
+              >Edit</ui5-button
+            >
+            <ui5-button design="Negative" data-action="delete" @click="handleDelete(tpl.id)"
+              >Delete</ui5-button
+            >
           </div>
         </div>
       </ui5-card>

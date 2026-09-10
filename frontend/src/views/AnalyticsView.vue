@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import "@ui5/webcomponents/dist/Title.js";
 import "@ui5/webcomponents/dist/Card.js";
 import "@ui5/webcomponents/dist/CardHeader.js";
@@ -10,6 +10,34 @@ import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 
 import { api } from "../api/client";
+import { formatDurationHours } from "../utils/formatters";
+
+interface MonthlyReport {
+  totalWorkouts: number;
+  totalVolume: number;
+  totalDurationSeconds: number;
+  topPRs: Array<{ exerciseName: string; prType: string; value: number; valueUnit?: string }>;
+  muscleDistribution: Array<{
+    muscleGroupId: string;
+    muscleGroup: string;
+    setCount: number;
+    percentage: number;
+  }>;
+}
+
+interface SetsPerMuscleGroup {
+  muscleGroupId: string;
+  muscleGroup: string;
+  setCount: number;
+  hypertrophyTargetMin: number;
+  hypertrophyTargetMax: number;
+}
+
+interface ConsistencyData {
+  currentStreakDays: number;
+  totalWorkouts: number;
+  activeDates: string[];
+}
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
@@ -18,22 +46,13 @@ const selectedYear = ref(currentYear);
 const selectedMonth = ref(currentMonth);
 
 const loading = ref(false);
-const report = ref<{
-  totalWorkouts: number;
-  totalVolume: number;
-  totalDurationSeconds: number;
-  topPrs: Array<{ exercise_name: string; pr_type: string; value: number }>;
-  muscleDistribution: Array<{ muscle_name: string; set_count: number; percentage: number }>;
-  weeklyMuscleTargetProgress: Array<{
-    muscle_name: string;
-    weekly_sets: number;
-    target_min: number;
-    target_max: number;
-  }>;
-} | null>(null);
+const report = ref<MonthlyReport | null>(null);
+const setsPerMuscleGroup = ref<SetsPerMuscleGroup[]>([]);
+const consistencyData = ref<ConsistencyData | null>(null);
 
-const consistencyData = ref<any>(null);
-const yearInReview = ref<any>(null);
+const availableYears = computed(() => {
+  return [currentYear, currentYear - 1];
+});
 
 const months = [
   { value: 1, name: "January" },
@@ -53,16 +72,24 @@ const months = [
 const fetchAnalytics = async () => {
   loading.value = true;
   try {
-    const reportData = await api.get(
-      `/api/v1/analytics/monthly-report?year=${selectedYear.value}&month=${selectedMonth.value}`,
-    );
+    const startDate = `${selectedYear.value}-${String(selectedMonth.value).padStart(2, "0")}-01`;
+    const nextM = selectedMonth.value === 12 ? 1 : selectedMonth.value + 1;
+    const nextY = selectedMonth.value === 12 ? selectedYear.value + 1 : selectedYear.value;
+    const endDate = `${nextY}-${String(nextM).padStart(2, "0")}-01`;
+
+    const [reportData, spmgRes, consistencyRes] = await Promise.all([
+      api.get<MonthlyReport>(
+        `/api/v1/analytics/monthly-report?year=${selectedYear.value}&month=${selectedMonth.value}`,
+      ),
+      api.get<{ setsPerMuscleGroup: SetsPerMuscleGroup[] }>(
+        `/api/v1/analytics/sets-per-muscle-group?from=${startDate}&to=${endDate}`,
+      ),
+      api.get<ConsistencyData>("/api/v1/analytics/consistency"),
+    ]);
+
     report.value = reportData;
-
-    const consistencyRes = await api.get("/api/v1/analytics/consistency");
+    setsPerMuscleGroup.value = spmgRes.setsPerMuscleGroup || [];
     consistencyData.value = consistencyRes;
-
-    const yearRes = await api.get(`/api/v1/analytics/year-in-review?year=${selectedYear.value}`);
-    yearInReview.value = yearRes;
   } catch (err) {
     console.error("Failed to load analytics report", err);
   } finally {
@@ -70,19 +97,16 @@ const fetchAnalytics = async () => {
   }
 };
 
-const handleMonthChange = (e: any) => {
-  selectedMonth.value = Number(e.target.selectedOption.value);
+const handleMonthChange = (e: Event) => {
+  const select = e.target as HTMLElement & { selectedOption: { value: string } };
+  selectedMonth.value = Number(select.selectedOption.value);
   fetchAnalytics();
 };
 
-const handleYearChange = (e: any) => {
-  selectedYear.value = Number(e.target.selectedOption.value);
+const handleYearChange = (e: Event) => {
+  const select = e.target as HTMLElement & { selectedOption: { value: string } };
+  selectedYear.value = Number(select.selectedOption.value);
   fetchAnalytics();
-};
-
-const formatDurationHours = (secs: number) => {
-  if (!secs) return "0.0 hrs";
-  return `${(secs / 3600).toFixed(1)} hrs`;
 };
 
 onMounted(() => {
@@ -96,7 +120,7 @@ onMounted(() => {
     <div class="header-bar">
       <div>
         <ui5-title level="H2">Monthly Report & Analytics</ui5-title>
-        <p class="subtitle">Periodic training progress summary (REQ-06)</p>
+        <p class="subtitle">Periodic training progress summary</p>
       </div>
 
       <div class="filter-controls">
@@ -112,8 +136,14 @@ onMounted(() => {
         </ui5-select>
 
         <ui5-select @change="handleYearChange">
-          <ui5-option value="2026" :selected="selectedYear === 2026">2026</ui5-option>
-          <ui5-option value="2025" :selected="selectedYear === 2025">2025</ui5-option>
+          <ui5-option
+            v-for="year in availableYears"
+            :key="year"
+            :value="String(year)"
+            :selected="selectedYear === year"
+          >
+            {{ year }}
+          </ui5-option>
         </ui5-select>
       </div>
     </div>
@@ -152,12 +182,12 @@ onMounted(() => {
           <div v-if="report.muscleDistribution?.length" class="distribution-list">
             <div
               v-for="item in report.muscleDistribution"
-              :key="item.muscle_name"
+              :key="item.muscleGroup"
               class="dist-item"
             >
               <div class="dist-meta">
-                <span>{{ item.muscle_name }}</span>
-                <span>{{ item.set_count }} sets ({{ item.percentage }}%)</span>
+                <span>{{ item.muscleGroup }}</span>
+                <span>{{ item.setCount }} sets ({{ item.percentage }}%)</span>
               </div>
               <div class="progress-track">
                 <div class="progress-fill" :style="{ width: item.percentage + '%' }"></div>
@@ -172,23 +202,22 @@ onMounted(() => {
       <ui5-card class="section-card">
         <ui5-card-header slot="header" title-text="Weekly Sets vs Hypertrophy Targets" />
         <div class="card-content">
-          <div v-if="report.weeklyMuscleTargetProgress?.length" class="target-list">
-            <div
-              v-for="item in report.weeklyMuscleTargetProgress"
-              :key="item.muscle_name"
-              class="target-item"
-            >
+          <div v-if="setsPerMuscleGroup?.length" class="target-list">
+            <div v-for="item in setsPerMuscleGroup" :key="item.muscleGroup" class="target-item">
               <div class="dist-meta">
-                <span>{{ item.muscle_name }}</span>
+                <span>{{ item.muscleGroup }}</span>
                 <span>
-                  {{ item.weekly_sets }} / {{ item.target_min }}-{{ item.target_max }} weekly sets
+                  {{ item.setCount }} / {{ item.hypertrophyTargetMin }}-{{
+                    item.hypertrophyTargetMax
+                  }}
+                  weekly sets
                 </span>
               </div>
               <div class="progress-track">
                 <div
                   class="progress-fill target-fill"
                   :style="{
-                    width: Math.min(100, (item.weekly_sets / item.target_max) * 100) + '%',
+                    width: Math.min(100, (item.setCount / item.hypertrophyTargetMax) * 100) + '%',
                   }"
                 ></div>
               </div>
@@ -202,13 +231,13 @@ onMounted(() => {
       <ui5-card class="section-card">
         <ui5-card-header slot="header" title-text="Top Personal Records (PRs)" />
         <div class="card-content">
-          <ui5-list v-if="report.topPrs?.length">
+          <ui5-list v-if="report.topPRs?.length">
             <ui5-list-item-standard
-              v-for="(pr, idx) in report.topPrs"
+              v-for="(pr, idx) in report.topPRs"
               :key="idx"
-              :description="`PR Type: ${pr.pr_type.toUpperCase()}`"
+              :description="`PR Type: ${pr.prType.toUpperCase()}`"
             >
-              🏆 {{ pr.exercise_name }}: {{ pr.value }} kg
+              🏆 {{ pr.exerciseName }}: {{ pr.value }} {{ pr.valueUnit || "kg" }}
             </ui5-list-item-standard>
           </ui5-list>
           <p v-else class="empty-text">No PRs set during this month.</p>
@@ -222,7 +251,7 @@ onMounted(() => {
           <div class="streak-stat">
             <span class="fire-icon">🔥</span>
             <div>
-              <div class="streak-val">{{ consistencyData.currentStreak || 0 }} Weeks</div>
+              <div class="streak-val">{{ consistencyData.currentStreakDays || 0 }} Days</div>
               <div class="streak-lbl">Current Training Streak</div>
             </div>
           </div>

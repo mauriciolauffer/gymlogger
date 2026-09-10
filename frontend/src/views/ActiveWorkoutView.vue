@@ -13,7 +13,12 @@ import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
 import { api } from "../api/client";
-import { activeWorkoutStore, type ActiveWorkoutSet } from "../store/activeWorkout";
+import { formatDuration } from "../utils/formatters";
+import {
+  activeWorkoutStore,
+  type ActiveWorkoutExercise,
+  type ActiveWorkoutSet,
+} from "../store/activeWorkout";
 import RestTimer from "../components/RestTimer.vue";
 import PrNotificationDialog from "../components/PrNotificationDialog.vue";
 import WarmupCalculatorModal from "../components/WarmupCalculatorModal.vue";
@@ -24,7 +29,7 @@ const workout = computed(() => activeWorkoutStore.workout);
 const elapsedSeconds = computed(() => activeWorkoutStore.elapsedSeconds);
 
 const showAddExerciseModal = ref(false);
-const availableExercises = ref<any[]>([]);
+const availableExercises = ref<ActiveWorkoutExercise[]>([]);
 const selectedExerciseId = ref("");
 
 const prNotification = ref<{ open: boolean; prTypes: string[] }>({
@@ -40,19 +45,9 @@ const warmupModal = ref<{ open: boolean; targetWeight?: number }>({
 const finishNotes = ref("");
 const showFinishModal = ref(false);
 
-const formatDuration = (secs: number) => {
-  const h = Math.floor(secs / 3600);
-  const m = Math.floor((secs % 3600) / 60);
-  const s = secs % 60;
-  if (h > 0) {
-    return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  }
-  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-};
-
 const fetchAvailableExercises = async () => {
   try {
-    const res = await api.get<{ exercises: any[] }>("/api/v1/exercises");
+    const res = await api.get<{ exercises: ActiveWorkoutExercise[] }>("/api/v1/exercises");
     availableExercises.value = res.exercises || [];
   } catch (err) {
     console.error("Failed to load exercises", err);
@@ -77,7 +72,7 @@ const handleConfirmAddExercise = async () => {
   showAddExerciseModal.value = false;
 };
 
-const handleAddSet = async (exercise: any) => {
+const handleAddSet = async (exercise: ActiveWorkoutExercise) => {
   let defaultWeight = 20;
   let defaultReps = 10;
   const setIndex = exercise.sets.length;
@@ -120,7 +115,7 @@ const handleUpdateSetReps = async (setId: string, newReps: number) => {
   }
 };
 
-const handleUpdateSetType = async (setId: string, newType: any) => {
+const handleUpdateSetType = async (setId: string, newType: string) => {
   await activeWorkoutStore.updateSet(setId, { set_type: newType });
 };
 
@@ -173,7 +168,7 @@ const handleFinishWorkout = async () => {
         <div class="card-content">
           <!-- Previous Reference Display -->
           <div v-if="ex.previousSets && ex.previousSets.length" class="previous-reference">
-            <span class="ref-title">Last Session Reference (REQ-02):</span>
+            <span class="ref-title">Last Session:</span>
             <span v-for="(ps, pIdx) in ex.previousSets" :key="pIdx" class="ref-chip">
               {{ ps.weight }}kg × {{ ps.reps }}
             </span>

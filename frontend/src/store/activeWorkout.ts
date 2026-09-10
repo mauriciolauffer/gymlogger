@@ -24,7 +24,7 @@ export interface ActiveWorkoutExercise {
   superset_id?: string | null;
   order_index: number;
   sets: ActiveWorkoutSet[];
-  previousSets?: any[];
+  previousSets?: ActiveWorkoutSet[];
 }
 
 export interface ActiveWorkout {
@@ -41,14 +41,14 @@ interface RestTimerState {
   active: boolean;
   duration: number;
   remaining: number;
-  intervalId: any;
+  intervalId: ReturnType<typeof setInterval> | null;
 }
 
 const state = reactive<{
   workout: ActiveWorkout | null;
   restTimer: RestTimerState;
   elapsedSeconds: number;
-  durationTimerId: any;
+  durationTimerId: ReturnType<typeof setInterval> | null;
 }>({
   workout: JSON.parse(localStorage.getItem("gymlogger_active_workout") || "null"),
   restTimer: {
@@ -134,9 +134,9 @@ export const activeWorkoutStore = {
       `/api/v1/workouts/${state.workout.id}/exercises`,
       { exercise_id: exerciseId, superset_id: supersetId },
     );
-    let previousSets: any[] = [];
+    let previousSets: ActiveWorkoutSet[] = [];
     try {
-      const prevData = await api.get<{ sets: any[] }>(
+      const prevData = await api.get<{ sets: ActiveWorkoutSet[] }>(
         `/api/v1/workouts/previous-values?exerciseId=${exerciseId}`,
       );
       previousSets = prevData.sets || [];

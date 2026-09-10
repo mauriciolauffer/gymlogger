@@ -19,12 +19,12 @@ const password = ref("");
 const errorMsg = ref("");
 const loading = ref(false);
 
-const handleEmailInput = (e: any) => {
-  email.value = e.target.value;
+const handleEmailInput = (e: Event) => {
+  email.value = (e.target as HTMLInputElement).value;
 };
 
-const handlePasswordInput = (e: any) => {
-  password.value = e.target.value;
+const handlePasswordInput = (e: Event) => {
+  password.value = (e.target as HTMLInputElement).value;
 };
 
 const handleLogin = async () => {
@@ -36,14 +36,18 @@ const handleLogin = async () => {
 
   loading.value = true;
   try {
-    const res = await api.post<{ token: string; user: any }>("/api/v1/auth/login", {
-      email: email.value,
-      password: password.value,
-    });
+    const res = await api.post<{ token: string; user: Record<string, unknown> }>(
+      "/api/v1/auth/login",
+      {
+        email: email.value,
+        password: password.value,
+      },
+    );
     authStore.setAuth(res.token, res.user);
     router.push("/workouts");
-  } catch (err: any) {
-    errorMsg.value = err.message || "Login failed. Please check your credentials.";
+  } catch (err) {
+    errorMsg.value =
+      err instanceof Error ? err.message : "Login failed. Please check your credentials.";
   } finally {
     loading.value = false;
   }

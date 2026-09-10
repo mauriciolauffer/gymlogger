@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import LogMeasurementModal from "../LogMeasurementModal.vue";
 
 describe("LogMeasurementModal", () => {
@@ -7,7 +7,7 @@ describe("LogMeasurementModal", () => {
     vi.restoreAllMocks();
   });
 
-  it("handles body measurement logging", async () => {
+  it("emits 'saved' after successful measurement log", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -16,18 +16,34 @@ describe("LogMeasurementModal", () => {
       }),
     );
 
-    const wrapper = mount(LogMeasurementModal, {
-      props: { open: true },
-    });
+    const wrapper = mount(LogMeasurementModal, { props: { open: true } });
 
     const weightInput = wrapper.find("ui5-input");
-    (weightInput.element as any).value = "80.0";
+    (weightInput.element as HTMLInputElement).value = "80.0";
     await weightInput.trigger("input");
 
-    const buttons = wrapper.findAll("ui5-button");
-    await buttons[1].trigger("click");
+    const saveBtn = wrapper.findAll("ui5-button").find((b) => b.text().includes("Save"));
+    await saveBtn!.trigger("click");
+    await flushPromises();
 
-    await new Promise((r) => setTimeout(r, 50));
     expect(wrapper.emitted("saved")).toBeTruthy();
+  });
+
+  it("shows validation error when no fields are filled", async () => {
+    const wrapper = mount(LogMeasurementModal, { props: { open: true } });
+
+    const saveBtn = wrapper.findAll("ui5-button").find((b) => b.text().includes("Save"));
+    await saveBtn!.trigger("click");
+
+    expect(wrapper.text()).toContain("Please enter at least one measurement metric.");
+  });
+
+  it("emits 'close' when cancel is clicked", async () => {
+    const wrapper = mount(LogMeasurementModal, { props: { open: true } });
+
+    const cancelBtn = wrapper.findAll("ui5-button").find((b) => b.text().includes("Cancel"));
+    await cancelBtn!.trigger("click");
+
+    expect(wrapper.emitted("close")).toBeTruthy();
   });
 });
