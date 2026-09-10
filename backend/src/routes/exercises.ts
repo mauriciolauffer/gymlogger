@@ -4,16 +4,15 @@ import type { Env } from "../index";
 import { getDb } from "../db/schema";
 import { exercises, muscleGroups, exerciseSecondaryMuscles } from "../db/schema";
 
-export const exercisesRouter = new Hono<Env>()
-  .get("/muscle-groups", async (c) => {
-    const db = getDb(c);
-    const results = await db
-      .select({ id: muscleGroups.id, name: muscleGroups.name })
-      .from(muscleGroups)
-      .orderBy(muscleGroups.name)
-      .all();
-    return c.json({ muscleGroups: results });
-  });
+export const exercisesRouter = new Hono<Env>().get("/muscle-groups", async (c) => {
+  const db = getDb(c);
+  const results = await db
+    .select({ id: muscleGroups.id, name: muscleGroups.name })
+    .from(muscleGroups)
+    .orderBy(muscleGroups.name)
+    .all();
+  return c.json({ muscleGroups: results });
+});
 
 exercisesRouter.get("/exercises", async (c) => {
   const user = c.get("user")!;

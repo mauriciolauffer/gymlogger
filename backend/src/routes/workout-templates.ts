@@ -6,7 +6,6 @@ import { workoutTemplates, workoutTemplateExercises, exercises } from "../db/sch
 
 export const workoutTemplatesRouter = new Hono<Env>();
 
-
 // GET /api/v1/workout-templates
 workoutTemplatesRouter.get("/", async (c) => {
   const user = c.get("user")!;

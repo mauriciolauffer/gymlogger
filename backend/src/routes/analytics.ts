@@ -88,10 +88,19 @@ analyticsRouter.get("/performance", async (c) => {
     .orderBy(asc(workouts.startTime), asc(workoutSets.orderIndex))
     .all();
 
-  const sessionsMap = new Map<string, { workoutId: string; date: string; sets: unknown[] }>();
-  const oneRepMaxCurve: unknown[] = [];
-  const maxWeightCurve: unknown[] = [];
-  const maxRepsCurve: unknown[] = [];
+  type PerformanceSet = {
+    setId: string;
+    weight: number;
+    reps: number;
+    rpe: number | null;
+    setType: string | null;
+    estimated1RM: number | null;
+  };
+  type SessionEntry = { workoutId: string; date: string; sets: PerformanceSet[] };
+  const sessionsMap = new Map<string, SessionEntry>();
+  const oneRepMaxCurve: { date: string; value: number; formula: string }[] = [];
+  const maxWeightCurve: { date: string; value: number }[] = [];
+  const maxRepsCurve: { date: string; value: number; weight: number }[] = [];
 
   for (const row of rawRows) {
     if (!sessionsMap.has(row.workout_id)) {
@@ -103,8 +112,8 @@ analyticsRouter.get("/performance", async (c) => {
     }
     sessionsMap.get(row.workout_id)!.sets.push({
       setId: row.set_id,
-      weight: row.weight,
-      reps: row.reps,
+      weight: row.weight ?? 0,
+      reps: row.reps ?? 0,
       rpe: row.rpe,
       setType: row.set_type,
       estimated1RM: row.estimated_1rm,
@@ -117,8 +126,8 @@ analyticsRouter.get("/performance", async (c) => {
     let maxReps = 0;
     let maxRepsWeight = 0;
 
-    for (const set of session.sets as { estimated1RM: number; weight: number; reps: number }[]) {
-      if (set.estimated1RM > max1RM) max1RM = set.estimated1RM;
+    for (const set of session.sets) {
+      if ((set.estimated1RM ?? 0) > max1RM) max1RM = set.estimated1RM ?? 0;
       if (set.weight > maxWeight) maxWeight = set.weight;
       if (set.reps > maxReps) {
         maxReps = set.reps;
