@@ -1,11 +1,25 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, defineAsyncComponent, onMounted, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import "@ui5/webcomponents-fiori/dist/ShellBar.js";
-import "@ui5/webcomponents/dist/Button.js";
-import "@ui5/webcomponents/dist/Title.js";
-import "@ui5/webcomponents/dist/TabContainer.js";
-import "@ui5/webcomponents/dist/Tab.js";
+import "@ui5/webcomponents-fiori/dist/NavigationLayout.js";
+import "@ui5/webcomponents-fiori/dist/SideNavigation.js";
+import "@ui5/webcomponents-fiori/dist/SideNavigationItem.js";
+import "@ui5/webcomponents/dist/Avatar.js";
+import "@ui5/webcomponents-icons/dist/user-settings.js";
+import "@ui5/webcomponents-icons/dist/person-placeholder.js";
+import "@ui5/webcomponents-icons/dist/action-settings.js";
+import "@ui5/webcomponents-icons/dist/menu2.js";
+import "@ui5/webcomponents-icons/dist/history.js";
+import "@ui5/webcomponents-icons/dist/document-text.js";
+import "@ui5/webcomponents-icons/dist/physical-activity.js";
+import "@ui5/webcomponents-icons/dist/bar-chart.js";
+import "@ui5/webcomponents-icons/dist/measure.js";
+import "@ui5/webcomponents-icons/dist/play.js";
+
+const UserMenuPopover = defineAsyncComponent(
+  () => import("./components/UserMenuPopover.vue"),
+);
 
 import { authStore } from "./store/auth";
 import { activeWorkoutStore } from "./store/activeWorkout";
@@ -16,21 +30,28 @@ const route = useRoute();
 
 const isAuthenticated = computed(() => authStore.isAuthenticated.value);
 const isWorkingOut = computed(() => activeWorkoutStore.isWorkingOut);
+const userName = computed(() => authStore.user?.name ?? "");
+const userEmail = computed(() => authStore.user?.email ?? "");
 
-const handleTabSelect = (e: any) => {
-  const selectedTab = e.detail.tab;
-  if (selectedTab && selectedTab.dataset.path) {
-    router.push(selectedTab.dataset.path);
-  }
+const navMode = ref<"Collapsed" | "Expanded">("Collapsed");
+const toggleNav = () => {
+  navMode.value = navMode.value === "Expanded" ? "Collapsed" : "Expanded";
 };
 
-const navigateTo = (path: string) => {
-  router.push(path);
+const userMenuOpen = ref(false);
+const userMenuMounted = ref(false);
+const userMenuOpener = ref<HTMLElement | null>(null);
+
+const handleProfileClick = (e: CustomEvent) => {
+  userMenuOpener.value = e.detail.targetRef;
+  userMenuMounted.value = true;
+  userMenuOpen.value = true;
 };
 
-const handleLogout = async () => {
-  await authStore.logout();
-  router.push("/login");
+const handleNavSelectionChange = (e: CustomEvent) => {
+  const item = e.detail?.item as HTMLElement | undefined;
+  const path = item?.dataset.path;
+  if (path) router.push(path);
 };
 
 onMounted(() => {
@@ -42,56 +63,83 @@ onMounted(() => {
 
 <template>
   <div class="app-shell">
-    <!-- SAP UI5 ShellBar -->
-    <ui5-shellbar primary-title="GymLogger" secondary-title="Workout Tracker">
-      <div slot="profile" v-if="isAuthenticated" class="shell-actions">
-        <ui5-button design="Transparent" @click="navigateTo('/profile')">Profile</ui5-button>
-        <ui5-button design="Transparent" @click="navigateTo('/settings')">Settings</ui5-button>
-        <ui5-button design="Transparent" @click="handleLogout">Log Out</ui5-button>
-      </div>
-    </ui5-shellbar>
+    <ui5-navigation-layout :mode="navMode">
+      <ui5-shellbar
+        slot="header"
+        primary-title="GymLogger"
+        secondary-title="Workout Tracker"
+        @profile-click="handleProfileClick"
+      >
+        <ui5-button slot="startButton" icon="menu2" @click="toggleNav" />
+        <ui5-avatar
+          v-if="isAuthenticated"
+          slot="profile"
+          icon="user-settings"
+          accessible-name="User menu"
+          interactive
+        />
+      </ui5-shellbar>
 
-    <!-- Navigation Tabs for Authenticated Users -->
-    <div v-if="isAuthenticated" class="navigation-tabs">
-      <ui5-tabcontainer fixed @tab-select="handleTabSelect">
-        <ui5-tab
+      <ui5-side-navigation
+        v-if="isAuthenticated"
+        slot="sideContent"
+        @selection-change="handleNavSelectionChange"
+      >
+        <ui5-side-navigation-item
+          v-if="isWorkingOut"
           text="Active Session"
+          icon="play"
           :selected="route.path === '/active-workout'"
           data-path="/active-workout"
-          v-if="isWorkingOut"
-        ></ui5-tab>
-        <ui5-tab
+        />
+        <ui5-side-navigation-item
           text="History"
+          icon="history"
           :selected="route.path === '/workouts'"
           data-path="/workouts"
-        ></ui5-tab>
-        <ui5-tab
+        />
+        <ui5-side-navigation-item
           text="Templates"
+          icon="document-text"
           :selected="route.path === '/templates'"
           data-path="/templates"
-        ></ui5-tab>
-        <ui5-tab
+        />
+        <ui5-side-navigation-item
           text="Exercises"
+          icon="physical-activity"
           :selected="route.path === '/exercises'"
           data-path="/exercises"
-        ></ui5-tab>
-        <ui5-tab
+        />
+        <ui5-side-navigation-item
           text="Analytics"
+          icon="bar-chart"
           :selected="route.path === '/analytics'"
           data-path="/analytics"
-        ></ui5-tab>
-        <ui5-tab
+        />
+        <ui5-side-navigation-item
           text="Measurements"
+          icon="measure"
           :selected="route.path === '/measurements'"
           data-path="/measurements"
-        ></ui5-tab>
-      </ui5-tabcontainer>
-    </div>
+        />
+      </ui5-side-navigation>
 
-    <!-- Router View Area -->
-    <main class="content-area">
-      <router-view />
-    </main>
+      <main class="content-area">
+        <router-view />
+      </main>
+    </ui5-navigation-layout>
+
+    <UserMenuPopover
+      v-if="userMenuMounted"
+      :open="userMenuOpen"
+      :opener="userMenuOpener"
+      :user-name="userName"
+      :user-email="userEmail"
+      @close="userMenuOpen = false"
+      @profile="router.push('/profile')"
+      @settings="router.push('/settings')"
+      @sign-out="authStore.logout().then(() => router.push('/login'))"
+    />
   </div>
 </template>
 
@@ -117,21 +165,18 @@ body {
 .app-shell {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
 }
 
-.navigation-tabs {
-  background-color: var(--sapList_Background, #ffffff);
-  border-bottom: 1px solid var(--sapList_BorderColor, #d9d9d9);
+ui5-navigation-layout {
+  flex: 1;
+  overflow: hidden;
 }
 
 .content-area {
-  flex: 1;
-}
-
-.shell-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  height: 100%;
+  box-sizing: border-box;
 }
 </style>

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import "@ui5/webcomponents/dist/Button.js";
-import "@ui5/webcomponents/dist/Title.js";
-import "@ui5/webcomponents/dist/Card.js";
-import "@ui5/webcomponents/dist/CardHeader.js";
+import "@ui5/webcomponents/dist/Form.js";
+import "@ui5/webcomponents/dist/FormGroup.js";
+import "@ui5/webcomponents/dist/FormItem.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/Label.js";
+import "@ui5/webcomponents/dist/SegmentedButton.js";
+import "@ui5/webcomponents/dist/SegmentedButtonItem.js";
 import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/StepInput.js";
@@ -39,60 +41,89 @@ const handleSave = async () => {
 
 <template>
   <div class="settings-container">
-    <ui5-card class="settings-card">
-      <ui5-card-header
-        slot="header"
-        title-text="System Settings"
-        subtitle-text="Configure app preferences"
-      />
+    <ui5-message-strip
+      v-if="message"
+      :design="message.type"
+      class="message-strip"
+      @close="message = null"
+    >
+      {{ message.text }}
+    </ui5-message-strip>
 
-      <div class="card-content">
-        <ui5-message-strip
-          v-if="message"
-          :design="message.type"
-          class="mb-3"
-          @close="message = null"
-        >
-          {{ message.text }}
-        </ui5-message-strip>
+    <ui5-form header-text="Settings" layout="S1 M1 L1 XL1" accessible-mode="Edit">
+      <ui5-form-group header-text="Units">
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Weight</ui5-label>
+          <ui5-segmented-button
+            @selection-change="
+              settings.preferred_weight_unit = $event.detail.selectedItems[0]?.dataset.value
+            "
+          >
+            <ui5-segmented-button-item
+              data-value="kg"
+              :selected="settings.preferred_weight_unit === 'kg'"
+              >kg</ui5-segmented-button-item
+            >
+            <ui5-segmented-button-item
+              data-value="lbs"
+              :selected="settings.preferred_weight_unit === 'lbs'"
+              >lbs</ui5-segmented-button-item
+            >
+          </ui5-segmented-button>
+        </ui5-form-item>
 
-        <div class="form-group">
-          <ui5-label>Preferred Weight Unit</ui5-label>
-          <ui5-select @change="settings.preferred_weight_unit = $event.target.selectedOption.value">
-            <ui5-option value="kg" :selected="settings.preferred_weight_unit === 'kg'"
-              >Kilograms (kg)</ui5-option
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Distance / Length</ui5-label>
+          <ui5-segmented-button
+            @selection-change="
+              settings.preferred_length_unit = $event.detail.selectedItems[0]?.dataset.value
+            "
+          >
+            <ui5-segmented-button-item
+              data-value="cm"
+              :selected="settings.preferred_length_unit === 'cm'"
+              >cm</ui5-segmented-button-item
             >
-            <ui5-option value="lbs" :selected="settings.preferred_weight_unit === 'lbs'"
-              >Pounds (lbs)</ui5-option
+            <ui5-segmented-button-item
+              data-value="in"
+              :selected="settings.preferred_length_unit === 'in'"
+              >in</ui5-segmented-button-item
             >
+          </ui5-segmented-button>
+        </ui5-form-item>
+      </ui5-form-group>
+
+      <ui5-form-group header-text="Appearance">
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Theme</ui5-label>
+          <ui5-segmented-button
+            @selection-change="settings.theme = $event.detail.selectedItems[0]?.dataset.value"
+          >
+            <ui5-segmented-button-item data-value="system" :selected="settings.theme === 'system'"
+              >System</ui5-segmented-button-item
+            >
+            <ui5-segmented-button-item data-value="light" :selected="settings.theme === 'light'"
+              >Light</ui5-segmented-button-item
+            >
+            <ui5-segmented-button-item data-value="dark" :selected="settings.theme === 'dark'"
+              >Dark</ui5-segmented-button-item
+            >
+          </ui5-segmented-button>
+        </ui5-form-item>
+
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Language</ui5-label>
+          <ui5-select @change="settings.language = $event.target.selectedOption.value">
+            <ui5-option value="en" :selected="settings.language === 'en'">English</ui5-option>
+            <ui5-option value="pt" :selected="settings.language === 'pt'">Português</ui5-option>
+            <ui5-option value="es" :selected="settings.language === 'es'">Español</ui5-option>
           </ui5-select>
-        </div>
+        </ui5-form-item>
+      </ui5-form-group>
 
-        <div class="form-group">
-          <ui5-label>Preferred Distance / Length Unit</ui5-label>
-          <ui5-select @change="settings.preferred_length_unit = $event.target.selectedOption.value">
-            <ui5-option value="cm" :selected="settings.preferred_length_unit === 'cm'"
-              >Centimeters (cm)</ui5-option
-            >
-            <ui5-option value="in" :selected="settings.preferred_length_unit === 'in'"
-              >Inches (in)</ui5-option
-            >
-          </ui5-select>
-        </div>
-
-        <div class="form-group">
-          <ui5-label>Theme</ui5-label>
-          <ui5-select @change="settings.theme = $event.target.selectedOption.value">
-            <ui5-option value="system" :selected="settings.theme === 'system'"
-              >System Default</ui5-option
-            >
-            <ui5-option value="light" :selected="settings.theme === 'light'">Light Mode</ui5-option>
-            <ui5-option value="dark" :selected="settings.theme === 'dark'">Dark Mode</ui5-option>
-          </ui5-select>
-        </div>
-
-        <div class="form-group">
-          <ui5-label>Default Inter-Set Rest Duration (seconds)</ui5-label>
+      <ui5-form-group header-text="Rest Timer">
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Default Inter-Set Rest Duration (seconds)</ui5-label>
           <ui5-step-input
             :value="settings.rest_timer_duration_seconds"
             min="10"
@@ -100,64 +131,45 @@ const handleSave = async () => {
             step="15"
             @change="settings.rest_timer_duration_seconds = Number($event.target.value)"
           />
-        </div>
+        </ui5-form-item>
 
-        <div class="form-group row-align">
-          <ui5-label>Enable Rest Timer Notifications</ui5-label>
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Enable Notifications</ui5-label>
           <ui5-switch
             :checked="settings.notifications_enabled"
             @change="settings.notifications_enabled = $event.target.checked"
           />
-        </div>
+        </ui5-form-item>
+      </ui5-form-group>
+    </ui5-form>
 
-        <div class="actions">
-          <ui5-button design="Emphasized" :disabled="saving" @click="handleSave">
-            {{ saving ? "Saving..." : "Save Settings" }}
-          </ui5-button>
-        </div>
-      </div>
-    </ui5-card>
+    <div class="actions">
+      <ui5-button design="Emphasized" :disabled="saving" @click="handleSave">
+        {{ saving ? "Saving..." : "Save Settings" }}
+      </ui5-button>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .settings-container {
   display: flex;
-  justify-content: center;
-  padding: 1.5rem;
-}
-
-.settings-card {
-  width: 100%;
-  max-width: 600px;
-}
-
-.card-content {
-  padding: 1.5rem;
-  display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
+  max-width: 800px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.row-align {
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+.message-strip {
+  margin-bottom: 0.5rem;
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
-.mb-3 {
-  margin-bottom: 0.75rem;
+ui5-segmented-button {
+  max-width: 16rem;
 }
 </style>

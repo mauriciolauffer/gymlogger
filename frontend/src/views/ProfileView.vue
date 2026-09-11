@@ -2,11 +2,13 @@
 import { ref, onMounted } from "vue";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Input.js";
-import "@ui5/webcomponents/dist/Title.js";
-import "@ui5/webcomponents/dist/Card.js";
-import "@ui5/webcomponents/dist/CardHeader.js";
+import "@ui5/webcomponents/dist/Form.js";
+import "@ui5/webcomponents/dist/FormGroup.js";
+import "@ui5/webcomponents/dist/FormItem.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/Label.js";
+import "@ui5/webcomponents/dist/SegmentedButton.js";
+import "@ui5/webcomponents/dist/SegmentedButtonItem.js";
 import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/DatePicker.js";
@@ -79,155 +81,131 @@ onMounted(() => {
 
 <template>
   <div class="profile-container">
-    <ui5-card class="profile-card">
-      <ui5-card-header
-        slot="header"
-        title-text="User Profile"
-        subtitle-text="Manage your personal details"
-      />
+    <ui5-message-strip
+      v-if="message"
+      :design="message.type"
+      class="message-strip"
+      @close="message = null"
+    >
+      {{ message.text }}
+    </ui5-message-strip>
 
-      <div class="card-content" v-if="!loading">
-        <ui5-message-strip
-          v-if="message"
-          :design="message.type"
-          class="mb-3"
-          @close="message = null"
-        >
-          {{ message.text }}
-        </ui5-message-strip>
-
-        <div class="form-group">
-          <ui5-label>Email (read-only)</ui5-label>
+    <ui5-form
+      v-if="!loading"
+      header-text="Profile"
+      layout="S1 M1 L1 XL1"
+      accessible-mode="Edit"
+    >
+      <ui5-form-group header-text="Account">
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Email</ui5-label>
           <ui5-input :value="profile.email" readonly />
-        </div>
+        </ui5-form-item>
 
-        <div class="form-group">
-          <ui5-label required>Name</ui5-label>
+        <ui5-form-item>
+          <ui5-label slot="labelContent" required>Name</ui5-label>
           <ui5-input
             :value="profile.name"
-            @input="profile.name = $event.target.value"
             placeholder="Athlete Name"
+            @input="profile.name = $event.target.value"
           />
-        </div>
+        </ui5-form-item>
+      </ui5-form-group>
 
-        <div class="form-grid">
-          <div class="form-group">
-            <ui5-label>Location</ui5-label>
+      <ui5-form-group header-text="Personal">
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Location</ui5-label>
+          <ui5-input
+            :value="profile.location"
+            placeholder="City, Country"
+            @input="profile.location = $event.target.value"
+          />
+        </ui5-form-item>
+
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Date of Birth</ui5-label>
+          <ui5-date-picker
+            :value="profile.birthday"
+            @change="profile.birthday = $event.target.value"
+          />
+        </ui5-form-item>
+
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Sex</ui5-label>
+          <ui5-select @change="profile.sex = $event.target.selectedOption.value">
+            <ui5-option value="prefer_not_to_say" :selected="profile.sex === 'prefer_not_to_say'">Prefer not to say</ui5-option>
+            <ui5-option value="male" :selected="profile.sex === 'male'">Male</ui5-option>
+            <ui5-option value="female" :selected="profile.sex === 'female'">Female</ui5-option>
+            <ui5-option value="other" :selected="profile.sex === 'other'">Other</ui5-option>
+          </ui5-select>
+        </ui5-form-item>
+
+        <ui5-form-item>
+          <ui5-label slot="labelContent">Height</ui5-label>
+          <div class="height-row">
             <ui5-input
-              :value="profile.location"
-              @input="profile.location = $event.target.value"
-              placeholder="City, Country"
+              type="Number"
+              :value="String(profile.height)"
+              placeholder="175"
+              @input="profile.height = Number($event.target.value)"
             />
+            <ui5-segmented-button
+              @selection-change="profile.height_unit = $event.detail.selectedItems[0]?.dataset.value"
+            >
+              <ui5-segmented-button-item data-value="cm" :selected="profile.height_unit === 'cm'">cm</ui5-segmented-button-item>
+              <ui5-segmented-button-item data-value="in" :selected="profile.height_unit === 'in'">in</ui5-segmented-button-item>
+            </ui5-segmented-button>
           </div>
+        </ui5-form-item>
+      </ui5-form-group>
 
-          <div class="form-group">
-            <ui5-label>Date of Birth</ui5-label>
-            <ui5-date-picker
-              :value="profile.birthday"
-              @change="profile.birthday = $event.target.value"
-            />
-          </div>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <ui5-label>Sex</ui5-label>
-            <ui5-select @change="profile.sex = $event.target.selectedOption.value">
-              <ui5-option value="prefer_not_to_say" :selected="profile.sex === 'prefer_not_to_say'"
-                >Prefer not to say</ui5-option
-              >
-              <ui5-option value="male" :selected="profile.sex === 'male'">Male</ui5-option>
-              <ui5-option value="female" :selected="profile.sex === 'female'">Female</ui5-option>
-              <ui5-option value="other" :selected="profile.sex === 'other'">Other</ui5-option>
-            </ui5-select>
-          </div>
-
-          <div class="form-group">
-            <ui5-label>Height</ui5-label>
-            <div class="row-inputs">
-              <ui5-input
-                type="Number"
-                :value="String(profile.height)"
-                @input="profile.height = Number($event.target.value)"
-                placeholder="175"
-              />
-              <ui5-select @change="profile.height_unit = $event.target.selectedOption.value">
-                <ui5-option value="cm" :selected="profile.height_unit === 'cm'">cm</ui5-option>
-                <ui5-option value="in" :selected="profile.height_unit === 'in'">in</ui5-option>
-              </ui5-select>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <ui5-label>Bio</ui5-label>
+      <ui5-form-group header-text="Bio">
+        <ui5-form-item>
+          <ui5-label slot="labelContent">About</ui5-label>
           <ui5-textarea
             :value="profile.bio"
-            @input="profile.bio = $event.target.value"
             placeholder="Tell us about your fitness goals..."
             rows="3"
+            @input="profile.bio = $event.target.value"
           />
-        </div>
+        </ui5-form-item>
+      </ui5-form-group>
+    </ui5-form>
 
-        <div class="actions">
-          <ui5-button design="Emphasized" :disabled="saving" @click="handleSave">
-            {{ saving ? "Saving..." : "Save Profile" }}
-          </ui5-button>
-        </div>
-      </div>
-    </ui5-card>
+    <div class="actions">
+      <ui5-button design="Emphasized" :disabled="saving || loading" @click="handleSave">
+        {{ saving ? "Saving..." : "Save Profile" }}
+      </ui5-button>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .profile-container {
   display: flex;
-  justify-content: center;
-  padding: 1.5rem;
-}
-
-.profile-card {
-  width: 100%;
-  max-width: 600px;
-}
-
-.card-content {
-  padding: 1.5rem;
-  display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 1rem;
+  max-width: 900px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.message-strip {
+  margin-bottom: 0.5rem;
 }
 
-.row-inputs {
+.height-row {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+}
+
+.height-row ui5-input {
+  flex: 1;
+  max-width: 8rem;
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1rem;
-}
-
-.mb-3 {
-  margin-bottom: 0.75rem;
-}
-
-@media (max-width: 600px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
+  margin-top: 0.5rem;
 }
 </style>
