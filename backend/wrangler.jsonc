@@ -16,4 +16,7 @@
   "secrets": {
     "required": ["JWT_SECRET", "APP_BASE_URL"],
   },
+  "observability": {
+    "enabled": true,
+  },
 }

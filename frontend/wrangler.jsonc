@@ -12,4 +12,7 @@
       "service": "gymlogger-api",
     },
   ],
+  "observability": {
+    "enabled": true,
+  },
 }

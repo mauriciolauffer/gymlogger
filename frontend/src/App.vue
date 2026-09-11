@@ -17,9 +17,7 @@ import "@ui5/webcomponents-icons/dist/bar-chart.js";
 import "@ui5/webcomponents-icons/dist/measure.js";
 import "@ui5/webcomponents-icons/dist/play.js";
 
-const UserMenuPopover = defineAsyncComponent(
-  () => import("./components/UserMenuPopover.vue"),
-);
+const UserMenuPopover = defineAsyncComponent(() => import("./components/UserMenuPopover.vue"));
 
 import { authStore } from "./store/auth";
 import { activeWorkoutStore } from "./store/activeWorkout";

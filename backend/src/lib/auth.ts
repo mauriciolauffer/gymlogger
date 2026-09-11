@@ -26,6 +26,9 @@ export const createAuth = (
       minPasswordLength: 8,
     },
     plugins: [bearer()],
+    telemetry: {
+      enabled: true,
+    },
     // secrets: [{ version: 1, value: secret }],
     secret,
     baseURL,

@@ -90,12 +90,7 @@ onMounted(() => {
       {{ message.text }}
     </ui5-message-strip>
 
-    <ui5-form
-      v-if="!loading"
-      header-text="Profile"
-      layout="S1 M1 L1 XL1"
-      accessible-mode="Edit"
-    >
+    <ui5-form v-if="!loading" header-text="Profile" layout="S1 M1 L1 XL1" accessible-mode="Edit">
       <ui5-form-group header-text="Account">
         <ui5-form-item>
           <ui5-label slot="labelContent">Email</ui5-label>
@@ -133,7 +128,9 @@ onMounted(() => {
         <ui5-form-item>
           <ui5-label slot="labelContent">Sex</ui5-label>
           <ui5-select @change="profile.sex = $event.target.selectedOption.value">
-            <ui5-option value="prefer_not_to_say" :selected="profile.sex === 'prefer_not_to_say'">Prefer not to say</ui5-option>
+            <ui5-option value="prefer_not_to_say" :selected="profile.sex === 'prefer_not_to_say'"
+              >Prefer not to say</ui5-option
+            >
             <ui5-option value="male" :selected="profile.sex === 'male'">Male</ui5-option>
             <ui5-option value="female" :selected="profile.sex === 'female'">Female</ui5-option>
             <ui5-option value="other" :selected="profile.sex === 'other'">Other</ui5-option>
@@ -150,10 +147,16 @@ onMounted(() => {
               @input="profile.height = Number($event.target.value)"
             />
             <ui5-segmented-button
-              @selection-change="profile.height_unit = $event.detail.selectedItems[0]?.dataset.value"
+              @selection-change="
+                profile.height_unit = $event.detail.selectedItems[0]?.dataset.value
+              "
             >
-              <ui5-segmented-button-item data-value="cm" :selected="profile.height_unit === 'cm'">cm</ui5-segmented-button-item>
-              <ui5-segmented-button-item data-value="in" :selected="profile.height_unit === 'in'">in</ui5-segmented-button-item>
+              <ui5-segmented-button-item data-value="cm" :selected="profile.height_unit === 'cm'"
+                >cm</ui5-segmented-button-item
+              >
+              <ui5-segmented-button-item data-value="in" :selected="profile.height_unit === 'in'"
+                >in</ui5-segmented-button-item
+              >
             </ui5-segmented-button>
           </div>
         </ui5-form-item>
