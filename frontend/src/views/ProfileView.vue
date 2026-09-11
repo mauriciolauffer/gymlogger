@@ -59,7 +59,7 @@ const handleSave = async () => {
       location: profile.value.location,
       birthday: profile.value.birthday,
       sex: profile.value.sex,
-      height: Number(profile.value.height),
+      height: Number(profile.value.height) > 0 ? Number(profile.value.height) : undefined,
       height_unit: profile.value.height_unit,
       bio: profile.value.bio,
     });

@@ -140,6 +140,7 @@ test-results/
 agent/
 
 # Playwright E2E
+.playwright-mcp/
 playwright/.auth/
 playwright-report/
 test-results/

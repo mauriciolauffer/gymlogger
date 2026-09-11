@@ -14,7 +14,7 @@ export default defineConfig({
   expect: { timeout: 8_000 },
 
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    baseURL: process.env.BASE_URL || "http://localhost:5173",
     actionTimeout: 10_000,
     navigationTimeout: 15_000,
     trace: "on-first-retry",
@@ -50,7 +50,7 @@ export default defineConfig({
     {
       // Vite frontend dev server
       command: "pnpm dev:ui",
-      url: "http://localhost:3000",
+      url: "http://localhost:5173",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
       stdout: "pipe",

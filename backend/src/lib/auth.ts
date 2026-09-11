@@ -10,6 +10,7 @@ export const createAuth = (
   secret: string,
   baseURL: string,
   corsOrigin: string,
+  useSecureCookies: boolean = baseURL.startsWith("https://"),
 ) => {
   const drizzleDb = drizzle(db, { schema });
 
@@ -31,7 +32,7 @@ export const createAuth = (
     // Requests arrive through frontend service binding, so this is the browser's origin
     trustedOrigins: [corsOrigin],
     advanced: {
-      useSecureCookies: true
+      useSecureCookies,
     },
     databaseHooks: {
       user: {

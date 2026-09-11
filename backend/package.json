@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "migrate:local": "wrangler d1 execute gymlogger-db --local --file migrations/0001_initial.sql",
     "deploy": "wrangler deploy",
     "test": "vitest run",
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@better-auth/drizzle-adapter": "^1.7.2",
+    "@better-auth/drizzle-adapter": "^1.7.3",
     "better-auth": "^1.7.3",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.7"
