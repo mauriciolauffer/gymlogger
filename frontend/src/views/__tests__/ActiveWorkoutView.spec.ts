@@ -26,7 +26,7 @@ const activeWorkout = {
 };
 
 const makeFetch = () =>
-  vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+  vi.fn<typeof fetch>().mockImplementation((url: string, opts?: RequestInit) => {
     if (url.includes("/exercises") && !url.includes("/workout-exercises")) {
       return Promise.resolve({
         ok: true,

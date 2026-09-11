@@ -29,6 +29,7 @@ test.describe("Exercise Library", () => {
     const count = await items.count();
     // All visible items should include "bench" in their text (case-insensitive)
     for (let i = 0; i < count; i++) {
+      // oxlint-disable-next-line no-await-in-loop
       const text = await items.nth(i).innerText();
       expect(text.toLowerCase()).toContain("bench");
     }

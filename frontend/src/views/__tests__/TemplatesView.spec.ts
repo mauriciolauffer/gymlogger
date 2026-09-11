@@ -15,7 +15,7 @@ const mockTemplate = {
 };
 
 const makeFetch = () =>
-  vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+  vi.fn<typeof fetch>().mockImplementation((url: string, opts?: RequestInit) => {
     if (opts?.method === "DELETE") {
       return Promise.resolve({ ok: true, json: async () => ({ message: "Deleted" }) });
     }

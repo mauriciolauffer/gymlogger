@@ -18,7 +18,7 @@ const workoutList = [
 ];
 
 const makeFetch = (overrides?: (url: string, opts?: RequestInit) => unknown) =>
-  vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+  vi.fn<typeof fetch>().mockImplementation((url: string, opts?: RequestInit) => {
     const result = overrides?.(url, opts);
     if (result !== undefined) return result;
     if (opts?.method === "DELETE") {

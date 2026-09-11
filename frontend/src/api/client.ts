@@ -17,7 +17,9 @@ export async function apiFetch<T = unknown>(
   try {
     response = await fetch(endpoint, { ...options, headers });
   } catch (err) {
-    throw new Error(`Network error: ${err instanceof Error ? err.message : String(err)}`);
+    throw new Error(`Network error: ${err instanceof Error ? err.message : String(err)}`, {
+      cause: err,
+    });
   }
 
   let data: unknown;

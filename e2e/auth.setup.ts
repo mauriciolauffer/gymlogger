@@ -1,4 +1,4 @@
-import { request, test as setup, expect } from "@playwright/test";
+import { request, test as setup } from "@playwright/test";
 
 const AUTH_FILE = "playwright/.auth/session.json";
 
@@ -32,9 +32,9 @@ setup("create test user and save auth state", async ({ browser }) => {
   await page.goto("http://localhost:5173/login");
 
   await page.evaluate(
-    ({ token, user }) => {
-      localStorage.setItem("gymlogger_token", token);
-      localStorage.setItem("gymlogger_user", JSON.stringify(user));
+    ({ token: authToken, user: authUser }) => {
+      localStorage.setItem("gymlogger_token", authToken);
+      localStorage.setItem("gymlogger_user", JSON.stringify(authUser));
     },
     { token, user },
   );

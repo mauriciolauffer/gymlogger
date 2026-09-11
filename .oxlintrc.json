@@ -7,7 +7,9 @@
     "suspicious": "warn",
     "pedantic": "off"
   },
-  "rules": {},
+  "rules": {
+    "import/no-unassigned-import": "off"
+  },
   "env": {
     "builtin": true
   }

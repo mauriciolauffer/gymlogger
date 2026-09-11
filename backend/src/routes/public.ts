@@ -9,12 +9,9 @@ publicRoutes.get("/health", (c) => {
 });
 
 publicRoutes.on(["GET", "POST"], "/api/auth/*", (c) => {
-  return createAuth(
-    c.env.DB,
-    c.env.JWT_SECRET,
-    c.env.APP_BASE_URL,
-    c.env.CORS_ORIGIN,
-  ).handler(c.req.raw);
+  return createAuth(c.env.DB, c.env.JWT_SECRET, c.env.APP_BASE_URL, c.env.CORS_ORIGIN).handler(
+    c.req.raw,
+  );
 });
 
 export { publicRoutes };

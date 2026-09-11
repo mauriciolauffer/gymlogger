@@ -11,7 +11,7 @@
     },
   ],
   "vars": {
-    "CORS_ORIGIN": ""
+    "CORS_ORIGIN": "",
   },
   "secrets": {
     "required": ["JWT_SECRET", "APP_BASE_URL"],

@@ -14,7 +14,7 @@ vi.mock("../../store/auth", async (importOriginal) => {
     ...original,
     authClient: {
       signUp: {
-        email: vi.fn(),
+        email: vi.fn<typeof import("../../store/auth").authClient.signUp.email>(),
       },
     },
   };

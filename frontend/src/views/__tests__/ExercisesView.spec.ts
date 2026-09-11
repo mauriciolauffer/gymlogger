@@ -2,28 +2,28 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import ExercisesView from "../ExercisesView.vue";
 
+const makeFetch = () =>
+  vi.fn<typeof fetch>().mockImplementation((url: string) => {
+    if (url.includes("/muscle-groups")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ muscleGroups: [{ id: "mg1", name: "Chest" }] }),
+      });
+    }
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({
+        exercises: [
+          { id: "e1", name: "Bench Press", category: "barbell", muscleGroupName: "Chest" },
+        ],
+      }),
+    });
+  });
+
 describe("ExercisesView", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
-
-  const makeFetch = () =>
-    vi.fn().mockImplementation((url: string) => {
-      if (url.includes("/muscle-groups")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ muscleGroups: [{ id: "mg1", name: "Chest" }] }),
-        });
-      }
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({
-          exercises: [
-            { id: "e1", name: "Bench Press", category: "barbell", muscleGroupName: "Chest" },
-          ],
-        }),
-      });
-    });
 
   it("renders the exercise library title", async () => {
     vi.stubGlobal("fetch", makeFetch());

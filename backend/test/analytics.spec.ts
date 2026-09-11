@@ -71,17 +71,19 @@ describe("Analytics — empty state", () => {
   });
 
   it("consistency counts consecutive-day streak", async () => {
-    for (let day = 1; day <= 3; day++) {
-      await app.request(
-        "/api/v1/workouts/start",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ title: `Day ${day}`, start_time: `2026-03-0${day}T10:00:00Z` }),
-        },
-        env,
-      );
-    }
+    await Promise.all(
+      [1, 2, 3].map((day) =>
+        app.request(
+          "/api/v1/workouts/start",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ title: `Day ${day}`, start_time: `2026-03-0${day}T10:00:00Z` }),
+          },
+          env,
+        ),
+      ),
+    );
     const res = await app.request(
       "/api/v1/analytics/consistency",
       { headers: { Authorization: `Bearer ${token}` } },
@@ -221,6 +223,7 @@ describe("Analytics — exercise performance drill-down", () => {
   beforeEach(async () => {
     ({ token } = await registerUser("perf@example.com", "password123", "Perf User"));
 
+    // oxlint-disable no-await-in-loop
     for (const [startTime, weight, reps] of [
       ["2026-02-01T10:00:00Z", 80, 10],
       ["2026-02-15T10:00:00Z", 90, 8],
@@ -257,6 +260,7 @@ describe("Analytics — exercise performance drill-down", () => {
         env,
       );
     }
+    // oxlint-enable no-await-in-loop
   });
 
   it("returns 1RM, max weight, and history across two sessions", async () => {
