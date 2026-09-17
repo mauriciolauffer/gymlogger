@@ -41,7 +41,7 @@ export const liveActivityRouter = new Hono<Env>().get("/:id/live", async (c) => 
     .limit(1)
     .get();
 
-  const startMs = new Date(workout.startTime).getTime();
+  const startMs = workout.startTime.getTime();
   const nowMs = Date.now();
   const elapsedSeconds = workout.endTime
     ? workout.durationSeconds

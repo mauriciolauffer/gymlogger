@@ -1,7 +1,10 @@
 import { describe, expect, it, beforeEach } from "vitest";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
 import { env } from "cloudflare:test";
 import app from "../src/index";
 import { registerUser } from "./helpers";
+import { usersProfile } from "../src/db/schema";
 
 describe("User profile", () => {
   let token: string;
@@ -31,7 +34,7 @@ describe("User profile", () => {
         body: JSON.stringify({
           name: "Updated Name",
           location: "Berlin",
-          sex: "male",
+          sex: "M",
           height: 180,
           height_unit: "cm",
           bio: "Lifter",
@@ -44,6 +47,37 @@ describe("User profile", () => {
     expect(data.message).toBe("Profile updated successfully");
     expect(data.profile.location).toBe("Berlin");
     expect(data.profile.name).toBe("Updated Name");
+  });
+
+  it("updates profile with birthday and partial fields", async () => {
+    const res = await app.request(
+      "/api/v1/users/profile",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ birthday: "1990-05-15", location: "Berlin" }),
+      },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ profile: { birthday: string; location: string } }>();
+    expect(data.profile.birthday).toBe("1990-05-15");
+    expect(data.profile.location).toBe("Berlin");
+  });
+
+  it("updates profile with only bio (other fields fall back to current values)", async () => {
+    const res = await app.request(
+      "/api/v1/users/profile",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ bio: "Just a bio update" }),
+      },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ profile: { bio: string } }>();
+    expect(data.profile.bio).toBe("Just a bio update");
   });
 
   it("rejects invalid sex value", async () => {
@@ -84,6 +118,44 @@ describe("User profile", () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it("returns 404 when profile row is missing", async () => {
+    const { token: freshToken, userId } = await registerUser(
+      "no-profile@example.com",
+      "password123",
+      "No Profile",
+    );
+    const db = drizzle(env.DB);
+    await db.delete(usersProfile).where(eq(usersProfile.id, userId)).run();
+
+    const res = await app.request(
+      "/api/v1/users/profile",
+      { headers: { Authorization: `Bearer ${freshToken}` } },
+      env,
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 404 when updating profile with missing row", async () => {
+    const { token: freshToken, userId } = await registerUser(
+      "no-profile-put@example.com",
+      "password123",
+      "No Profile Put",
+    );
+    const db = drizzle(env.DB);
+    await db.delete(usersProfile).where(eq(usersProfile.id, userId)).run();
+
+    const res = await app.request(
+      "/api/v1/users/profile",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
+        body: JSON.stringify({ bio: "test" }),
+      },
+      env,
+    );
+    expect(res.status).toBe(404);
+  });
 });
 
 describe("User settings", () => {
@@ -104,6 +176,35 @@ describe("User settings", () => {
     expect(data.settings?.preferred_weight_unit).toBe("kg");
   });
 
+  it("gets settings auto-creating defaults when none exist", async () => {
+    const { token: freshToken } = await registerUser(
+      "users-ext@example.com",
+      "password123",
+      "Users Ext",
+    );
+    const res = await app.request(
+      "/api/v1/users/settings",
+      { headers: { Authorization: `Bearer ${freshToken}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{
+      settings: {
+        preferred_weight_unit: string;
+        theme: string;
+        preferred_length_unit: string;
+        language: string;
+        rest_timer_duration_seconds: number;
+        notifications_enabled: boolean;
+      };
+    }>();
+    expect(data.settings?.preferred_weight_unit).toBe("kg");
+    expect(data.settings?.theme).toBe("S");
+    expect(data.settings?.language).toBe("en");
+    expect(data.settings?.rest_timer_duration_seconds).toBe(90);
+    expect(data.settings?.notifications_enabled).toBe(true);
+  });
+
   it("updates user settings", async () => {
     const res = await app.request(
       "/api/v1/users/settings",
@@ -112,7 +213,7 @@ describe("User settings", () => {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           preferred_weight_unit: "lbs",
-          theme: "dark",
+          theme: "D",
           rest_timer_duration_seconds: 120,
         }),
       },
@@ -127,8 +228,102 @@ describe("User settings", () => {
       };
     }>();
     expect(data.settings?.preferred_weight_unit).toBe("lbs");
-    expect(data.settings?.theme).toBe("dark");
+    expect(data.settings?.theme).toBe("D");
     expect(data.settings?.rest_timer_duration_seconds).toBe(120);
+  });
+
+  it("updates settings with notifications_enabled flag", async () => {
+    const res = await app.request(
+      "/api/v1/users/settings",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ notifications_enabled: false, preferred_length_unit: "in" }),
+      },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{
+      settings: { notifications_enabled: boolean; preferred_length_unit: string };
+    }>();
+    expect(data.settings?.notifications_enabled).toBe(false);
+    expect(data.settings?.preferred_length_unit).toBe("in");
+  });
+
+  it("updates settings with language", async () => {
+    const res = await app.request(
+      "/api/v1/users/settings",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ language: "de" }),
+      },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ settings: { language: string } }>();
+    expect(data.settings?.language).toBe("de");
+  });
+
+  it("updates settings twice (upsert idempotency)", async () => {
+    await app.request(
+      "/api/v1/users/settings",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ theme: "D" }),
+      },
+      env,
+    );
+
+    const res = await app.request(
+      "/api/v1/users/settings",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ theme: "L" }),
+      },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ settings: { theme: string } }>();
+    expect(data.settings?.theme).toBe("L");
+  });
+
+  it("updates settings when no current settings exist (upsert path)", async () => {
+    const { token: freshToken } = await registerUser(
+      "settings-upsert@example.com",
+      "password123",
+      "Upsert User",
+    );
+
+    const res = await app.request(
+      "/api/v1/users/settings",
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
+        body: JSON.stringify({
+          theme: "D",
+          preferred_weight_unit: "lbs",
+          preferred_length_unit: "in",
+          language: "es",
+          rest_timer_duration_seconds: 60,
+          notifications_enabled: false,
+        }),
+      },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{
+      settings: {
+        theme: string;
+        preferred_weight_unit: string;
+        language: string;
+      };
+    }>();
+    expect(data.settings?.theme).toBe("D");
+    expect(data.settings?.preferred_weight_unit).toBe("lbs");
+    expect(data.settings?.language).toBe("es");
   });
 
   it("rejects invalid theme", async () => {

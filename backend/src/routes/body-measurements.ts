@@ -1,9 +1,14 @@
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 import { eq, and, gte, lte, asc } from "drizzle-orm";
 import type { Env } from "../index";
 import { convertLength, convertWeight } from "../utils/unit-converter";
 import { getDb } from "../db/schema";
 import { bodyMeasurements, userSettings } from "../db/schema";
+import {
+  createBodyMeasurementSchema,
+  updateBodyMeasurementBodySchema,
+} from "../validation/schemas";
 
 export const bodyMeasurementsRouter = new Hono<Env>();
 
@@ -66,13 +71,9 @@ bodyMeasurementsRouter.get("/", async (c) => {
 });
 
 // POST /api/v1/body-measurements
-bodyMeasurementsRouter.post("/", async (c) => {
+bodyMeasurementsRouter.post("/", zValidator("json", createBodyMeasurementSchema), async (c) => {
   const user = c.get("user")!;
-  const body = await c.req.json().catch(() => null);
-
-  if (!body) {
-    return c.json({ error: "Invalid JSON body" }, 400);
-  }
+  const body = c.req.valid("json");
 
   const {
     date,
@@ -157,66 +158,70 @@ bodyMeasurementsRouter.get("/:id", async (c) => {
 });
 
 // PUT /api/v1/body-measurements/:id
-bodyMeasurementsRouter.put("/:id", async (c) => {
-  const user = c.get("user")!;
-  const id = c.req.param("id");
-  const body = await c.req.json().catch(() => null);
-  const db = getDb(c);
+bodyMeasurementsRouter.put(
+  "/:id",
+  zValidator("json", updateBodyMeasurementBodySchema),
+  async (c) => {
+    const user = c.get("user")!;
+    const id = c.req.param("id");
+    const body = c.req.valid("json");
+    const db = getDb(c);
 
-  const existing = await db
-    .select({ id: bodyMeasurements.id })
-    .from(bodyMeasurements)
-    .where(and(eq(bodyMeasurements.id, id), eq(bodyMeasurements.userId, user.userId)))
-    .get();
+    const existing = await db
+      .select({ id: bodyMeasurements.id })
+      .from(bodyMeasurements)
+      .where(and(eq(bodyMeasurements.id, id), eq(bodyMeasurements.userId, user.userId)))
+      .get();
 
-  if (!existing) {
-    return c.json({ error: "Body measurement entry not found or unauthorized" }, 404);
-  }
+    if (!existing) {
+      return c.json({ error: "Body measurement entry not found or unauthorized" }, 404);
+    }
 
-  if (!body) {
-    return c.json({ error: "Invalid JSON body" }, 400);
-  }
+    const {
+      date,
+      weight,
+      weight_unit,
+      body_fat_pct,
+      chest,
+      waist,
+      hips,
+      shoulders,
+      biceps,
+      forearms,
+      thighs,
+      calves,
+      neck,
+      length_unit,
+    } = body;
 
-  const {
-    date,
-    weight,
-    weight_unit,
-    body_fat_pct,
-    chest,
-    waist,
-    hips,
-    shoulders,
-    biceps,
-    forearms,
-    thighs,
-    calves,
-    neck,
-    length_unit,
-  } = body;
+    const patch: Record<string, unknown> = {};
+    if (date !== undefined) patch.date = date;
+    if (weight !== undefined) patch.weight = weight;
+    if (weight_unit !== undefined) patch.weightUnit = weight_unit;
+    if (body_fat_pct !== undefined) patch.bodyFatPct = body_fat_pct;
+    if (chest !== undefined) patch.chest = chest;
+    if (waist !== undefined) patch.waist = waist;
+    if (hips !== undefined) patch.hips = hips;
+    if (shoulders !== undefined) patch.shoulders = shoulders;
+    if (biceps !== undefined) patch.biceps = biceps;
+    if (forearms !== undefined) patch.forearms = forearms;
+    if (thighs !== undefined) patch.thighs = thighs;
+    if (calves !== undefined) patch.calves = calves;
+    if (neck !== undefined) patch.neck = neck;
+    if (length_unit !== undefined) patch.lengthUnit = length_unit;
 
-  const patch: Record<string, unknown> = {};
-  if (date !== undefined) patch.date = date;
-  if (weight !== undefined) patch.weight = weight;
-  if (weight_unit !== undefined) patch.weightUnit = weight_unit;
-  if (body_fat_pct !== undefined) patch.bodyFatPct = body_fat_pct;
-  if (chest !== undefined) patch.chest = chest;
-  if (waist !== undefined) patch.waist = waist;
-  if (hips !== undefined) patch.hips = hips;
-  if (shoulders !== undefined) patch.shoulders = shoulders;
-  if (biceps !== undefined) patch.biceps = biceps;
-  if (forearms !== undefined) patch.forearms = forearms;
-  if (thighs !== undefined) patch.thighs = thighs;
-  if (calves !== undefined) patch.calves = calves;
-  if (neck !== undefined) patch.neck = neck;
-  if (length_unit !== undefined) patch.lengthUnit = length_unit;
+    if (Object.keys(patch).length > 0) {
+      await db.update(bodyMeasurements).set(patch).where(eq(bodyMeasurements.id, id)).run();
+    }
 
-  if (Object.keys(patch).length > 0) {
-    await db.update(bodyMeasurements).set(patch).where(eq(bodyMeasurements.id, id)).run();
-  }
-
-  const updated = await db.select().from(bodyMeasurements).where(eq(bodyMeasurements.id, id)).get();
-  return c.json({ message: "Body measurement updated", measurement: updated });
-});
+    const updated = await db
+      .select()
+      .from(bodyMeasurements)
+      .where(eq(bodyMeasurements.id, id))
+      .get();
+    return c.json({ message: "Body measurement updated", measurement: updated });
+  },
+);
 
 // DELETE /api/v1/body-measurements/:id
 bodyMeasurementsRouter.delete("/:id", async (c) => {

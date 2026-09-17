@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
 import { structuredLogger, type StructuredLoggerEnv } from "@hono/structured-logger";
@@ -37,7 +38,10 @@ app.notFound((c) => {
   return c.json({ error: "Endpoint not found" }, 404);
 });
 
-app.onError((_err, c) => {
+app.onError((err, c) => {
+  if (err instanceof HTTPException) {
+    return err.getResponse();
+  }
   return c.json({ error: "Internal Server Error" }, 500);
 });
 

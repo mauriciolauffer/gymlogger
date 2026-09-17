@@ -21,8 +21,8 @@ async function muscleSetCounts(
   to?: string,
 ): Promise<{ id: string; muscle_group: string; set_count: number }[]> {
   const conditions = [eq(workouts.userId, userId)];
-  if (from) conditions.push(gte(workouts.startTime, from));
-  if (to) conditions.push(lte(workouts.startTime, to));
+  if (from) conditions.push(gte(workouts.startTime, new Date(from)));
+  if (to) conditions.push(lte(workouts.startTime, new Date(to)));
 
   const results = await db
     .select({
@@ -106,7 +106,7 @@ analyticsRouter.get("/performance", async (c) => {
     if (!sessionsMap.has(row.workout_id)) {
       sessionsMap.set(row.workout_id, {
         workoutId: row.workout_id,
-        date: row.start_time,
+        date: row.start_time.toISOString(),
         sets: [],
       });
     }
@@ -135,7 +135,7 @@ analyticsRouter.get("/performance", async (c) => {
       }
     }
 
-    if (max1RM > 0) oneRepMaxCurve.push({ date: session.date, value: max1RM, formula: "epley" });
+    if (max1RM > 0) oneRepMaxCurve.push({ date: session.date, value: max1RM, formula: "EP" });
     if (maxWeight > 0) maxWeightCurve.push({ date: session.date, value: maxWeight });
     if (maxReps > 0)
       maxRepsCurve.push({ date: session.date, value: maxReps, weight: maxRepsWeight });
@@ -158,11 +158,11 @@ analyticsRouter.get("/monthly-report", async (c) => {
   const month = parseInt(c.req.query("month") || String(now.getMonth() + 1), 10);
 
   const monthStr = String(month).padStart(2, "0");
-  const startDate = `${year}-${monthStr}-01T00:00:00Z`;
+  const startDate = new Date(`${year}-${monthStr}-01T00:00:00Z`);
   const nextMonth = month === 12 ? 1 : month + 1;
   const nextYear = month === 12 ? year + 1 : year;
   const nextMonthStr = String(nextMonth).padStart(2, "0");
-  const endDate = `${nextYear}-${nextMonthStr}-01T00:00:00Z`;
+  const endDate = new Date(`${nextYear}-${nextMonthStr}-01T00:00:00Z`);
 
   const db = getDb(c);
 
@@ -287,7 +287,9 @@ analyticsRouter.get("/consistency", async (c) => {
     .orderBy(desc(workouts.startTime))
     .all();
 
-  const activeDates = Array.from(new Set(workoutList.map((w) => w.startTime.split("T")[0])))
+  const activeDates = Array.from(
+    new Set(workoutList.map((w) => w.startTime.toISOString().split("T")[0])),
+  )
     .toSorted()
     .toReversed();
 
@@ -323,8 +325,8 @@ analyticsRouter.get("/year-in-review", async (c) => {
   const now = new Date();
   const year = parseInt(c.req.query("year") || String(now.getFullYear()), 10);
 
-  const startDate = `${year}-01-01T00:00:00Z`;
-  const endDate = `${year + 1}-01-01T00:00:00Z`;
+  const startDate = new Date(`${year}-01-01T00:00:00Z`);
+  const endDate = new Date(`${year + 1}-01-01T00:00:00Z`);
 
   const db = getDb(c);
 

@@ -15,7 +15,7 @@ describe("calculate1RM", () => {
 
   it("returns weight when reps === 1", () => {
     expect(calculate1RM(100, 1)).toBe(100);
-    expect(calculate1RM(140, 1, "brzycki")).toBe(140);
+    expect(calculate1RM(140, 1, "BR")).toBe(140);
   });
 
   it("epley formula (default)", () => {
@@ -24,12 +24,12 @@ describe("calculate1RM", () => {
   });
 
   it("brzycki formula", () => {
-    expect(calculate1RM(100, 5, "brzycki")).toBe(Math.round(100 * (36 / (37 - 5)) * 10) / 10);
+    expect(calculate1RM(100, 5, "BR")).toBe(Math.round(100 * (36 / (37 - 5)) * 10) / 10);
   });
 
   it("brzycki returns weight when reps >= 37", () => {
-    expect(calculate1RM(100, 37, "brzycki")).toBe(100);
-    expect(calculate1RM(100, 40, "brzycki")).toBe(100);
+    expect(calculate1RM(100, 37, "BR")).toBe(100);
+    expect(calculate1RM(100, 40, "BR")).toBe(100);
   });
 });
 

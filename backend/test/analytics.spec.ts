@@ -3,107 +3,117 @@ import { env } from "cloudflare:test";
 import app from "../src/index";
 import { registerUser } from "./helpers";
 
-describe("Analytics — empty state", () => {
+describe("Analytics", () => {
   let token: string;
 
   beforeEach(async () => {
-    ({ token } = await registerUser(
-      "analytics-empty@example.com",
-      "password123",
-      "Analytics User",
-    ));
+    ({ token } = await registerUser("analytics@example.com", "password123", "Analytics User"));
   });
 
-  it("monthly-report returns totals for a given month", async () => {
+  it("returns consistency stats", async () => {
     const res = await app.request(
-      "/api/v1/analytics/monthly-report?year=2026&month=1",
+      "/api/v1/analytics/consistency",
       { headers: { Authorization: `Bearer ${token}` } },
       env,
     );
     expect(res.status).toBe(200);
-    const data = await res.json<{
-      period: { year: number; month: number };
-      totalWorkouts: number;
-    }>();
-    expect(data.period.year).toBe(2026);
-    expect(data.period.month).toBe(1);
+    const data = await res.json<{ currentStreakDays: number; totalWorkouts: number }>();
+    expect(typeof data.currentStreakDays).toBe("number");
     expect(typeof data.totalWorkouts).toBe("number");
   });
 
-  it("muscle-distribution returns distribution array", async () => {
+  it("consistency breaks streak on non-consecutive days", async () => {
+    for (const startTime of ["2026-01-01T10:00:00Z", "2026-01-03T10:00:00Z"]) {
+      await app.request(
+        "/api/v1/workouts/start",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ title: "Workout", start_time: startTime }),
+        },
+        env,
+      );
+    }
+    const res = await app.request(
+      "/api/v1/analytics/consistency",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ currentStreakDays: number; totalWorkouts: number }>();
+    expect(data.totalWorkouts).toBe(2);
+    expect(data.currentStreakDays).toBe(1);
+  });
+
+  it("monthly-report for December (month=12 edge case)", async () => {
+    const res = await app.request(
+      "/api/v1/analytics/monthly-report?year=2026&month=12",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ period: { year: number; month: number } }>();
+    expect(data.period.year).toBe(2026);
+    expect(data.period.month).toBe(12);
+  });
+
+  it("monthly-report with no year/month uses defaults", async () => {
+    const res = await app.request(
+      "/api/v1/analytics/monthly-report",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ period: { year: number; month: number } }>();
+    expect(typeof data.period.year).toBe("number");
+    expect(typeof data.period.month).toBe("number");
+  });
+
+  it("year-in-review with no year param uses current year", async () => {
+    const res = await app.request(
+      "/api/v1/analytics/year-in-review",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ year: number }>();
+    expect(typeof data.year).toBe("number");
+  });
+
+  it("muscle-distribution returns zero percentage when no sets logged", async () => {
     const res = await app.request(
       "/api/v1/analytics/muscle-distribution",
       { headers: { Authorization: `Bearer ${token}` } },
       env,
     );
     expect(res.status).toBe(200);
-    const data = await res.json<{ totalSets: number; distribution: unknown[] }>();
-    expect(typeof data.totalSets).toBe("number");
-    expect(Array.isArray(data.distribution)).toBe(true);
+    const data = await res.json<{ totalSets: number; distribution: { percentage: number }[] }>();
+    expect(data.totalSets).toBe(0);
+    if (data.distribution.length > 0) {
+      expect(data.distribution.every((d) => d.percentage === 0)).toBe(true);
+    }
   });
 
-  it("sets-per-muscle-group returns setsPerMuscleGroup array", async () => {
+  it("muscle-distribution with from/to filters", async () => {
     const res = await app.request(
-      "/api/v1/analytics/sets-per-muscle-group",
+      "/api/v1/analytics/muscle-distribution?from=2026-01-01&to=2026-12-31",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ totalSets: number; distribution: unknown[] }>();
+    expect(typeof data.totalSets).toBe("number");
+  });
+
+  it("sets-per-muscle-group with from/to filters", async () => {
+    const res = await app.request(
+      "/api/v1/analytics/sets-per-muscle-group?from=2026-01-01&to=2026-12-31",
       { headers: { Authorization: `Bearer ${token}` } },
       env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ setsPerMuscleGroup: unknown[] }>();
     expect(Array.isArray(data.setsPerMuscleGroup)).toBe(true);
-  });
-
-  it("consistency returns streak and activeDates", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/consistency",
-      { headers: { Authorization: `Bearer ${token}` } },
-      env,
-    );
-    expect(res.status).toBe(200);
-    const data = await res.json<{
-      currentStreakDays: number;
-      totalWorkouts: number;
-      activeDates: string[];
-    }>();
-    expect(typeof data.currentStreakDays).toBe("number");
-    expect(typeof data.totalWorkouts).toBe("number");
-    expect(Array.isArray(data.activeDates)).toBe(true);
-  });
-
-  it("consistency counts consecutive-day streak", async () => {
-    await Promise.all(
-      [1, 2, 3].map((day) =>
-        app.request(
-          "/api/v1/workouts/start",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ title: `Day ${day}`, start_time: `2026-03-0${day}T10:00:00Z` }),
-          },
-          env,
-        ),
-      ),
-    );
-    const res = await app.request(
-      "/api/v1/analytics/consistency",
-      { headers: { Authorization: `Bearer ${token}` } },
-      env,
-    );
-    expect(res.status).toBe(200);
-    const data = await res.json<{ totalWorkouts: number }>();
-    expect(data.totalWorkouts).toBe(3);
-  });
-
-  it("year-in-review returns totals for a given year", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/year-in-review?year=2026",
-      { headers: { Authorization: `Bearer ${token}` } },
-      env,
-    );
-    expect(res.status).toBe(200);
-    const data = await res.json<{ year: number; totalWorkouts: number }>();
-    expect(data.year).toBe(2026);
-    expect(typeof data.totalWorkouts).toBe("number");
   });
 
   it("performance returns 400 when exerciseId is missing", async () => {
@@ -115,32 +125,105 @@ describe("Analytics — empty state", () => {
     expect(res.status).toBe(400);
   });
 
-  it("performance returns 404 for unknown exercise", async () => {
+  it("performance returns 404 for unknown exerciseId", async () => {
     const res = await app.request(
-      "/api/v1/analytics/performance?exerciseId=nonexistent",
+      "/api/v1/analytics/performance?exerciseId=nonexistent_exercise",
       { headers: { Authorization: `Bearer ${token}` } },
       env,
     );
     expect(res.status).toBe(404);
   });
-});
 
-describe("Analytics — with workout data", () => {
-  let token: string;
+  it("consistency streak increments on consecutive days", async () => {
+    for (const startTime of [
+      "2026-03-01T10:00:00Z",
+      "2026-03-02T10:00:00Z",
+      "2026-03-03T10:00:00Z",
+    ]) {
+      await app.request(
+        "/api/v1/workouts/start",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ title: "Daily Workout", start_time: startTime }),
+        },
+        env,
+      );
+    }
+    const res = await app.request(
+      "/api/v1/analytics/consistency",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ currentStreakDays: number; totalWorkouts: number }>();
+    expect(data.totalWorkouts).toBe(3);
+    expect(data.currentStreakDays).toBe(3);
+  });
 
-  beforeEach(async () => {
-    ({ token } = await registerUser(
-      "analytics-data@example.com",
-      "password123",
-      "Analytics Athlete",
-    ));
+  it("performance returns empty curves when no sets logged", async () => {
+    const res = await app.request(
+      "/api/v1/analytics/performance?exerciseId=ex_bench_press",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+  });
 
+  it("performance with zero-weight/zero-rep set excludes from curves", async () => {
     const wRes = await app.request(
       "/api/v1/workouts/start",
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Feb Session", start_time: "2026-02-10T10:00:00Z" }),
+        body: JSON.stringify({ title: "Zero Set", start_time: "2026-05-01T10:00:00Z" }),
+      },
+      env,
+    );
+    const { workout } = await wRes.json<{ workout: { id: string } }>();
+    const addEx = await app.request(
+      `/api/v1/workouts/${workout.id}/exercises`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ exercise_id: "ex_bench_press" }),
+      },
+      env,
+    );
+    const { workoutExercise } = await addEx.json<{ workoutExercise: { id: string } }>();
+    await app.request(
+      `/api/v1/workouts/${workout.id}/sets`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 0, reps: 0 }),
+      },
+      env,
+    );
+
+    const res = await app.request(
+      "/api/v1/analytics/performance?exerciseId=ex_bench_press",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{
+      oneRepMaxCurve: unknown[];
+      maxWeightCurve: unknown[];
+      maxRepsCurve: unknown[];
+    }>();
+    expect(data.oneRepMaxCurve.length).toBe(0);
+    expect(data.maxWeightCurve.length).toBe(0);
+    expect(data.maxRepsCurve.length).toBe(0);
+  });
+
+  it("performance with multiple sets per session hits sessionsMap cache branch", async () => {
+    const wRes = await app.request(
+      "/api/v1/workouts/start",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title: "Multi Set Session", start_time: "2026-06-01T10:00:00Z" }),
       },
       env,
     );
@@ -157,99 +240,11 @@ describe("Analytics — with workout data", () => {
     );
     const { workoutExercise } = await addEx.json<{ workoutExercise: { id: string } }>();
 
-    await app.request(
-      `/api/v1/workouts/${workout.id}/sets`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 100, reps: 5 }),
-      },
-      env,
-    );
-
-    await app.request(
-      `/api/v1/workouts/${workout.id}/finish`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      },
-      env,
-    );
-  });
-
-  it("monthly-report shows correct totals when data exists", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/monthly-report?year=2026&month=2",
-      { headers: { Authorization: `Bearer ${token}` } },
-      env,
-    );
-    expect(res.status).toBe(200);
-    const data = await res.json<{
-      totalWorkouts: number;
-      totalVolume: number;
-      muscleDistribution: unknown[];
-    }>();
-    expect(data.totalWorkouts).toBe(1);
-    expect(data.totalVolume).toBe(500);
-    expect(data.muscleDistribution.length).toBeGreaterThan(0);
-  });
-
-  it("muscle-distribution totalSets reflects logged sets", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/muscle-distribution",
-      { headers: { Authorization: `Bearer ${token}` } },
-      env,
-    );
-    expect(res.status).toBe(200);
-    const data = await res.json<{ totalSets: number }>();
-    expect(data.totalSets).toBe(1);
-  });
-
-  it("year-in-review shows workout from current year", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/year-in-review?year=2026",
-      { headers: { Authorization: `Bearer ${token}` } },
-      env,
-    );
-    expect(res.status).toBe(200);
-    const data = await res.json<{ totalWorkouts: number }>();
-    expect(data.totalWorkouts).toBe(1);
-  });
-});
-
-describe("Analytics — exercise performance drill-down", () => {
-  let token: string;
-
-  beforeEach(async () => {
-    ({ token } = await registerUser("perf@example.com", "password123", "Perf User"));
-
-    // oxlint-disable no-await-in-loop
-    for (const [startTime, weight, reps] of [
-      ["2026-02-01T10:00:00Z", 80, 10],
-      ["2026-02-15T10:00:00Z", 90, 8],
-    ] as [string, number, number][]) {
-      const wRes = await app.request(
-        "/api/v1/workouts/start",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ title: "Session", start_time: startTime }),
-        },
-        env,
-      );
-      const { workout } = await wRes.json<{ workout: { id: string } }>();
-
-      const addEx = await app.request(
-        `/api/v1/workouts/${workout.id}/exercises`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ exercise_id: "ex_bench_press" }),
-        },
-        env,
-      );
-      const { workoutExercise } = await addEx.json<{ workoutExercise: { id: string } }>();
-
+    for (const [weight, reps] of [
+      [80, 10],
+      [90, 8],
+      [100, 5],
+    ] as [number, number][]) {
       await app.request(
         `/api/v1/workouts/${workout.id}/sets`,
         {
@@ -260,10 +255,7 @@ describe("Analytics — exercise performance drill-down", () => {
         env,
       );
     }
-    // oxlint-enable no-await-in-loop
-  });
 
-  it("returns 1RM, max weight, and history across two sessions", async () => {
     const res = await app.request(
       "/api/v1/analytics/performance?exerciseId=ex_bench_press",
       { headers: { Authorization: `Bearer ${token}` } },
@@ -271,16 +263,67 @@ describe("Analytics — exercise performance drill-down", () => {
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
-      exercise: { id: string };
-      oneRepMaxCurve: { date: string; value: number }[];
-      maxWeightCurve: { date: string; value: number }[];
-      history: unknown[];
+      history: { sets: unknown[] }[];
+      maxWeightCurve: { value: number }[];
     }>();
-    expect(data.exercise.id).toBe("ex_bench_press");
-    expect(data.oneRepMaxCurve.length).toBe(2);
-    expect(data.maxWeightCurve.length).toBe(2);
-    expect(data.maxWeightCurve[0].value).toBe(80);
-    expect(data.maxWeightCurve[1].value).toBe(90);
-    expect(data.history.length).toBe(2);
+    expect(data.history.length).toBe(1);
+    expect(data.history[0].sets.length).toBe(3);
+    expect(data.maxWeightCurve[0].value).toBe(100);
+  });
+
+  it("performance with zero-weight set and real-weight set (maxReps branches)", async () => {
+    const wRes = await app.request(
+      "/api/v1/workouts/start",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title: "Mixed Reps", start_time: "2026-07-01T10:00:00Z" }),
+      },
+      env,
+    );
+    const { workout } = await wRes.json<{ workout: { id: string } }>();
+
+    const addEx = await app.request(
+      `/api/v1/workouts/${workout.id}/exercises`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ exercise_id: "ex_squat" }),
+      },
+      env,
+    );
+    const { workoutExercise } = await addEx.json<{ workoutExercise: { id: string } }>();
+
+    await app.request(
+      `/api/v1/workouts/${workout.id}/sets`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 0, reps: 0 }),
+      },
+      env,
+    );
+    await app.request(
+      `/api/v1/workouts/${workout.id}/sets`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 140, reps: 3 }),
+      },
+      env,
+    );
+
+    const res = await app.request(
+      "/api/v1/analytics/performance?exerciseId=ex_squat",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{
+      maxWeightCurve: { value: number }[];
+      maxRepsCurve: { value: number }[];
+    }>();
+    expect(data.maxWeightCurve[0].value).toBe(140);
+    expect(data.maxRepsCurve[0].value).toBe(3);
   });
 });

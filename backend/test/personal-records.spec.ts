@@ -144,4 +144,59 @@ describe("Personal record detection", () => {
     const set2Data = await set2Res.json<{ isPr: boolean }>();
     expect(set2Data.isPr).toBe(false);
   });
+
+  it("filters personal records by exerciseId", async () => {
+    const startRes = await app.request(
+      "/api/v1/workouts/start",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title: "PR Workout" }),
+      },
+      env,
+    );
+    const { workout } = await startRes.json<{ workout: { id: string } }>();
+    const addEx = await app.request(
+      `/api/v1/workouts/${workout.id}/exercises`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ exercise_id: "ex_bench_press" }),
+      },
+      env,
+    );
+    const { workoutExercise } = await addEx.json<{ workoutExercise: { id: string } }>();
+    await app.request(
+      `/api/v1/workouts/${workout.id}/sets`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 100, reps: 5 }),
+      },
+      env,
+    );
+
+    const res = await app.request(
+      "/api/v1/personal-records?exerciseId=ex_bench_press",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{
+      personalRecords: { exerciseId: string }[];
+    }>();
+    expect(data.personalRecords.length).toBeGreaterThan(0);
+    expect(data.personalRecords.every((r) => r.exerciseId === "ex_bench_press")).toBe(true);
+  });
+
+  it("lists all personal records without exerciseId filter", async () => {
+    const res = await app.request(
+      "/api/v1/personal-records",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ personalRecords: unknown[] }>();
+    expect(Array.isArray(data.personalRecords)).toBe(true);
+  });
 });

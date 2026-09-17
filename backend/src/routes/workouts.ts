@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 import { eq, and, gte, lte, desc, asc, max, sql, inArray } from "drizzle-orm";
 import type { Env } from "../index";
 import { calculate1RM } from "../utils/calculator";
@@ -13,6 +14,13 @@ import {
   exercises,
   workoutTemplateExercises,
 } from "../db/schema";
+import {
+  startWorkoutSchema,
+  finishWorkoutSchema,
+  addWorkoutExerciseSchema,
+  addWorkoutSetSchema,
+  updateWorkoutSetSchema,
+} from "../validation/schemas";
 
 export const workoutsRouter = new Hono<Env>();
 
@@ -60,14 +68,14 @@ workoutsRouter.get("/previous-values", async (c) => {
 });
 
 // POST /api/v1/workouts/start
-workoutsRouter.post("/start", async (c) => {
+workoutsRouter.post("/start", zValidator("json", startWorkoutSchema), async (c) => {
   const user = c.get("user")!;
-  const body = await c.req.json().catch(() => null);
+  const body = c.req.valid("json");
   const db = getDb(c);
 
   const workoutId = `wk_${crypto.randomUUID()}`;
   const title = body?.title ?? "Workout";
-  const startTime = body?.start_time || new Date().toISOString();
+  const startTime = body?.start_time ? new Date(body.start_time) : new Date();
   const templateId = body?.template_id || null;
 
   const settings = await db
@@ -127,15 +135,10 @@ workoutsRouter.post("/start", async (c) => {
 });
 
 // POST /api/v1/workouts/:id/exercises
-workoutsRouter.post("/:id/exercises", async (c) => {
+workoutsRouter.post("/:id/exercises", zValidator("json", addWorkoutExerciseSchema), async (c) => {
   const user = c.get("user")!;
   const workoutId = c.req.param("id");
-  const body = await c.req.json().catch(() => null);
-
-  if (!body || !body.exercise_id) {
-    return c.json({ error: "exercise_id is required" }, 400);
-  }
-
+  const body = c.req.valid("json");
   const db = getDb(c);
 
   const workout = await db
@@ -200,14 +203,10 @@ async function updateWorkoutTotals(db: DrizzleDb, workoutId: string) {
 }
 
 // POST /api/v1/workouts/:id/sets
-workoutsRouter.post("/:id/sets", async (c) => {
+workoutsRouter.post("/:id/sets", zValidator("json", addWorkoutSetSchema), async (c) => {
   const user = c.get("user")!;
   const workoutId = c.req.param("id");
-  const body = await c.req.json().catch(() => null);
-
-  if (!body || !body.workout_exercise_id) {
-    return c.json({ error: "workout_exercise_id is required" }, 400);
-  }
+  const body = c.req.valid("json");
 
   const db = getDb(c);
 
@@ -225,8 +224,8 @@ workoutsRouter.post("/:id/sets", async (c) => {
 
   const setWeight = typeof weight === "number" ? weight : 0;
   const setReps = typeof reps === "number" ? reps : 0;
-  const setType = set_type || "normal";
-  const formula = "epley";
+  const setType = set_type || "NO";
+  const formula = "EP";
   const est1RM = calculate1RM(setWeight, setReps, formula);
 
   const settings = await db
@@ -314,11 +313,11 @@ workoutsRouter.post("/:id/sets", async (c) => {
 });
 
 // PUT /api/v1/workouts/:id/sets/:setId
-workoutsRouter.put("/:id/sets/:setId", async (c) => {
+workoutsRouter.put("/:id/sets/:setId", zValidator("json", updateWorkoutSetSchema), async (c) => {
   const user = c.get("user")!;
   const workoutId = c.req.param("id");
   const setId = c.req.param("setId");
-  const body = await c.req.json().catch(() => null);
+  const body = c.req.valid("json");
   const db = getDb(c);
 
   const set = await db
@@ -347,7 +346,7 @@ workoutsRouter.put("/:id/sets/:setId", async (c) => {
   const newReps = body?.reps !== undefined ? body.reps : set.reps;
   const newSetType = body?.set_type !== undefined ? body.set_type : set.setType;
   const newRpe = body?.rpe !== undefined ? body.rpe : set.rpe;
-  const newFormula = "epley";
+  const newFormula = "EP";
   const newEst1RM = calculate1RM(newWeight, newReps, newFormula);
 
   await db
@@ -412,10 +411,10 @@ workoutsRouter.delete("/:id/sets/:setId", async (c) => {
 });
 
 // PUT /api/v1/workouts/:id/finish
-workoutsRouter.put("/:id/finish", async (c) => {
+workoutsRouter.put("/:id/finish", zValidator("json", finishWorkoutSchema), async (c) => {
   const user = c.get("user")!;
   const workoutId = c.req.param("id");
-  const body = await c.req.json().catch(() => ({}));
+  const body = c.req.valid("json");
   const db = getDb(c);
 
   const workout = await db
@@ -428,9 +427,9 @@ workoutsRouter.put("/:id/finish", async (c) => {
     return c.json({ error: "Workout session not found" }, 404);
   }
 
-  const endTime = new Date().toISOString();
-  const startMs = new Date(workout.startTime).getTime();
-  const endMs = new Date(endTime).getTime();
+  const endTime = new Date();
+  const startMs = workout.startTime.getTime();
+  const endMs = endTime.getTime();
   const durationSeconds = Math.max(0, Math.floor((endMs - startMs) / 1000));
 
   await updateWorkoutTotals(db, workoutId);
@@ -475,8 +474,8 @@ workoutsRouter.get("/", async (c) => {
   const db = getDb(c);
 
   const conditions = [eq(workouts.userId, user.userId)];
-  if (from) conditions.push(gte(workouts.startTime, from));
-  if (to) conditions.push(lte(workouts.startTime, to));
+  if (from) conditions.push(gte(workouts.startTime, new Date(from)));
+  if (to) conditions.push(lte(workouts.startTime, new Date(to)));
 
   const limitVal = Math.min(Math.max(1, parseInt(limit || "20", 10)), 100);
   const offsetVal = Math.max(0, parseInt(offset || "0", 10));

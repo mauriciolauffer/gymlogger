@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": [".agents/", "node_modules/"],
   "plugins": ["typescript", "unicorn", "oxc", "eslint", "vitest", "vue", "promise", "import"],
   "categories": {
     "correctness": "error",
@@ -7,10 +8,27 @@
     "suspicious": "warn",
     "pedantic": "off"
   },
+  "options": {
+    "typeAware": false
+  },
   "rules": {
     "import/no-unassigned-import": "off"
   },
   "env": {
     "builtin": true
-  }
+  },
+  "overrides": [
+    {
+      "files": ["frontend/**"],
+      "env": {
+        "browser": true
+      }
+    },
+    {
+      "files": ["backend/**"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
 }

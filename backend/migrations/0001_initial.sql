@@ -75,23 +75,23 @@ CREATE TABLE IF NOT EXISTS user_profile (
     id TEXT PRIMARY KEY,
     location TEXT,
     birthday DATE,
-    sex TEXT CHECK(sex IN ('male', 'female', 'other', 'prefer_not_to_say')),
+    sex TEXT CHECK(sex IN ('M', 'F', 'O', 'P')),
     height REAL,
     height_unit TEXT REFERENCES units(code) DEFAULT 'cm',
     bio TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at INTEGER
 );
 
 -- User Settings Table
 CREATE TABLE IF NOT EXISTS user_settings (
     user_id TEXT PRIMARY KEY REFERENCES user_profile(id) ON DELETE CASCADE,
-    theme TEXT CHECK(theme IN ('light', 'dark', 'system')) DEFAULT 'system',
+    theme TEXT CHECK(theme IN ('L', 'D', 'S')) DEFAULT 'S',
     preferred_weight_unit TEXT REFERENCES units(code) DEFAULT 'kg',
     preferred_length_unit TEXT REFERENCES units(code) DEFAULT 'cm',
     language TEXT DEFAULT 'en',
     rest_timer_duration_seconds INTEGER DEFAULT 90,
     notifications_enabled BOOLEAN DEFAULT TRUE,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at INTEGER
 );
 
 -- Body Measurements Table
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS body_measurements (
     neck REAL,
     length_unit TEXT REFERENCES units(code) DEFAULT 'cm',
     photo_url TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at INTEGER
 );
 
 -- Muscle Groups Lookup Table
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS exercises (
     attribution TEXT,
     is_custom BOOLEAN DEFAULT FALSE,
     user_id TEXT REFERENCES user_profile(id),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at INTEGER
 );
 
 -- Seed Preset Exercises
@@ -184,8 +184,8 @@ CREATE TABLE IF NOT EXISTS workout_templates (
     user_id TEXT NOT NULL REFERENCES user_profile(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at INTEGER,
+    updated_at INTEGER
 );
 
 -- Workout Template Exercises Table
@@ -204,15 +204,15 @@ CREATE TABLE IF NOT EXISTS workouts (
     user_id TEXT NOT NULL REFERENCES user_profile(id),
     template_id TEXT REFERENCES workout_templates(id) ON DELETE SET NULL,
     title TEXT NOT NULL,
-    start_time DATETIME NOT NULL,
-    end_time DATETIME,
+    start_time INTEGER NOT NULL,
+    end_time INTEGER,
     duration_seconds INTEGER,
     total_volume REAL DEFAULT 0,
     volume_unit TEXT REFERENCES units(code) DEFAULT 'kg',
     set_count INTEGER DEFAULT 0,
     has_pr BOOLEAN DEFAULT FALSE,
     notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at INTEGER
 );
 
 -- Workout Exercises Table
@@ -229,13 +229,13 @@ CREATE TABLE IF NOT EXISTS workout_exercises (
 CREATE TABLE IF NOT EXISTS workout_sets (
     id TEXT PRIMARY KEY,
     workout_exercise_id TEXT NOT NULL REFERENCES workout_exercises(id) ON DELETE CASCADE,
-    set_type TEXT CHECK(set_type IN ('normal', 'warmup', 'drop', 'failure')) DEFAULT 'normal',
+    set_type TEXT CHECK(set_type IN ('NO', 'WU', 'DP', 'FA')) DEFAULT 'NO',
     weight REAL NOT NULL DEFAULT 0,
     weight_unit TEXT REFERENCES units(code) DEFAULT 'kg',
     reps INTEGER NOT NULL DEFAULT 0,
     rpe REAL,
     estimated_1rm REAL,
-    estimated_1rm_formula TEXT CHECK(estimated_1rm_formula IN ('epley', 'brzycki')),
+    estimated_1rm_formula TEXT CHECK(estimated_1rm_formula IN ('EP', 'BR')),
     is_pr BOOLEAN DEFAULT FALSE,
     pr_type TEXT,
     order_index INTEGER NOT NULL
@@ -246,10 +246,10 @@ CREATE TABLE IF NOT EXISTS personal_records (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES user_profile(id) ON DELETE CASCADE,
     exercise_id TEXT NOT NULL REFERENCES exercises(id),
-    pr_type TEXT NOT NULL CHECK(pr_type IN ('1rm', 'weight', 'volume', 'reps')),
+    pr_type TEXT NOT NULL CHECK(pr_type IN ('RM', 'WT', 'VO', 'RP')),
     value REAL NOT NULL,
     value_unit TEXT REFERENCES units(code),
-    achieved_at DATETIME NOT NULL,
+    achieved_at INTEGER NOT NULL,
     workout_set_id TEXT REFERENCES workout_sets(id) ON DELETE SET NULL,
     UNIQUE(user_id, exercise_id, pr_type)
 );

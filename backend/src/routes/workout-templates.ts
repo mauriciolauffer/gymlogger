@@ -1,8 +1,13 @@
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 import { eq, and, desc, asc } from "drizzle-orm";
 import type { Env } from "../index";
 import { getDb } from "../db/schema";
 import { workoutTemplates, workoutTemplateExercises, exercises } from "../db/schema";
+import {
+  createWorkoutTemplateSchema,
+  updateWorkoutTemplateBodySchema,
+} from "../validation/schemas";
 
 export const workoutTemplatesRouter = new Hono<Env>();
 
@@ -82,17 +87,13 @@ workoutTemplatesRouter.get("/:id", async (c) => {
 });
 
 // POST /api/v1/workout-templates
-workoutTemplatesRouter.post("/", async (c) => {
+workoutTemplatesRouter.post("/", zValidator("json", createWorkoutTemplateSchema), async (c) => {
   const user = c.get("user")!;
-  const body = await c.req.json().catch(() => null);
-
-  if (!body || !body.title) {
-    return c.json({ error: "Title is required" }, 400);
-  }
+  const body = c.req.valid("json");
 
   const { title, notes, exercises: bodyExercises } = body;
   const templateId = `wt_${crypto.randomUUID()}`;
-  const now = new Date().toISOString();
+  const now = new Date();
   const db = getDb(c);
 
   await db
@@ -146,76 +147,76 @@ workoutTemplatesRouter.post("/", async (c) => {
 });
 
 // PUT /api/v1/workout-templates/:id
-workoutTemplatesRouter.put("/:id", async (c) => {
-  const user = c.get("user")!;
-  const id = c.req.param("id");
-  const body = await c.req.json().catch(() => null);
-  const db = getDb(c);
+workoutTemplatesRouter.put(
+  "/:id",
+  zValidator("json", updateWorkoutTemplateBodySchema),
+  async (c) => {
+    const user = c.get("user")!;
+    const id = c.req.param("id");
+    const body = c.req.valid("json");
+    const db = getDb(c);
 
-  const template = await db
-    .select({ id: workoutTemplates.id })
-    .from(workoutTemplates)
-    .where(and(eq(workoutTemplates.id, id), eq(workoutTemplates.userId, user.userId)))
-    .get();
+    const template = await db
+      .select({ id: workoutTemplates.id })
+      .from(workoutTemplates)
+      .where(and(eq(workoutTemplates.id, id), eq(workoutTemplates.userId, user.userId)))
+      .get();
 
-  if (!template) {
-    return c.json({ error: "Workout template not found or unauthorized" }, 404);
-  }
+    if (!template) {
+      return c.json({ error: "Workout template not found or unauthorized" }, 404);
+    }
 
-  if (!body) {
-    return c.json({ error: "Invalid JSON body" }, 400);
-  }
+    const { title, notes, exercises: bodyExercises } = body;
 
-  const { title, notes, exercises: bodyExercises } = body;
+    const patch: Record<string, unknown> = { updatedAt: new Date() };
+    if (title !== undefined) patch.title = title;
+    if (notes !== undefined) patch.notes = notes;
 
-  const patch: Record<string, unknown> = { updatedAt: new Date().toISOString() };
-  if (title !== undefined) patch.title = title;
-  if (notes !== undefined) patch.notes = notes;
+    await db.update(workoutTemplates).set(patch).where(eq(workoutTemplates.id, id)).run();
 
-  await db.update(workoutTemplates).set(patch).where(eq(workoutTemplates.id, id)).run();
+    if (Array.isArray(bodyExercises)) {
+      await db
+        .delete(workoutTemplateExercises)
+        .where(eq(workoutTemplateExercises.templateId, id))
+        .run();
 
-  if (Array.isArray(bodyExercises)) {
-    await db
-      .delete(workoutTemplateExercises)
+      await Promise.all(
+        bodyExercises.map((ex, i) => {
+          const wteId = `wte_${crypto.randomUUID()}`;
+          const orderIdx = ex.order_index !== undefined ? ex.order_index : i;
+          return db
+            .insert(workoutTemplateExercises)
+            .values({
+              id: wteId,
+              templateId: id,
+              exerciseId: ex.exercise_id,
+              supersetId: ex.superset_id ?? null,
+              notes: ex.notes ?? null,
+              orderIndex: orderIdx,
+            })
+            .run();
+        }),
+      );
+    }
+
+    const updatedTemplate = await db
+      .select()
+      .from(workoutTemplates)
+      .where(eq(workoutTemplates.id, id))
+      .get();
+    const updatedExercises = await db
+      .select()
+      .from(workoutTemplateExercises)
       .where(eq(workoutTemplateExercises.templateId, id))
-      .run();
+      .orderBy(asc(workoutTemplateExercises.orderIndex))
+      .all();
 
-    await Promise.all(
-      bodyExercises.map((ex, i) => {
-        const wteId = `wte_${crypto.randomUUID()}`;
-        const orderIdx = ex.order_index !== undefined ? ex.order_index : i;
-        return db
-          .insert(workoutTemplateExercises)
-          .values({
-            id: wteId,
-            templateId: id,
-            exerciseId: ex.exercise_id,
-            supersetId: ex.superset_id ?? null,
-            notes: ex.notes ?? null,
-            orderIndex: orderIdx,
-          })
-          .run();
-      }),
-    );
-  }
-
-  const updatedTemplate = await db
-    .select()
-    .from(workoutTemplates)
-    .where(eq(workoutTemplates.id, id))
-    .get();
-  const updatedExercises = await db
-    .select()
-    .from(workoutTemplateExercises)
-    .where(eq(workoutTemplateExercises.templateId, id))
-    .orderBy(asc(workoutTemplateExercises.orderIndex))
-    .all();
-
-  return c.json({
-    message: "Workout template updated",
-    template: { ...updatedTemplate, exercises: updatedExercises },
-  });
-});
+    return c.json({
+      message: "Workout template updated",
+      template: { ...updatedTemplate, exercises: updatedExercises },
+    });
+  },
+);
 
 // DELETE /api/v1/workout-templates/:id
 workoutTemplatesRouter.delete("/:id", async (c) => {

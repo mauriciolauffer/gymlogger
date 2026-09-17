@@ -1,11 +1,10 @@
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import type { Env } from "../index";
 import { getDb } from "../db/schema";
 import { user, usersProfile, userSettings } from "../db/schema";
-
-const VALID_WEIGHT_UNITS = new Set(["kg", "lbs"]);
-const VALID_LENGTH_UNITS = new Set(["cm", "in"]);
+import { updateProfileSchema, updateSettingsSchema } from "../validation/schemas";
 
 export const usersRouter = new Hono<Env>()
   .get("/profile", async (c) => {
@@ -36,37 +35,13 @@ export const usersRouter = new Hono<Env>()
 
     return c.json({ profile });
   })
-  .put("/profile", async (c) => {
+  .put("/profile", zValidator("json", updateProfileSchema), async (c) => {
     const sessionUser = c.get("user")!;
-    const body = await c.req.json().catch(() => null);
-
-    if (!body) {
-      return c.json({ error: "Invalid JSON body" }, 400);
-    }
+    const body = c.req.valid("json");
 
     const { name, location, birthday, sex, height, height_unit, bio } = body;
 
-    if (sex !== undefined && sex !== null) {
-      const validSexes = ["male", "female", "other", "prefer_not_to_say"];
-      if (!validSexes.includes(sex)) {
-        return c.json({ error: "Invalid sex value" }, 400);
-      }
-    }
-
-    if (height !== undefined && height !== null) {
-      if (typeof height !== "number" || height <= 0) {
-        return c.json({ error: "Height must be a positive number" }, 400);
-      }
-    }
-
-    if (height_unit !== undefined && height_unit !== null) {
-      if (!VALID_LENGTH_UNITS.has(height_unit)) {
-        return c.json({ error: "Invalid height unit" }, 400);
-      }
-    }
-
     const db = getDb(c);
-
     const current = await db
       .select({
         location: usersProfile.location,
@@ -144,7 +119,7 @@ export const usersRouter = new Hono<Env>()
         .insert(userSettings)
         .values({
           userId: sessionUser.userId,
-          theme: "system",
+          theme: "S",
           preferredWeightUnit: "kg",
           preferredLengthUnit: "cm",
           language: "en",
@@ -183,13 +158,9 @@ export const usersRouter = new Hono<Env>()
         : null,
     });
   })
-  .put("/settings", async (c) => {
+  .put("/settings", zValidator("json", updateSettingsSchema), async (c) => {
     const sessionUser = c.get("user")!;
-    const body = await c.req.json().catch(() => null);
-
-    if (!body) {
-      return c.json({ error: "Invalid JSON body" }, 400);
-    }
+    const body = c.req.valid("json");
 
     const {
       theme,
@@ -199,30 +170,6 @@ export const usersRouter = new Hono<Env>()
       rest_timer_duration_seconds,
       notifications_enabled,
     } = body;
-
-    if (theme !== undefined && theme !== null) {
-      if (!["light", "dark", "system"].includes(theme)) {
-        return c.json({ error: "Invalid theme" }, 400);
-      }
-    }
-
-    if (preferred_weight_unit !== undefined && preferred_weight_unit !== null) {
-      if (!VALID_WEIGHT_UNITS.has(preferred_weight_unit)) {
-        return c.json({ error: "Invalid weight unit" }, 400);
-      }
-    }
-
-    if (preferred_length_unit !== undefined && preferred_length_unit !== null) {
-      if (!VALID_LENGTH_UNITS.has(preferred_length_unit)) {
-        return c.json({ error: "Invalid length unit" }, 400);
-      }
-    }
-
-    if (rest_timer_duration_seconds !== undefined && rest_timer_duration_seconds !== null) {
-      if (typeof rest_timer_duration_seconds !== "number" || rest_timer_duration_seconds <= 0) {
-        return c.json({ error: "Rest timer duration must be a positive integer" }, 400);
-      }
-    }
 
     const db = getDb(c);
 
@@ -239,7 +186,7 @@ export const usersRouter = new Hono<Env>()
       .where(eq(userSettings.userId, sessionUser.userId))
       .get();
 
-    const newTheme = theme !== undefined ? theme : (current?.theme ?? "system");
+    const newTheme = theme !== undefined ? theme : (current?.theme ?? "S");
     const newWeightUnit =
       preferred_weight_unit !== undefined
         ? preferred_weight_unit
@@ -268,7 +215,7 @@ export const usersRouter = new Hono<Env>()
         language: newLang,
         restTimerDurationSeconds: newRestTimer,
         notificationsEnabled: newNotifs,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       })
       .onConflictDoUpdate({
         target: userSettings.userId,
@@ -279,7 +226,7 @@ export const usersRouter = new Hono<Env>()
           language: newLang,
           restTimerDurationSeconds: newRestTimer,
           notificationsEnabled: newNotifs,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date(),
         },
       })
       .run();

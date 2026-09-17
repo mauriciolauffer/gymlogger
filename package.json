@@ -27,19 +27,20 @@
     "format": "oxfmt"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.54.6",
-    "@cloudflare/vitest-plugin": "^1.1.6",
-    "@cloudflare/workers-types": "^5.20260908.1",
+    "@cloudflare/vite-plugin": "^1.54.10",
+    "@cloudflare/vitest-plugin": "^1.1.10",
+    "@cloudflare/workers-types": "^5.20260916.1",
     "@playwright/test": "^1.63.0",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.6.1",
     "@vitest/coverage-istanbul": "^4.1.11",
     "@vitest/coverage-v8": "^4.1.11",
-    "oxfmt": "^0.67.0",
-    "oxlint": "^1.82.0",
+    "oxfmt": "^0.68.0",
+    "oxlint": "^1.83.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "typescript": "^7.0.2",
-    "vite": "^8.2.2",
+    "vite": "^8.3.0",
     "vitest": "^4.1.11",
-    "wrangler": "^4.130.0"
+    "wrangler": "^4.132.0"
   },
-  "packageManager": "pnpm@12.3.4"
+  "packageManager": "pnpm@12.4.1"
 }

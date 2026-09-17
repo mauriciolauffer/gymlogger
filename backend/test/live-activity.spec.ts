@@ -61,6 +61,33 @@ describe("Live activity", () => {
     expect(data.status).toBe("completed");
   });
 
+  it("GET /:id/live uses default rest timer when no settings exist", async () => {
+    const { token: freshToken } = await registerUser(
+      "live-no-settings@example.com",
+      "password123",
+      "Live No Settings",
+    );
+    const wRes = await app.request(
+      "/api/v1/workouts/start",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
+        body: JSON.stringify({ title: "No Settings Workout" }),
+      },
+      env,
+    );
+    const { workout } = await wRes.json<{ workout: { id: string } }>();
+
+    const res = await app.request(
+      `/api/v1/workouts/${workout.id}/live`,
+      { headers: { Authorization: `Bearer ${freshToken}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ restTimerDurationSeconds: number }>();
+    expect(data.restTimerDurationSeconds).toBe(90);
+  });
+
   it("returns 404 for an unknown workout", async () => {
     const res = await app.request(
       "/api/v1/workouts/nonexistent/live",

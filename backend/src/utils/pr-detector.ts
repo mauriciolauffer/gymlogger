@@ -26,11 +26,11 @@ export async function checkAndUpdatePR(
     const setVolume = weight * reps;
 
     const prTypesToTest = [
-      { type: "1rm", value: est1RM },
-      { type: "weight", value: weight },
-      { type: "volume", value: setVolume },
-      { type: "reps", value: reps },
-    ];
+      { type: "RM", value: est1RM },
+      { type: "WT", value: weight },
+      { type: "VO", value: setVolume },
+      { type: "RP", value: reps },
+    ] as const;
 
     const existingValues = await Promise.all(
       prTypesToTest.map((item) =>
@@ -68,7 +68,7 @@ export async function checkAndUpdatePR(
             prType: item.type,
             value: item.value,
             valueUnit: weightUnit,
-            achievedAt: new Date().toISOString(),
+            achievedAt: new Date(),
             workoutSetId: setId,
           })
           .onConflictDoUpdate({
@@ -76,7 +76,7 @@ export async function checkAndUpdatePR(
             set: {
               value: item.value,
               valueUnit: weightUnit,
-              achievedAt: new Date().toISOString(),
+              achievedAt: new Date(),
               workoutSetId: setId,
             },
           })
@@ -85,7 +85,7 @@ export async function checkAndUpdatePR(
     );
 
     const brokenTypes = broken.map((b) => b.type);
-    const primaryPrType = brokenTypes.includes("1rm") ? "1rm" : brokenTypes[0];
+    const primaryPrType = brokenTypes.includes("RM") ? "RM" : brokenTypes[0];
 
     await db
       .update(workoutSets)

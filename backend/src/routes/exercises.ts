@@ -1,8 +1,10 @@
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 import { eq, and, like, or, SQL } from "drizzle-orm";
 import type { Env } from "../index";
 import { getDb } from "../db/schema";
 import { exercises, muscleGroups, exerciseSecondaryMuscles } from "../db/schema";
+import { createExerciseSchema, updateExerciseBodySchema } from "../validation/schemas";
 
 export const exercisesRouter = new Hono<Env>().get("/muscle-groups", async (c) => {
   const db = getDb(c);
@@ -111,13 +113,9 @@ exercisesRouter.get("/exercises/:id", async (c) => {
   return c.json({ exercise: { ...exercise, secondaryMuscles } });
 });
 
-exercisesRouter.post("/exercises", async (c) => {
+exercisesRouter.post("/exercises", zValidator("json", createExerciseSchema), async (c) => {
   const user = c.get("user")!;
-  const body = await c.req.json().catch(() => null);
-
-  if (!body || !body.name || !body.category || !body.body_part) {
-    return c.json({ error: "Name, category, and body_part are required" }, 400);
-  }
+  const body = c.req.valid("json");
 
   const {
     name,
@@ -167,10 +165,10 @@ exercisesRouter.post("/exercises", async (c) => {
   return c.json({ message: "Custom exercise created", exercise: newExercise }, 201);
 });
 
-exercisesRouter.put("/exercises/:id", async (c) => {
+exercisesRouter.put("/exercises/:id", zValidator("json", updateExerciseBodySchema), async (c) => {
   const user = c.get("user")!;
   const id = c.req.param("id");
-  const body = await c.req.json().catch(() => null);
+  const body = c.req.valid("json");
   const db = getDb(c);
 
   const existing = await db
@@ -183,10 +181,6 @@ exercisesRouter.put("/exercises/:id", async (c) => {
 
   if (!existing) {
     return c.json({ error: "Custom exercise not found or unauthorized" }, 404);
-  }
-
-  if (!body) {
-    return c.json({ error: "Invalid JSON body" }, 400);
   }
 
   const {

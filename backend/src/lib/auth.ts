@@ -50,7 +50,7 @@ export const createAuth = (
               .insert(userSettings)
               .values({
                 userId: user.id,
-                theme: "system",
+                theme: "S",
                 preferredWeightUnit: "kg",
                 preferredLengthUnit: "cm",
                 language: "en",
