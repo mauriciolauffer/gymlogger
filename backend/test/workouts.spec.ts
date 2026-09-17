@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import app from "../src/index";
-import { registerUser } from "./helpers";
+import { buildWorkout, registerUser } from "./helpers";
 
 describe("Workout session", () => {
   let token: string;
@@ -102,13 +102,7 @@ describe("Workout session", () => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          workout_exercise_id: workoutExercise.id,
-          set_type: "NO",
-          weight: 100,
-          reps: 5,
-          rpe: 8,
-        }),
+        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, set_type: "NO", weight: 100, reps: 5, rpe: 8 }),
       },
       env,
     );
@@ -122,13 +116,7 @@ describe("Workout session", () => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          workout_exercise_id: workoutExercise.id,
-          set_type: "NO",
-          weight: 100,
-          reps: 5,
-          rpe: 9,
-        }),
+        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, set_type: "NO", weight: 100, reps: 5, rpe: 9 }),
       },
       env,
     );
@@ -162,16 +150,11 @@ describe("Workout session", () => {
   });
 
   it("starts workout with no title uses default", async () => {
-    const { token: freshToken } = await registerUser(
-      "no-title@example.com",
-      "password123",
-      "No Title User",
-    );
     const res = await app.request(
       "/api/v1/workouts/start",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({}),
       },
       env,
@@ -262,19 +245,28 @@ describe("Workout session", () => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Filter Test" }),
+        body: JSON.stringify({ title: "Filter Test", start_time: "2026-06-15T10:00:00Z" }),
       },
       env,
     );
 
-    const res = await app.request(
-      "/api/v1/workouts?from=2020-01-01&to=2099-12-31",
+    const inRange = await app.request(
+      "/api/v1/workouts?from=2026-01-01&to=2026-12-31",
       { headers: { Authorization: `Bearer ${token}` } },
       env,
     );
-    expect(res.status).toBe(200);
-    const data = await res.json<{ workouts: unknown[] }>();
-    expect(data.workouts.length).toBeGreaterThan(0);
+    expect(inRange.status).toBe(200);
+    const inData = await inRange.json<{ workouts: unknown[] }>();
+    expect(inData.workouts.length).toBeGreaterThan(0);
+
+    const outOfRange = await app.request(
+      "/api/v1/workouts?from=2030-01-01&to=2030-12-31",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(outOfRange.status).toBe(200);
+    const outData = await outOfRange.json<{ workouts: unknown[] }>();
+    expect(outData.workouts.length).toBe(0);
   });
 
   it("lists workouts with limit and offset", async () => {
@@ -693,41 +685,21 @@ describe("Workout session", () => {
   });
 
   it("deletes a set from a workout", async () => {
-    const startRes = await app.request(
-      "/api/v1/workouts/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Delete Set Test" }),
-      },
-      env,
-    );
-    const { workout } = await startRes.json<{ workout: { id: string } }>();
-
-    const addExRes = await app.request(
-      `/api/v1/workouts/${workout.id}/exercises`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ exercise_id: "ex_squat", order_index: 0 }),
-      },
-      env,
-    );
-    const { workoutExercise } = await addExRes.json<{ workoutExercise: { id: string } }>();
+    const { workoutId, workoutExerciseId } = await buildWorkout(token, "ex_squat", [], { title: "Delete Set Test" });
 
     const addSetRes = await app.request(
-      `/api/v1/workouts/${workout.id}/sets`,
+      `/api/v1/workouts/${workoutId}/sets`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 100, reps: 5 }),
+        body: JSON.stringify({ workout_exercise_id: workoutExerciseId, weight: 100, reps: 5 }),
       },
       env,
     );
     const { set } = await addSetRes.json<{ set: { id: string } }>();
 
     const delRes = await app.request(
-      `/api/v1/workouts/${workout.id}/sets/${set.id}`,
+      `/api/v1/workouts/${workoutId}/sets/${set.id}`,
       { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
       env,
     );
@@ -818,41 +790,21 @@ describe("Workout session", () => {
 
   it("returns 404 when updating a set from another user's workout", async () => {
     const { token: otherToken } = await registerUser("other-sets@example.com", "password123");
-    const startRes = await app.request(
-      "/api/v1/workouts/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${otherToken}` },
-        body: JSON.stringify({ title: "Other Workout" }),
-      },
-      env,
-    );
-    const { workout } = await startRes.json<{ workout: { id: string } }>();
-
-    const addExRes = await app.request(
-      `/api/v1/workouts/${workout.id}/exercises`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${otherToken}` },
-        body: JSON.stringify({ exercise_id: "ex_bench_press", order_index: 0 }),
-      },
-      env,
-    );
-    const { workoutExercise } = await addExRes.json<{ workoutExercise: { id: string } }>();
+    const { workoutId, workoutExerciseId } = await buildWorkout(otherToken, "ex_bench_press", [], { title: "Other Workout" });
 
     const addSetRes = await app.request(
-      `/api/v1/workouts/${workout.id}/sets`,
+      `/api/v1/workouts/${workoutId}/sets`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${otherToken}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 50, reps: 5 }),
+        body: JSON.stringify({ workout_exercise_id: workoutExerciseId, weight: 50, reps: 5 }),
       },
       env,
     );
     const { set } = await addSetRes.json<{ set: { id: string } }>();
 
     const res = await app.request(
-      `/api/v1/workouts/${workout.id}/sets/${set.id}`,
+      `/api/v1/workouts/${workoutId}/sets/${set.id}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -865,41 +817,21 @@ describe("Workout session", () => {
 
   it("returns 404 when deleting set from another user's workout", async () => {
     const { token: otherToken } = await registerUser("del-set-other@example.com", "password123");
-    const startRes = await app.request(
-      "/api/v1/workouts/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${otherToken}` },
-        body: JSON.stringify({ title: "Other Delete" }),
-      },
-      env,
-    );
-    const { workout } = await startRes.json<{ workout: { id: string } }>();
-
-    const addExRes = await app.request(
-      `/api/v1/workouts/${workout.id}/exercises`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${otherToken}` },
-        body: JSON.stringify({ exercise_id: "ex_bench_press" }),
-      },
-      env,
-    );
-    const { workoutExercise } = await addExRes.json<{ workoutExercise: { id: string } }>();
+    const { workoutId, workoutExerciseId } = await buildWorkout(otherToken, "ex_bench_press", [], { title: "Other Delete" });
 
     const addSetRes = await app.request(
-      `/api/v1/workouts/${workout.id}/sets`,
+      `/api/v1/workouts/${workoutId}/sets`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${otherToken}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 50, reps: 5 }),
+        body: JSON.stringify({ workout_exercise_id: workoutExerciseId, weight: 50, reps: 5 }),
       },
       env,
     );
     const { set } = await addSetRes.json<{ set: { id: string } }>();
 
     const res = await app.request(
-      `/api/v1/workouts/${workout.id}/sets/${set.id}`,
+      `/api/v1/workouts/${workoutId}/sets/${set.id}`,
       { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
       env,
     );
@@ -946,5 +878,64 @@ describe("Workout session", () => {
       env,
     );
     expect(res.status).toBe(404);
+  });
+
+  it("returns 400 with error details when start_time format is invalid", async () => {
+    const res = await app.request(
+      "/api/v1/workouts/start",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title: "Bad Date", start_time: "not-a-date" }),
+      },
+      env,
+    );
+    expect(res.status).toBe(400);
+    const data = await res.json<{ error?: string; success?: boolean }>();
+    expect(data.success === false || typeof data.error === "string").toBe(true);
+  });
+
+  it("deleting a workout removes its child exercises and sets", async () => {
+    const { workoutId } = await buildWorkout(
+      token,
+      "ex_bench_press",
+      [{ weight: 80, reps: 5 }],
+      { title: "Cascade Delete Test" },
+    );
+
+    await app.request(
+      `/api/v1/workouts/${workoutId}`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+
+    const getRes = await app.request(
+      `/api/v1/workouts/${workoutId}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(getRes.status).toBe(404);
+  });
+
+  it("finishing a workout with a PR set marks has_pr true on the workout", async () => {
+    const { workoutId } = await buildWorkout(
+      token,
+      "ex_bench_press",
+      [{ weight: 100, reps: 5 }],
+      { title: "PR Flag Test" },
+    );
+
+    const finishRes = await app.request(
+      `/api/v1/workouts/${workoutId}/finish`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({}),
+      },
+      env,
+    );
+    expect(finishRes.status).toBe(200);
+    const { workout: finished } = await finishRes.json<{ workout: { has_pr: boolean } }>();
+    expect(finished.has_pr).toBe(true);
   });
 });

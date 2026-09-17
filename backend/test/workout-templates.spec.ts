@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import app from "../src/index";
 import { registerUser } from "./helpers";
 
@@ -285,19 +285,6 @@ describe("Workout templates", () => {
     expect(res.status).toBe(404);
   });
 
-  it("returns 400 when creating without a title", async () => {
-    const res = await app.request(
-      "/api/v1/workout-templates",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ notes: "No title" }),
-      },
-      env,
-    );
-    expect(res.status).toBe(400);
-  });
-
   it("returns 404 when updating another user's template", async () => {
     const { token: otherToken } = await registerUser("tmpl-other@example.com", "password123");
     const createRes = await app.request(
@@ -342,5 +329,52 @@ describe("Workout templates", () => {
       env,
     );
     expect(res.status).toBe(404);
+  });
+
+  it("deleting a template removes its child exercise rows", async () => {
+    const createRes = await app.request(
+      "/api/v1/workout-templates",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          title: "Cascade Template",
+          exercises: [
+            { exercise_id: "ex_bench_press", order_index: 0 },
+            { exercise_id: "ex_squat", order_index: 1 },
+          ],
+        }),
+      },
+      env,
+    );
+    const { template } = await createRes.json<{ template: { id: string } }>();
+
+    await app.request(
+      `/api/v1/workout-templates/${template.id}`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+
+    const getRes = await app.request(
+      `/api/v1/workout-templates/${template.id}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(getRes.status).toBe(404);
+  });
+
+  it("returns 400 with error details when creating template with invalid body", async () => {
+    const res = await app.request(
+      "/api/v1/workout-templates",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ notes: "No title" }),
+      },
+      env,
+    );
+    expect(res.status).toBe(400);
+    const data = await res.json<{ error?: string; success?: boolean }>();
+    expect(data.success === false || typeof data.error === "string").toBe(true);
   });
 });

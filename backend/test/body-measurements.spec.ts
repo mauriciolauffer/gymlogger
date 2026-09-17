@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import app from "../src/index";
 import { registerUser } from "./helpers";
 
@@ -390,5 +390,18 @@ describe("Body measurements", () => {
     const data = await res.json<{ measurement: { weightUnit: string; lengthUnit: string } }>();
     expect(data.measurement.weightUnit).toBe("kg");
     expect(data.measurement.lengthUnit).toBe("cm");
+  });
+
+  it("returns 400 when body_fat_pct exceeds 100", async () => {
+    const res = await app.request(
+      "/api/v1/body-measurements",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ date: "2026-01-01", body_fat_pct: 101 }),
+      },
+      env,
+    );
+    expect(res.status).toBe(400);
   });
 });

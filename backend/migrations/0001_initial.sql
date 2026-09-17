@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS user_profile (
 
 -- User Settings Table
 CREATE TABLE IF NOT EXISTS user_settings (
-    user_id TEXT PRIMARY KEY REFERENCES user_profile(id) ON DELETE CASCADE,
+    user_id TEXT PRIMARY KEY REFERENCES user(id) ON DELETE CASCADE,
     theme TEXT CHECK(theme IN ('L', 'D', 'S')) DEFAULT 'S',
     preferred_weight_unit TEXT REFERENCES units(code) DEFAULT 'kg',
     preferred_length_unit TEXT REFERENCES units(code) DEFAULT 'cm',

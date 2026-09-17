@@ -1,7 +1,10 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:test";
+import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
+import { env } from "cloudflare:workers";
 import app from "../src/index";
 import { registerUser } from "./helpers";
+import { userSettings } from "../src/db/schema";
 
 describe("Live activity", () => {
   let token: string;
@@ -62,7 +65,7 @@ describe("Live activity", () => {
   });
 
   it("GET /:id/live uses default rest timer when no settings exist", async () => {
-    const { token: freshToken } = await registerUser(
+    const { token: freshToken, userId } = await registerUser(
       "live-no-settings@example.com",
       "password123",
       "Live No Settings",
@@ -77,6 +80,8 @@ describe("Live activity", () => {
       env,
     );
     const { workout } = await wRes.json<{ workout: { id: string } }>();
+    const db = drizzle(env.DB);
+    await db.delete(userSettings).where(eq(userSettings.userId, userId)).run();
 
     const res = await app.request(
       `/api/v1/workouts/${workout.id}/live`,

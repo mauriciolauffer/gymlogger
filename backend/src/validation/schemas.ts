@@ -156,7 +156,7 @@ export const createWorkoutTemplateSchema = z.object({
 });
 
 export const updateWorkoutTemplateBodySchema = z.object({
-  title: updateWorkoutTemplateSchema.shape.title,
+  title: updateWorkoutTemplateSchema.shape.title.optional(),
   notes: updateWorkoutTemplateSchema.shape.notes.optional(),
   exercises: z.array(templateExerciseSchema).optional(),
 });

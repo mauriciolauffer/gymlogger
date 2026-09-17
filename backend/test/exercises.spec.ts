@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import app from "../src/index";
 import { registerUser } from "./helpers";
 

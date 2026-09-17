@@ -222,8 +222,8 @@ workoutsRouter.post("/:id/sets", zValidator("json", addWorkoutSetSchema), async 
 
   const { workout_exercise_id, set_type, weight, weight_unit, reps, rpe, order_index } = body;
 
-  const setWeight = typeof weight === "number" ? weight : 0;
-  const setReps = typeof reps === "number" ? reps : 0;
+  const setWeight = weight ?? 0;
+  const setReps = reps ?? 0;
   const setType = set_type || "NO";
   const formula = "EP";
   const est1RM = calculate1RM(setWeight, setReps, formula);
@@ -474,8 +474,10 @@ workoutsRouter.get("/", async (c) => {
   const db = getDb(c);
 
   const conditions = [eq(workouts.userId, user.userId)];
-  if (from) conditions.push(gte(workouts.startTime, new Date(from)));
-  if (to) conditions.push(lte(workouts.startTime, new Date(to)));
+  const fromDate = from ? new Date(from) : null;
+  const toDate = to ? new Date(to) : null;
+  if (fromDate && !isNaN(fromDate.getTime())) conditions.push(gte(workouts.startTime, fromDate));
+  if (toDate && !isNaN(toDate.getTime())) conditions.push(lte(workouts.startTime, toDate));
 
   const limitVal = Math.min(Math.max(1, parseInt(limit || "20", 10)), 100);
   const offsetVal = Math.max(0, parseInt(offset || "0", 10));

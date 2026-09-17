@@ -1,4 +1,4 @@
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import app from "../src/index";
 
 export async function registerUser(
@@ -20,16 +20,45 @@ export async function registerUser(
   return { token, userId: data.user.id };
 }
 
-export async function loginUser(email: string, password: string): Promise<{ token: string }> {
-  const res = await app.request(
-    "/api/auth/sign-in/email",
+export async function buildWorkout(
+  token: string,
+  exerciseId: string,
+  sets: { weight?: number; reps?: number; set_type?: string; rpe?: number }[],
+  opts?: { title?: string; start_time?: string },
+): Promise<{ workoutId: string; workoutExerciseId: string }> {
+  const wRes = await app.request(
+    "/api/v1/workouts/start",
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ title: opts?.title ?? "Workout", ...(opts?.start_time && { start_time: opts.start_time }) }),
     },
     env,
   );
-  const token = res.headers.get("set-auth-token") ?? "";
-  return { token };
+  const { workout } = await wRes.json<{ workout: { id: string } }>();
+
+  const exRes = await app.request(
+    `/api/v1/workouts/${workout.id}/exercises`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ exercise_id: exerciseId }),
+    },
+    env,
+  );
+  const { workoutExercise } = await exRes.json<{ workoutExercise: { id: string } }>();
+
+  for (const s of sets) {
+    await app.request(
+      `/api/v1/workouts/${workout.id}/sets`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, ...s }),
+      },
+      env,
+    );
+  }
+
+  return { workoutId: workout.id, workoutExerciseId: workoutExercise.id };
 }

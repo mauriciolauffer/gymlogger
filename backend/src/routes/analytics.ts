@@ -21,8 +21,10 @@ async function muscleSetCounts(
   to?: string,
 ): Promise<{ id: string; muscle_group: string; set_count: number }[]> {
   const conditions = [eq(workouts.userId, userId)];
-  if (from) conditions.push(gte(workouts.startTime, new Date(from)));
-  if (to) conditions.push(lte(workouts.startTime, new Date(to)));
+  const fromDate = from ? new Date(from) : null;
+  const toDate = to ? new Date(to) : null;
+  if (fromDate && !isNaN(fromDate.getTime())) conditions.push(gte(workouts.startTime, fromDate));
+  if (toDate && !isNaN(toDate.getTime())) conditions.push(lte(workouts.startTime, toDate));
 
   const results = await db
     .select({
@@ -154,8 +156,10 @@ analyticsRouter.get("/performance", async (c) => {
 analyticsRouter.get("/monthly-report", async (c) => {
   const user = c.get("user")!;
   const now = new Date();
-  const year = parseInt(c.req.query("year") || String(now.getFullYear()), 10);
-  const month = parseInt(c.req.query("month") || String(now.getMonth() + 1), 10);
+  const yearRaw = parseInt(c.req.query("year") || String(now.getFullYear()), 10);
+  const monthRaw = parseInt(c.req.query("month") || String(now.getMonth() + 1), 10);
+  const year = isNaN(yearRaw) ? now.getFullYear() : yearRaw;
+  const month = isNaN(monthRaw) || monthRaw < 1 || monthRaw > 12 ? now.getMonth() + 1 : monthRaw;
 
   const monthStr = String(month).padStart(2, "0");
   const startDate = new Date(`${year}-${monthStr}-01T00:00:00Z`);
@@ -323,7 +327,8 @@ analyticsRouter.get("/consistency", async (c) => {
 analyticsRouter.get("/year-in-review", async (c) => {
   const user = c.get("user")!;
   const now = new Date();
-  const year = parseInt(c.req.query("year") || String(now.getFullYear()), 10);
+  const yearRaw = parseInt(c.req.query("year") || String(now.getFullYear()), 10);
+  const year = isNaN(yearRaw) ? now.getFullYear() : yearRaw;
 
   const startDate = new Date(`${year}-01-01T00:00:00Z`);
   const endDate = new Date(`${year + 1}-01-01T00:00:00Z`);

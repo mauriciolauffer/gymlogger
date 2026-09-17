@@ -23,6 +23,10 @@ describe("calculate1RM", () => {
     expect(calculate1RM(80, 10)).toBe(Math.round(80 * (1 + 10 / 30) * 10) / 10);
   });
 
+  it("epley formula (explicit EP code)", () => {
+    expect(calculate1RM(100, 5, "EP")).toBe(Math.round(100 * (1 + 5 / 30) * 10) / 10);
+  });
+
   it("brzycki formula", () => {
     expect(calculate1RM(100, 5, "BR")).toBe(Math.round(100 * (36 / (37 - 5)) * 10) / 10);
   });

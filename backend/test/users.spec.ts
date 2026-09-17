@@ -1,10 +1,10 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import app from "../src/index";
 import { registerUser } from "./helpers";
-import { usersProfile } from "../src/db/schema";
+import { usersProfile, userSettings } from "../src/db/schema";
 
 describe("User profile", () => {
   let token: string;
@@ -363,5 +363,27 @@ describe("User settings", () => {
       env,
     );
     expect(res.status).toBe(400);
+  });
+
+  it("auto-creates settings row when none exists on GET /settings", async () => {
+    const { token: freshToken, userId } = await registerUser(
+      "settings-missing@example.com",
+      "password123",
+      "Missing Settings",
+    );
+    const db = drizzle(env.DB);
+    await db.delete(userSettings).where(eq(userSettings.userId, userId)).run();
+
+    const res = await app.request(
+      "/api/v1/users/settings",
+      { headers: { Authorization: `Bearer ${freshToken}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{
+      settings: { theme: string; preferred_weight_unit: string };
+    }>();
+    expect(data.settings.theme).toBe("S");
+    expect(data.settings.preferred_weight_unit).toBe("kg");
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import app from "../src/index";
 import { registerUser } from "./helpers";
 import { user, usersProfile, userSettings } from "../src/db/schema";
@@ -187,6 +187,7 @@ describe("Login", () => {
   });
 
   it("sign-out with invalid token is idempotent (returns 200)", async () => {
+    // Better Auth always returns 200 for sign-out regardless of token validity
     const res = await app.request(
       "/api/auth/sign-out",
       { method: "POST", headers: { Authorization: "Bearer invalidtoken" } },
@@ -197,113 +198,34 @@ describe("Login", () => {
 });
 
 describe("Private routes deny unauthenticated access", () => {
-  it("GET /api/v1/muscle-groups → 401", async () => {
-    const res = await app.request("/api/v1/muscle-groups", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/exercises → 401", async () => {
-    const res = await app.request("/api/v1/exercises", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("POST /api/v1/exercises → 401", async () => {
-    const res = await app.request("/api/v1/exercises", { method: "POST" }, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/exercises/:id → 401", async () => {
-    const res = await app.request("/api/v1/exercises/any-id", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("PUT /api/v1/exercises/:id → 401", async () => {
-    const res = await app.request("/api/v1/exercises/any-id", { method: "PUT" }, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("DELETE /api/v1/exercises/:id → 401", async () => {
-    const res = await app.request("/api/v1/exercises/any-id", { method: "DELETE" }, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/users/profile → 401", async () => {
-    const res = await app.request("/api/v1/users/profile", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("PUT /api/v1/users/profile → 401", async () => {
-    const res = await app.request("/api/v1/users/profile", { method: "PUT" }, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/users/settings → 401", async () => {
-    const res = await app.request("/api/v1/users/settings", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("PUT /api/v1/users/settings → 401", async () => {
-    const res = await app.request("/api/v1/users/settings", { method: "PUT" }, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("POST /api/v1/workouts/start → 401", async () => {
-    const res = await app.request("/api/v1/workouts/start", { method: "POST" }, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/workouts → 401", async () => {
-    const res = await app.request("/api/v1/workouts", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/workouts/previous-values → 401", async () => {
-    const res = await app.request("/api/v1/workouts/previous-values?exerciseId=x", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/workouts/:id/live → 401", async () => {
-    const res = await app.request("/api/v1/workouts/any-id/live", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/workout-templates → 401", async () => {
-    const res = await app.request("/api/v1/workout-templates", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("POST /api/v1/workout-templates → 401", async () => {
-    const res = await app.request("/api/v1/workout-templates", { method: "POST" }, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/personal-records → 401", async () => {
-    const res = await app.request("/api/v1/personal-records", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/calculators/warmup → 401", async () => {
-    const res = await app.request("/api/v1/calculators/warmup?targetWeight=100", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/analytics/muscle-groups → 401", async () => {
-    const res = await app.request("/api/v1/analytics/muscle-groups", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/analytics/volume → 401", async () => {
-    const res = await app.request("/api/v1/analytics/volume", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("GET /api/v1/body-measurements → 401", async () => {
-    const res = await app.request("/api/v1/body-measurements", {}, env);
-    expect(res.status).toBe(401);
-  });
-
-  it("POST /api/v1/body-measurements → 401", async () => {
-    const res = await app.request("/api/v1/body-measurements", { method: "POST" }, env);
-    expect(res.status).toBe(401);
-  });
+  it.each([
+    ["GET", "/api/v1/muscle-groups"],
+    ["GET", "/api/v1/exercises"],
+    ["POST", "/api/v1/exercises"],
+    ["GET", "/api/v1/exercises/any-id"],
+    ["PUT", "/api/v1/exercises/any-id"],
+    ["DELETE", "/api/v1/exercises/any-id"],
+    ["GET", "/api/v1/users/profile"],
+    ["PUT", "/api/v1/users/profile"],
+    ["GET", "/api/v1/users/settings"],
+    ["PUT", "/api/v1/users/settings"],
+    ["POST", "/api/v1/workouts/start"],
+    ["GET", "/api/v1/workouts"],
+    ["GET", "/api/v1/workouts/previous-values?exerciseId=x"],
+    ["GET", "/api/v1/workouts/any-id/live"],
+    ["GET", "/api/v1/workout-templates"],
+    ["POST", "/api/v1/workout-templates"],
+    ["GET", "/api/v1/personal-records"],
+    ["GET", "/api/v1/calculators/warmup?targetWeight=100"],
+    ["GET", "/api/v1/analytics/muscle-groups"],
+    ["GET", "/api/v1/analytics/volume"],
+    ["GET", "/api/v1/body-measurements"],
+    ["POST", "/api/v1/body-measurements"],
+  ] as [string, string][])(
+    "%s %s → 401 without token",
+    async (method, path) => {
+      const res = await app.request(path, { method }, env);
+      expect(res.status).toBe(401);
+    },
+  );
 });

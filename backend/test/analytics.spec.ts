@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import app from "../src/index";
-import { registerUser } from "./helpers";
+import { buildWorkout, registerUser } from "./helpers";
 
 describe("Analytics", () => {
   let token: string;
@@ -23,16 +23,8 @@ describe("Analytics", () => {
   });
 
   it("consistency breaks streak on non-consecutive days", async () => {
-    for (const startTime of ["2026-01-01T10:00:00Z", "2026-01-03T10:00:00Z"]) {
-      await app.request(
-        "/api/v1/workouts/start",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ title: "Workout", start_time: startTime }),
-        },
-        env,
-      );
+    for (const start_time of ["2026-01-01T10:00:00Z", "2026-01-03T10:00:00Z"]) {
+      await buildWorkout(token, "ex_bench_press", [], { title: "Workout", start_time });
     }
     const res = await app.request(
       "/api/v1/analytics/consistency",
@@ -55,6 +47,33 @@ describe("Analytics", () => {
     const data = await res.json<{ period: { year: number; month: number } }>();
     expect(data.period.year).toBe(2026);
     expect(data.period.month).toBe(12);
+  });
+
+  it("monthly-report includes topPRs when PRs were set in the period", async () => {
+    await buildWorkout(token, "ex_bench_press", [{ weight: 120, reps: 3 }], { title: "Monthly PR Workout" });
+
+    const res = await app.request(
+      "/api/v1/analytics/monthly-report?year=2026&month=9",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ topPRs: { exerciseId: string }[] }>();
+    expect(data.topPRs.length).toBeGreaterThan(0);
+    expect(data.topPRs[0].exerciseId).toBe("ex_bench_press");
+  });
+
+  it("year-in-review includes topPRs when PRs were set in the year", async () => {
+    await buildWorkout(token, "ex_squat", [{ weight: 150, reps: 5 }], { title: "Year PR Workout" });
+
+    const res = await app.request(
+      "/api/v1/analytics/year-in-review?year=2026",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ topPRs: { exerciseId: string }[] }>();
+    expect(data.topPRs.length).toBeGreaterThan(0);
   });
 
   it("monthly-report with no year/month uses defaults", async () => {
@@ -135,20 +154,12 @@ describe("Analytics", () => {
   });
 
   it("consistency streak increments on consecutive days", async () => {
-    for (const startTime of [
+    for (const start_time of [
       "2026-03-01T10:00:00Z",
       "2026-03-02T10:00:00Z",
       "2026-03-03T10:00:00Z",
     ]) {
-      await app.request(
-        "/api/v1/workouts/start",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ title: "Daily Workout", start_time: startTime }),
-        },
-        env,
-      );
+      await buildWorkout(token, "ex_bench_press", [], { title: "Daily Workout", start_time });
     }
     const res = await app.request(
       "/api/v1/analytics/consistency",
@@ -171,35 +182,7 @@ describe("Analytics", () => {
   });
 
   it("performance with zero-weight/zero-rep set excludes from curves", async () => {
-    const wRes = await app.request(
-      "/api/v1/workouts/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Zero Set", start_time: "2026-05-01T10:00:00Z" }),
-      },
-      env,
-    );
-    const { workout } = await wRes.json<{ workout: { id: string } }>();
-    const addEx = await app.request(
-      `/api/v1/workouts/${workout.id}/exercises`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ exercise_id: "ex_bench_press" }),
-      },
-      env,
-    );
-    const { workoutExercise } = await addEx.json<{ workoutExercise: { id: string } }>();
-    await app.request(
-      `/api/v1/workouts/${workout.id}/sets`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 0, reps: 0 }),
-      },
-      env,
-    );
+    await buildWorkout(token, "ex_bench_press", [{ weight: 0, reps: 0 }], { title: "Zero Set" });
 
     const res = await app.request(
       "/api/v1/analytics/performance?exerciseId=ex_bench_press",
@@ -218,43 +201,12 @@ describe("Analytics", () => {
   });
 
   it("performance with multiple sets per session hits sessionsMap cache branch", async () => {
-    const wRes = await app.request(
-      "/api/v1/workouts/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Multi Set Session", start_time: "2026-06-01T10:00:00Z" }),
-      },
-      env,
+    await buildWorkout(
+      token,
+      "ex_bench_press",
+      [{ weight: 80, reps: 10 }, { weight: 90, reps: 8 }, { weight: 100, reps: 5 }],
+      { title: "Multi Set Session" },
     );
-    const { workout } = await wRes.json<{ workout: { id: string } }>();
-
-    const addEx = await app.request(
-      `/api/v1/workouts/${workout.id}/exercises`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ exercise_id: "ex_bench_press" }),
-      },
-      env,
-    );
-    const { workoutExercise } = await addEx.json<{ workoutExercise: { id: string } }>();
-
-    for (const [weight, reps] of [
-      [80, 10],
-      [90, 8],
-      [100, 5],
-    ] as [number, number][]) {
-      await app.request(
-        `/api/v1/workouts/${workout.id}/sets`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight, reps }),
-        },
-        env,
-      );
-    }
 
     const res = await app.request(
       "/api/v1/analytics/performance?exerciseId=ex_bench_press",
@@ -272,45 +224,11 @@ describe("Analytics", () => {
   });
 
   it("performance with zero-weight set and real-weight set (maxReps branches)", async () => {
-    const wRes = await app.request(
-      "/api/v1/workouts/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Mixed Reps", start_time: "2026-07-01T10:00:00Z" }),
-      },
-      env,
-    );
-    const { workout } = await wRes.json<{ workout: { id: string } }>();
-
-    const addEx = await app.request(
-      `/api/v1/workouts/${workout.id}/exercises`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ exercise_id: "ex_squat" }),
-      },
-      env,
-    );
-    const { workoutExercise } = await addEx.json<{ workoutExercise: { id: string } }>();
-
-    await app.request(
-      `/api/v1/workouts/${workout.id}/sets`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 0, reps: 0 }),
-      },
-      env,
-    );
-    await app.request(
-      `/api/v1/workouts/${workout.id}/sets`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, weight: 140, reps: 3 }),
-      },
-      env,
+    await buildWorkout(
+      token,
+      "ex_squat",
+      [{ weight: 0, reps: 0 }, { weight: 140, reps: 3 }],
+      { title: "Mixed Reps" },
     );
 
     const res = await app.request(
@@ -325,5 +243,31 @@ describe("Analytics", () => {
     }>();
     expect(data.maxWeightCurve[0].value).toBe(140);
     expect(data.maxRepsCurve[0].value).toBe(3);
+  });
+
+  it("monthly-report with non-numeric year falls back gracefully", async () => {
+    const res = await app.request(
+      "/api/v1/analytics/monthly-report?year=abc&month=xyz",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ period: { year: number; month: number } }>();
+    expect(typeof data.period.year).toBe("number");
+    expect(isNaN(data.period.year)).toBe(false);
+    expect(typeof data.period.month).toBe("number");
+    expect(isNaN(data.period.month)).toBe(false);
+  });
+
+  it("year-in-review with non-numeric year falls back gracefully", async () => {
+    const res = await app.request(
+      "/api/v1/analytics/year-in-review?year=abc",
+      { headers: { Authorization: `Bearer ${token}` } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json<{ year: number }>();
+    expect(typeof data.year).toBe("number");
+    expect(isNaN(data.year)).toBe(false);
   });
 });
