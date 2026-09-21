@@ -9,148 +9,137 @@ import {
   updateWorkoutTemplateBodySchema,
 } from "../validation/schemas";
 
-export const workoutTemplatesRouter = new Hono<Env>();
+export const workoutTemplatesRouter = new Hono<Env>()
+  .get("/", async (c) => {
+    const user = c.get("user")!;
+    const db = getDb(c);
 
-// GET /api/v1/workout-templates
-workoutTemplatesRouter.get("/", async (c) => {
-  const user = c.get("user")!;
-  const db = getDb(c);
+    const templates = await db
+      .select()
+      .from(workoutTemplates)
+      .where(eq(workoutTemplates.userId, user.userId))
+      .orderBy(desc(workoutTemplates.updatedAt))
+      .all();
 
-  const templates = await db
-    .select()
-    .from(workoutTemplates)
-    .where(eq(workoutTemplates.userId, user.userId))
-    .orderBy(desc(workoutTemplates.updatedAt))
-    .all();
-
-  const templatesWithExercises = await Promise.all(
-    templates.map(async (t) => {
-      const templateExercises = await db
-        .select({
-          id: workoutTemplateExercises.id,
-          templateId: workoutTemplateExercises.templateId,
-          exerciseId: workoutTemplateExercises.exerciseId,
-          supersetId: workoutTemplateExercises.supersetId,
-          notes: workoutTemplateExercises.notes,
-          orderIndex: workoutTemplateExercises.orderIndex,
-          exerciseName: exercises.name,
-          category: exercises.category,
-          equipment: exercises.equipment,
-        })
-        .from(workoutTemplateExercises)
-        .innerJoin(exercises, eq(workoutTemplateExercises.exerciseId, exercises.id))
-        .where(eq(workoutTemplateExercises.templateId, t.id))
-        .orderBy(asc(workoutTemplateExercises.orderIndex))
-        .all();
-      return Object.assign({}, t, { exercises: templateExercises });
-    }),
-  );
-
-  return c.json({ templates: templatesWithExercises });
-});
-
-// GET /api/v1/workout-templates/:id
-workoutTemplatesRouter.get("/:id", async (c) => {
-  const user = c.get("user")!;
-  const id = c.req.param("id");
-  const db = getDb(c);
-
-  const template = await db
-    .select()
-    .from(workoutTemplates)
-    .where(and(eq(workoutTemplates.id, id), eq(workoutTemplates.userId, user.userId)))
-    .get();
-
-  if (!template) {
-    return c.json({ error: "Workout template not found" }, 404);
-  }
-
-  const templateExercises = await db
-    .select({
-      id: workoutTemplateExercises.id,
-      templateId: workoutTemplateExercises.templateId,
-      exerciseId: workoutTemplateExercises.exerciseId,
-      supersetId: workoutTemplateExercises.supersetId,
-      notes: workoutTemplateExercises.notes,
-      orderIndex: workoutTemplateExercises.orderIndex,
-      exerciseName: exercises.name,
-      category: exercises.category,
-      equipment: exercises.equipment,
-    })
-    .from(workoutTemplateExercises)
-    .innerJoin(exercises, eq(workoutTemplateExercises.exerciseId, exercises.id))
-    .where(eq(workoutTemplateExercises.templateId, id))
-    .orderBy(asc(workoutTemplateExercises.orderIndex))
-    .all();
-
-  return c.json({ template: { ...template, exercises: templateExercises } });
-});
-
-// POST /api/v1/workout-templates
-workoutTemplatesRouter.post("/", zValidator("json", createWorkoutTemplateSchema), async (c) => {
-  const user = c.get("user")!;
-  const body = c.req.valid("json");
-
-  const { title, notes, exercises: bodyExercises } = body;
-  const templateId = `wt_${crypto.randomUUID()}`;
-  const now = new Date();
-  const db = getDb(c);
-
-  await db
-    .insert(workoutTemplates)
-    .values({
-      id: templateId,
-      userId: user.userId,
-      title,
-      notes: notes ?? null,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .run();
-
-  if (Array.isArray(bodyExercises)) {
-    await Promise.all(
-      bodyExercises.map((ex, i) => {
-        const wteId = `wte_${crypto.randomUUID()}`;
-        const orderIdx = ex.order_index !== undefined ? ex.order_index : i;
-        return db
-          .insert(workoutTemplateExercises)
-          .values({
-            id: wteId,
-            templateId,
-            exerciseId: ex.exercise_id,
-            supersetId: ex.superset_id ?? null,
-            notes: ex.notes ?? null,
-            orderIndex: orderIdx,
+    const templatesWithExercises = await Promise.all(
+      templates.map(async (t) => {
+        const templateExercises = await db
+          .select({
+            id: workoutTemplateExercises.id,
+            templateId: workoutTemplateExercises.templateId,
+            exerciseId: workoutTemplateExercises.exerciseId,
+            supersetId: workoutTemplateExercises.supersetId,
+            notes: workoutTemplateExercises.notes,
+            orderIndex: workoutTemplateExercises.orderIndex,
+            exerciseName: exercises.name,
+            category: exercises.category,
+            equipment: exercises.equipment,
           })
-          .run();
+          .from(workoutTemplateExercises)
+          .innerJoin(exercises, eq(workoutTemplateExercises.exerciseId, exercises.id))
+          .where(eq(workoutTemplateExercises.templateId, t.id))
+          .orderBy(asc(workoutTemplateExercises.orderIndex))
+          .all();
+        return Object.assign({}, t, { exercises: templateExercises });
       }),
     );
-  }
 
-  const template = await db
-    .select()
-    .from(workoutTemplates)
-    .where(eq(workoutTemplates.id, templateId))
-    .get();
-  const savedExercises = await db
-    .select()
-    .from(workoutTemplateExercises)
-    .where(eq(workoutTemplateExercises.templateId, templateId))
-    .orderBy(asc(workoutTemplateExercises.orderIndex))
-    .all();
+    return c.json({ templates: templatesWithExercises });
+  })
+  .get("/:id", async (c) => {
+    const user = c.get("user")!;
+    const id = c.req.param("id");
+    const db = getDb(c);
 
-  return c.json(
-    { message: "Workout template created", template: { ...template, exercises: savedExercises } },
-    201,
-  );
-});
+    const template = await db
+      .select()
+      .from(workoutTemplates)
+      .where(and(eq(workoutTemplates.id, id), eq(workoutTemplates.userId, user.userId)))
+      .get();
 
-// PUT /api/v1/workout-templates/:id
-workoutTemplatesRouter.put(
-  "/:id",
-  zValidator("json", updateWorkoutTemplateBodySchema),
-  async (c) => {
+    if (!template) {
+      return c.json({ error: "Workout template not found" }, 404);
+    }
+
+    const templateExercises = await db
+      .select({
+        id: workoutTemplateExercises.id,
+        templateId: workoutTemplateExercises.templateId,
+        exerciseId: workoutTemplateExercises.exerciseId,
+        supersetId: workoutTemplateExercises.supersetId,
+        notes: workoutTemplateExercises.notes,
+        orderIndex: workoutTemplateExercises.orderIndex,
+        exerciseName: exercises.name,
+        category: exercises.category,
+        equipment: exercises.equipment,
+      })
+      .from(workoutTemplateExercises)
+      .innerJoin(exercises, eq(workoutTemplateExercises.exerciseId, exercises.id))
+      .where(eq(workoutTemplateExercises.templateId, id))
+      .orderBy(asc(workoutTemplateExercises.orderIndex))
+      .all();
+
+    return c.json({ template: { ...template, exercises: templateExercises } });
+  })
+  .post("/", zValidator("json", createWorkoutTemplateSchema), async (c) => {
+    const user = c.get("user")!;
+    const body = c.req.valid("json");
+
+    const { title, notes, exercises: bodyExercises } = body;
+    const templateId = `wt_${crypto.randomUUID()}`;
+    const now = new Date();
+    const db = getDb(c);
+
+    await db
+      .insert(workoutTemplates)
+      .values({
+        id: templateId,
+        userId: user.userId,
+        title,
+        notes: notes ?? null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+
+    if (Array.isArray(bodyExercises)) {
+      await Promise.all(
+        bodyExercises.map((ex, i) => {
+          const wteId = `wte_${crypto.randomUUID()}`;
+          const orderIdx = ex.order_index !== undefined ? ex.order_index : i;
+          return db
+            .insert(workoutTemplateExercises)
+            .values({
+              id: wteId,
+              templateId,
+              exerciseId: ex.exercise_id,
+              supersetId: ex.superset_id ?? null,
+              notes: ex.notes ?? null,
+              orderIndex: orderIdx,
+            })
+            .run();
+        }),
+      );
+    }
+
+    const template = await db
+      .select()
+      .from(workoutTemplates)
+      .where(eq(workoutTemplates.id, templateId))
+      .get();
+    const savedExercises = await db
+      .select()
+      .from(workoutTemplateExercises)
+      .where(eq(workoutTemplateExercises.templateId, templateId))
+      .orderBy(asc(workoutTemplateExercises.orderIndex))
+      .all();
+
+    return c.json(
+      { message: "Workout template created", template: { ...template, exercises: savedExercises } },
+      201,
+    );
+  })
+  .put("/:id", zValidator("json", updateWorkoutTemplateBodySchema), async (c) => {
     const user = c.get("user")!;
     const id = c.req.param("id");
     const body = c.req.valid("json");
@@ -215,25 +204,22 @@ workoutTemplatesRouter.put(
       message: "Workout template updated",
       template: { ...updatedTemplate, exercises: updatedExercises },
     });
-  },
-);
+  })
+  .delete("/:id", async (c) => {
+    const user = c.get("user")!;
+    const id = c.req.param("id");
+    const db = getDb(c);
 
-// DELETE /api/v1/workout-templates/:id
-workoutTemplatesRouter.delete("/:id", async (c) => {
-  const user = c.get("user")!;
-  const id = c.req.param("id");
-  const db = getDb(c);
+    const template = await db
+      .select({ id: workoutTemplates.id })
+      .from(workoutTemplates)
+      .where(and(eq(workoutTemplates.id, id), eq(workoutTemplates.userId, user.userId)))
+      .get();
 
-  const template = await db
-    .select({ id: workoutTemplates.id })
-    .from(workoutTemplates)
-    .where(and(eq(workoutTemplates.id, id), eq(workoutTemplates.userId, user.userId)))
-    .get();
+    if (!template) {
+      return c.json({ error: "Workout template not found or unauthorized" }, 404);
+    }
 
-  if (!template) {
-    return c.json({ error: "Workout template not found or unauthorized" }, 404);
-  }
-
-  await db.delete(workoutTemplates).where(eq(workoutTemplates.id, id)).run();
-  return c.json({ message: "Workout template deleted" });
-});
+    await db.delete(workoutTemplates).where(eq(workoutTemplates.id, id)).run();
+    return c.json({ message: "Workout template deleted" });
+  });
