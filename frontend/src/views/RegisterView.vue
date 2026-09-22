@@ -9,7 +9,7 @@ import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/Label.js";
 
-import { authClient, authStore } from "../store/auth";
+import { authClient, authStore } from "../store/auth.js";
 
 const router = useRouter();
 

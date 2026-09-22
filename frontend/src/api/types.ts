@@ -1,5 +1,5 @@
 import type { InferResponseType } from "hono/client";
-import { client } from "./client";
+import { client } from "./client.js";
 
 // Intermediates for path segments that contain hyphens or colons (oxfmt can't parse bracket notation in typeof generics)
 const workoutById = client.api.v1.workouts[":id"];

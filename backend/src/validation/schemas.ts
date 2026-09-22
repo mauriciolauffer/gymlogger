@@ -10,8 +10,8 @@ import {
   bodyMeasurements,
   userSettings,
   usersProfile,
-} from "../db/schema";
-import { SEX_VALUES, THEME_VALUES } from "../db/constants";
+} from "../db/schema.js";
+import { SEX_VALUES, THEME_VALUES } from "../db/constants.js";
 
 // ==========================================
 // DERIVED FROM DRIZZLE TABLES

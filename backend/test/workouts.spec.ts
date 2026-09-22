@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { env } from "cloudflare:workers";
-import app from "../src/index";
-import { buildWorkout, registerUser } from "./helpers";
+import app from "../src/index.ts";
+import { buildWorkout, registerUser } from "./helpers.ts";
 
 describe("Workout session", () => {
   let token: string;
@@ -282,17 +282,21 @@ describe("Workout session", () => {
   });
 
   it("lists workouts with limit and offset", async () => {
+    const requests = [];
     for (let i = 0; i < 3; i++) {
-      await app.request(
-        "/api/v1/workouts/start",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ title: `Workout ${i}` }),
-        },
-        env,
+      requests.push(
+        app.request(
+          "/api/v1/workouts/start",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ title: `Workout ${i}` }),
+          },
+          env,
+        ),
       );
     }
+    await Promise.all(requests);
 
     const res = await app.request(
       "/api/v1/workouts?limit=2&offset=1",

@@ -1,7 +1,7 @@
 import { reactive } from "vue";
-import { client } from "../api/client";
+import { client } from "../api/client.js";
 import type { InferResponseType } from "hono/client";
-import type { Theme } from "../db/constants";
+import type { Theme } from "../db/constants.ts";
 
 type SettingsGetRes = InferResponseType<typeof client.api.v1.users.settings.$get, 200>;
 type SettingsPutRes = InferResponseType<typeof client.api.v1.users.settings.$put, 200>;

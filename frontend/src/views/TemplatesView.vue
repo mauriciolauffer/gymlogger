@@ -8,9 +8,9 @@ import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
-import { client } from "../api/client";
-import type { TemplatesGetRes, TemplateGetRes } from "../api/types";
-import { activeWorkoutStore } from "../store/activeWorkout";
+import { client } from "../api/client.js";
+import type { TemplatesGetRes, TemplateGetRes } from "../api/types.ts";
+import { activeWorkoutStore } from "../store/activeWorkout.js";
 import TemplateEditorModal from "../components/TemplateEditorModal.vue";
 
 interface WorkoutTemplate {

@@ -6,8 +6,8 @@ import "@ui5/webcomponents/dist/Input.js";
 import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 
-import type { ActiveWorkoutExercise } from "../store/activeWorkout";
-import { SET_TYPE } from "../db/constants";
+import type { ActiveWorkoutExercise } from "../store/activeWorkout.ts";
+import { SET_TYPE } from "../db/constants.js";
 
 const props = defineProps<{
   exercise: ActiveWorkoutExercise;

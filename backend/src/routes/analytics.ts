@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { eq, and, gte, lte, desc, asc, sql, count } from "drizzle-orm";
-import type { Env } from "../index";
-import { getDb } from "../db/schema";
-import type { DrizzleDb } from "../db/schema";
+import type { Env } from "../index.ts";
+import { getDb } from "../db/schema.js";
+import type { DrizzleDb } from "../db/schema.ts";
 import {
   workouts,
   workoutExercises,
@@ -10,7 +10,7 @@ import {
   exercises,
   muscleGroups,
   personalRecords,
-} from "../db/schema";
+} from "../db/schema.js";
 
 async function muscleSetCounts(
   db: DrizzleDb,

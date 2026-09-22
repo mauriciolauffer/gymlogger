@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { calculate1RM } from "../src/utils/calculator";
-import { convertWeight, convertLength } from "../src/utils/unit-converter";
+import { calculate1RM } from "../src/utils/calculator.ts";
+import { convertWeight, convertLength } from "../src/utils/unit-converter.ts";
 
 describe("calculate1RM", () => {
   it("returns 0 when reps <= 0", () => {

@@ -10,7 +10,7 @@ import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
-import { client } from "../api/client";
+import { client } from "../api/client.js";
 import type { InferResponseType } from "hono/client";
 
 type ExercisesRes = InferResponseType<typeof client.api.v1.exercises.$get, 200>;

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import RegisterView from "../RegisterView.vue";
-import { authStore } from "../../store/auth";
+import { authStore } from "../../store/auth.js";
 
 const mockPush = vi.fn<() => void>();
 vi.mock("vue-router", () => ({
@@ -20,7 +20,7 @@ vi.mock("../../store/auth", async (importOriginal) => {
   };
 });
 
-import { authClient } from "../../store/auth";
+import { authClient } from "../../store/auth.js";
 
 describe("RegisterView", () => {
   beforeEach(() => {

@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { env } from "cloudflare:workers";
-import app from "../src/index";
-import { buildWorkout, registerUser } from "./helpers";
+import app from "../src/index.ts";
+import { buildWorkout, registerUser } from "./helpers.ts";
 
 describe("Analytics", () => {
   let token: string;
@@ -23,9 +23,13 @@ describe("Analytics", () => {
   });
 
   it("consistency breaks streak on non-consecutive days", async () => {
+    const buildWorkouts = [];
     for (const start_time of ["2026-01-01T10:00:00Z", "2026-01-03T10:00:00Z"]) {
-      await buildWorkout(token, "ex_bench_press", [], { title: "Workout", start_time });
+      buildWorkouts.push(
+        buildWorkout(token, "ex_bench_press", [], { title: "Workout", start_time }),
+      );
     }
+    await Promise.all(buildWorkouts);
     const res = await app.request(
       "/api/v1/analytics/consistency",
       { headers: { Authorization: `Bearer ${token}` } },
@@ -156,13 +160,17 @@ describe("Analytics", () => {
   });
 
   it("consistency streak increments on consecutive days", async () => {
+    const buildWorkouts = [];
     for (const start_time of [
       "2026-03-01T10:00:00Z",
       "2026-03-02T10:00:00Z",
       "2026-03-03T10:00:00Z",
     ]) {
-      await buildWorkout(token, "ex_bench_press", [], { title: "Daily Workout", start_time });
+      buildWorkouts.push(
+        buildWorkout(token, "ex_bench_press", [], { title: "Daily Workout", start_time }),
+      );
     }
+    await Promise.all(buildWorkouts);
     const res = await app.request(
       "/api/v1/analytics/consistency",
       { headers: { Authorization: `Bearer ${token}` } },

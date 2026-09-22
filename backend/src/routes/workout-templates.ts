@@ -1,13 +1,13 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq, and, desc, asc } from "drizzle-orm";
-import type { Env } from "../index";
-import { getDb } from "../db/schema";
-import { workoutTemplates, workoutTemplateExercises, exercises } from "../db/schema";
+import type { Env } from "../index.js";
+import { getDb } from "../db/schema.js";
+import { workoutTemplates, workoutTemplateExercises, exercises } from "../db/schema.js";
 import {
   createWorkoutTemplateSchema,
   updateWorkoutTemplateBodySchema,
-} from "../validation/schemas";
+} from "../validation/schemas.js";
 
 export const workoutTemplatesRouter = new Hono<Env>()
   .get("/", async (c) => {

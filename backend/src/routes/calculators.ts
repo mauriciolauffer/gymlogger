@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { Env } from "../index";
+import type { Env } from "../index.ts";
 
 export const calculatorsRouter = new Hono<Env>().get("/warmup", async (c) => {
   const targetWeightStr = c.req.query("targetWeight");

@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { env } from "cloudflare:workers";
-import app from "../src/index";
-import { buildWorkout, registerUser } from "./helpers";
+import app from "../src/index.ts";
+import { buildWorkout, registerUser } from "./helpers.ts";
 
 describe("Personal record detection", () => {
   let token: string;

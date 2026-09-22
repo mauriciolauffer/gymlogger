@@ -19,9 +19,9 @@ import "@ui5/webcomponents-icons/dist/play.js";
 
 const UserMenuPopover = defineAsyncComponent(() => import("./components/UserMenuPopover.vue"));
 
-import { authStore } from "./store/auth";
-import { activeWorkoutStore } from "./store/activeWorkout";
-import { settingsStore } from "./store/settings";
+import { authStore } from "./store/auth.js";
+import { activeWorkoutStore } from "./store/activeWorkout.js";
+import { settingsStore } from "./store/settings.js";
 
 const router = useRouter();
 const route = useRoute();

@@ -1,15 +1,15 @@
 import { Hono } from "hono";
-import type { Env } from "../index";
-import { authMiddleware } from "../middleware/auth";
-import { usersRouter } from "./users";
-import { exercisesRouter } from "./exercises";
-import { workoutsRouter } from "./workouts";
-import { workoutTemplatesRouter } from "./workout-templates";
-import { liveActivityRouter } from "./live-activity";
-import { personalRecordsRouter } from "./personal-records";
-import { calculatorsRouter } from "./calculators";
-import { analyticsRouter } from "./analytics";
-import { bodyMeasurementsRouter } from "./body-measurements";
+import type { Env } from "../index.js";
+import { authMiddleware } from "../middleware/auth.js";
+import { usersRouter } from "./users.js";
+import { exercisesRouter } from "./exercises.js";
+import { workoutsRouter } from "./workouts.js";
+import { workoutTemplatesRouter } from "./workout-templates.js";
+import { liveActivityRouter } from "./live-activity.js";
+import { personalRecordsRouter } from "./personal-records.js";
+import { calculatorsRouter } from "./calculators.js";
+import { analyticsRouter } from "./analytics.js";
+import { bodyMeasurementsRouter } from "./body-measurements.js";
 
 export const privateRoutes = new Hono<Env>()
   .use("*", authMiddleware)

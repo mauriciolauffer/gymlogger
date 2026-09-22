@@ -8,8 +8,8 @@ import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 
-import { client } from "../api/client";
-import type { ExercisePostRes } from "../api/types";
+import { client } from "../api/client.js";
+import type { ExercisePostRes } from "../api/types.ts";
 
 const props = defineProps<{
   open: boolean;

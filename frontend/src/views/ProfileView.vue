@@ -14,9 +14,9 @@ import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/DatePicker.js";
 import "@ui5/webcomponents/dist/TextArea.js";
 
-import { client } from "../api/client";
+import { client } from "../api/client.js";
 import type { InferResponseType } from "hono/client";
-import { SEX } from "../db/constants";
+import { SEX } from "../db/constants.js";
 
 type ProfileGetRes = InferResponseType<typeof client.api.v1.users.profile.$get, 200>;
 

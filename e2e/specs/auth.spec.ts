@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { LoginPage } from "../pages/login.page";
-import { RegisterPage } from "../pages/register.page";
+import { LoginPage } from "../pages/login.page.ts";
+import { RegisterPage } from "../pages/register.page.ts";
 
 // These tests run WITHOUT auth state (login/register pages are public)
 test.use({ storageState: { cookies: [], origins: [] } });

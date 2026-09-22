@@ -1,6 +1,6 @@
+import type { Env } from "../index.ts";
 import { createMiddleware } from "hono/factory";
-import type { Env } from "../index";
-import { createAuth } from "../lib/auth";
+import { createAuth } from "../lib/auth.js";
 
 export const authMiddleware = createMiddleware<Env>(async (c, next) => {
   const auth = createAuth(c.env.DB, c.env.JWT_SECRET, c.env.APP_BASE_URL, c.env.CORS_ORIGIN);

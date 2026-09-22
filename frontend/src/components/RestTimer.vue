@@ -4,7 +4,7 @@ import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
 import "@ui5/webcomponents/dist/Card.js";
 
-import { activeWorkoutStore } from "../store/activeWorkout";
+import { activeWorkoutStore } from "../store/activeWorkout.js";
 
 const restTimer = computed(() => activeWorkoutStore.restTimer);
 

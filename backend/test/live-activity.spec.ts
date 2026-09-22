@@ -2,9 +2,9 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "cloudflare:workers";
-import app from "../src/index";
-import { registerUser } from "./helpers";
-import { userSettings } from "../src/db/schema";
+import app from "../src/index.ts";
+import { registerUser } from "./helpers.ts";
+import { userSettings } from "../src/db/schema.ts";
 
 describe("Live activity", () => {
   let token: string;

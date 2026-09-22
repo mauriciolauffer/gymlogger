@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import type { Env } from "../index";
-import { createAuth } from "../lib/auth";
-import { docsRouter } from "./docs";
+import type { Env } from "../index.ts";
+import { createAuth } from "../lib/auth.js";
+import { docsRouter } from "./docs.js";
 
 export const publicRoutes = new Hono<Env>()
   .get("/favicon.ico", (c) => c.body(null, 204))

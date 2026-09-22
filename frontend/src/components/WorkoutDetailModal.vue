@@ -4,8 +4,8 @@ import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
-import { SET_TYPE } from "../db/constants";
-import type { ActiveWorkoutExercise } from "../store/activeWorkout";
+import { SET_TYPE } from "../db/constants.js";
+import type { ActiveWorkoutExercise } from "../store/activeWorkout.ts";
 
 interface WorkoutDetail {
   title: string;

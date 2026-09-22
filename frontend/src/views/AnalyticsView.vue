@@ -9,9 +9,9 @@ import "@ui5/webcomponents/dist/Panel.js";
 import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 
-import { client } from "../api/client";
-import type { MonthlyReportRes, SetsPerMuscleGroupRes, ConsistencyRes } from "../api/types";
-import { formatDurationHours } from "../utils/formatters";
+import { client } from "../api/client.js";
+import type { MonthlyReportRes, SetsPerMuscleGroupRes, ConsistencyRes } from "../api/types.ts";
+import { formatDurationHours } from "../utils/formatters.js";
 
 interface MonthlyReport {
   totalWorkouts: number;

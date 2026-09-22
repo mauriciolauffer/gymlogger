@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq, and, gte, lte, desc, asc, max, sql, inArray } from "drizzle-orm";
-import type { Env } from "../index";
-import { calculate1RM } from "../utils/calculator";
-import { checkAndUpdatePR } from "../utils/pr-detector";
-import { getDb } from "../db/schema";
-import type { DrizzleDb } from "../db/schema";
+import type { Env } from "../index.js";
+import { calculate1RM } from "../utils/calculator.js";
+import { checkAndUpdatePR } from "../utils/pr-detector.js";
+import { getDb } from "../db/schema.js";
+import type { DrizzleDb } from "../db/schema.js";
 import {
   workouts,
   workoutExercises,
@@ -13,14 +13,14 @@ import {
   userSettings,
   exercises,
   workoutTemplateExercises,
-} from "../db/schema";
+} from "../db/schema.js";
 import {
   startWorkoutSchema,
   finishWorkoutSchema,
   addWorkoutExerciseSchema,
   addWorkoutSetSchema,
   updateWorkoutSetSchema,
-} from "../validation/schemas";
+} from "../validation/schemas.js";
 
 async function updateWorkoutTotals(db: DrizzleDb, workoutId: string) {
   const stats = await db

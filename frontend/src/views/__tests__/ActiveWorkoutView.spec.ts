@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import ActiveWorkoutView from "../ActiveWorkoutView.vue";
-import { activeWorkoutStore } from "../../store/activeWorkout";
+import { activeWorkoutStore } from "../../store/activeWorkout.js";
 
 const mockPush = vi.fn<() => void>();
 vi.mock("vue-router", () => ({

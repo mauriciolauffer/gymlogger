@@ -13,8 +13,8 @@ import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/StepInput.js";
 import "@ui5/webcomponents/dist/Switch.js";
 
-import { settingsStore, type UserSettings } from "../store/settings";
-import { THEME } from "../db/constants";
+import { settingsStore, type UserSettings } from "../store/settings.js";
+import { THEME } from "../db/constants.js";
 
 const settings = ref<UserSettings>({ ...settingsStore.settings });
 const saving = ref(false);

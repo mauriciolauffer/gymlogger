@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq, and, like, or, SQL } from "drizzle-orm";
-import type { Env } from "../index";
-import { getDb } from "../db/schema";
-import { exercises, muscleGroups, exerciseSecondaryMuscles } from "../db/schema";
-import { createExerciseSchema, updateExerciseBodySchema } from "../validation/schemas";
+import type { Env } from "../index.js";
+import { getDb } from "../db/schema.js";
+import { exercises, muscleGroups, exerciseSecondaryMuscles } from "../db/schema.js";
+import { createExerciseSchema, updateExerciseBodySchema } from "../validation/schemas.js";
 
 export const exercisesRouter = new Hono<Env>()
   .get("/muscle-groups", async (c) => {

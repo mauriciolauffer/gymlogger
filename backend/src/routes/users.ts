@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
-import type { Env } from "../index";
-import { getDb } from "../db/schema";
-import { user, usersProfile, userSettings } from "../db/schema";
-import { updateProfileSchema, updateSettingsSchema } from "../validation/schemas";
+import type { Env } from "../index.js";
+import { getDb } from "../db/schema.js";
+import { user, usersProfile, userSettings } from "../db/schema.js";
+import { updateProfileSchema, updateSettingsSchema } from "../validation/schemas.js";
 
 export const usersRouter = new Hono<Env>()
   .get("/profile", async (c) => {

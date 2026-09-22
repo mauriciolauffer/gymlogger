@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
 import RestTimer from "../RestTimer.vue";
-import { activeWorkoutStore } from "../../store/activeWorkout";
+import { activeWorkoutStore } from "../../store/activeWorkout.js";
 
 describe("RestTimer", () => {
   it("renders remaining rest time when active", () => {

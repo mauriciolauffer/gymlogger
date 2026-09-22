@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import app from "../src/index";
+import app from "../src/index.ts";
 
 export async function registerUser(
   email: string,
@@ -51,17 +51,21 @@ export async function buildWorkout(
   );
   const { workoutExercise } = await exRes.json<{ workoutExercise: { id: string } }>();
 
+  const requests = [];
   for (const s of sets) {
-    await app.request(
-      `/api/v1/workouts/${workout.id}/sets`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, ...s }),
-      },
-      env,
+    requests.push(
+      app.request(
+        `/api/v1/workouts/${workout.id}/sets`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ workout_exercise_id: workoutExercise.id, ...s }),
+        },
+        env,
+      ),
     );
   }
+  await Promise.all(requests);
 
   return { workoutId: workout.id, workoutExerciseId: workoutExercise.id };
 }

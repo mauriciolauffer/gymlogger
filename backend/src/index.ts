@@ -3,8 +3,8 @@ import { HTTPException } from "hono/http-exception";
 import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
 import { structuredLogger, type StructuredLoggerEnv } from "@hono/structured-logger";
-import { publicRoutes } from "./routes/public";
-import { privateRoutes } from "./routes/private";
+import { publicRoutes } from "./routes/public.js";
+import { privateRoutes } from "./routes/private.js";
 
 export type Env = {
   Bindings: {

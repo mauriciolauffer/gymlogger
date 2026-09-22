@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ProfilePage } from "../pages/profile.page";
+import { ProfilePage } from "../pages/profile.page.ts";
 
 test.describe("User Profile", () => {
   test("profile page loads with heading @smoke", async ({ page }) => {

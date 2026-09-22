@@ -8,7 +8,7 @@ import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 
-import { client } from "../api/client";
+import { client } from "../api/client.js";
 
 defineProps<{
   open: boolean;

@@ -1,7 +1,7 @@
 import { reactive } from "vue";
-import { client } from "../api/client";
-import { settingsStore } from "./settings";
-import type { SetType } from "../db/constants";
+import { client } from "../api/client.js";
+import { settingsStore } from "./settings.js";
+import type { SetType } from "../db/constants.ts";
 
 export interface ActiveWorkoutSet {
   id: string;

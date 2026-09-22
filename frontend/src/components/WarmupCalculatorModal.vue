@@ -7,7 +7,7 @@ import "@ui5/webcomponents/dist/Label.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
-import { client } from "../api/client";
+import { client } from "../api/client.js";
 import type { InferResponseType } from "hono/client";
 
 type WarmupRes = InferResponseType<typeof client.api.v1.calculators.warmup.$get, 200>;

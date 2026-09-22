@@ -10,8 +10,8 @@ import "@ui5/webcomponents/dist/ListItemStandard.js";
 import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 
-import { client } from "../api/client";
-import type { MuscleGroupsRes, ExercisesRes } from "../api/types";
+import { client } from "../api/client.js";
+import type { MuscleGroupsRes, ExercisesRes } from "../api/types.ts";
 import CreateExerciseModal from "../components/CreateExerciseModal.vue";
 import ExerciseDetailModal from "../components/ExerciseDetailModal.vue";
 

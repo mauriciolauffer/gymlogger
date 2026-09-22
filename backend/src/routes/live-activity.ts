@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { eq, and, desc } from "drizzle-orm";
-import type { Env } from "../index";
-import { getDb } from "../db/schema";
-import { workouts, workoutExercises, workoutSets, userSettings } from "../db/schema";
+import type { Env } from "../index.js";
+import { getDb } from "../db/schema.js";
+import { workouts, workoutExercises, workoutSets, userSettings } from "../db/schema.js";
 
 export const liveActivityRouter = new Hono<Env>().get("/:id/live", async (c) => {
   const user = c.get("user")!;

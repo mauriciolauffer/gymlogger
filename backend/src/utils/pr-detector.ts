@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
-import { calculate1RM } from "./calculator";
-import type { DrizzleDb } from "../db/schema";
-import { personalRecords, workoutSets, workoutExercises, workouts } from "../db/schema";
+import { calculate1RM } from "./calculator.js";
+import type { DrizzleDb } from "../db/schema.js";
+import { personalRecords, workoutSets, workoutExercises, workouts } from "../db/schema.js";
 
 export interface PRCheckResult {
   isPr: boolean;

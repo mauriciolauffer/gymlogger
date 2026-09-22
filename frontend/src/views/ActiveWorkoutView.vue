@@ -8,16 +8,16 @@ import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/Dialog.js";
 
-import { client } from "../api/client";
+import { client } from "../api/client.js";
 import type { InferResponseType } from "hono/client";
-import { formatDuration } from "../utils/formatters";
+import { formatDuration } from "../utils/formatters.js";
 
 type ExercisesRes = InferResponseType<typeof client.api.v1.exercises.$get, 200>;
 import {
   activeWorkoutStore,
   type ActiveWorkoutExercise,
   type ActiveWorkoutSet,
-} from "../store/activeWorkout";
+} from "../store/activeWorkout.js";
 import RestTimer from "../components/RestTimer.vue";
 import PrNotificationDialog from "../components/PrNotificationDialog.vue";
 import WarmupCalculatorModal from "../components/WarmupCalculatorModal.vue";

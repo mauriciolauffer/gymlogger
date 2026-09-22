@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { WorkoutsPage } from "../pages/workouts.page";
+import { WorkoutsPage } from "../pages/workouts.page.ts";
 
 // Uses the shared authenticated session from auth.setup.ts
 test.describe("Workout History", () => {

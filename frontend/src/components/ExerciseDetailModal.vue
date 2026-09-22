@@ -8,8 +8,8 @@ import "@ui5/webcomponents/dist/ListItemStandard.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/Panel.js";
 
-import { client } from "../api/client";
-import type { PerformanceRes } from "../api/types";
+import { client } from "../api/client.js";
+import type { PerformanceRes } from "../api/types.ts";
 
 const props = defineProps<{
   open: boolean;

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import App from "../App.vue";
-import { router } from "../router";
-import { authStore } from "../store/auth";
+import { router } from "../router/index.js";
+import { authStore } from "../store/auth.js";
 
 describe("App Shell", () => {
   beforeEach(() => {

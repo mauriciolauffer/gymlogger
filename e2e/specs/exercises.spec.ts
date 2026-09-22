@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { ExercisesPage } from "../pages/exercises.page";
+import { ExercisesPage } from "../pages/exercises.page.ts";
 
 test.describe("Exercise Library", () => {
   test("page loads with heading @smoke", async ({ page }) => {

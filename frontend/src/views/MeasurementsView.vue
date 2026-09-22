@@ -7,9 +7,9 @@ import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
-import { client } from "../api/client";
-import type { MeasurementsGetRes } from "../api/types";
-import { formatDate } from "../utils/formatters";
+import { client } from "../api/client.js";
+import type { MeasurementsGetRes } from "../api/types.ts";
+import { formatDate } from "../utils/formatters.js";
 import LogMeasurementModal from "../components/LogMeasurementModal.vue";
 
 interface MeasurementLog {

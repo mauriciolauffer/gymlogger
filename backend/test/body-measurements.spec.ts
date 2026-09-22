@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { env } from "cloudflare:workers";
-import app from "../src/index";
-import { registerUser } from "./helpers";
+import app from "../src/index.ts";
+import { registerUser } from "./helpers.ts";
 
 describe("Body measurements", () => {
   let token: string;

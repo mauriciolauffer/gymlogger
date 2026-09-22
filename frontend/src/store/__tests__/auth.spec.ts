@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { authStore } from "../auth";
+import { authStore } from "../auth.js";
 
 describe("Auth Store", () => {
   beforeEach(() => {

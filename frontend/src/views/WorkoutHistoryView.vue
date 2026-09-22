@@ -8,10 +8,10 @@ import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
-import { formatDate, formatDuration } from "../utils/formatters";
-import { client } from "../api/client";
-import type { WorkoutsGetRes, WorkoutGetRes } from "../api/types";
-import { activeWorkoutStore } from "../store/activeWorkout";
+import { formatDate, formatDuration } from "../utils/formatters.js";
+import { client } from "../api/client.js";
+import type { WorkoutsGetRes, WorkoutGetRes } from "../api/types.ts";
+import { activeWorkoutStore } from "../store/activeWorkout.js";
 import WorkoutDetailModal from "../components/WorkoutDetailModal.vue";
 
 interface WorkoutSummary {

@@ -1,14 +1,14 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { eq, and, gte, lte, asc } from "drizzle-orm";
-import type { Env } from "../index";
-import { convertLength, convertWeight } from "../utils/unit-converter";
-import { getDb } from "../db/schema";
-import { bodyMeasurements, userSettings } from "../db/schema";
+import type { Env } from "../index.ts";
+import { convertLength, convertWeight } from "../utils/unit-converter.js";
+import { getDb } from "../db/schema.js";
+import { bodyMeasurements, userSettings } from "../db/schema.js";
 import {
   createBodyMeasurementSchema,
   updateBodyMeasurementBodySchema,
-} from "../validation/schemas";
+} from "../validation/schemas.js";
 
 export const bodyMeasurementsRouter = new Hono<Env>()
   .get("/", async (c) => {
