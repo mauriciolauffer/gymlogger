@@ -5,7 +5,7 @@ import { docsRouter } from "./docs.js";
 
 export const publicRoutes = new Hono<Env>()
   .get("/favicon.ico", (c) => c.body(null, 204))
-  .get("/health", (c) => {
+  .get("/api/health", (c) => {
     return c.json({ status: "ok" });
   })
   .on(["GET", "POST"], "/api/auth/*", (c) => {

@@ -18,8 +18,8 @@ describe("Index", () => {
     expect(data.error).toBe("Endpoint not found");
   });
 
-  it("GET /health returns ok", async () => {
-    const res = await app.request("/health", {}, env);
+  it("GET /api/health returns ok", async () => {
+    const res = await app.request("/api/health", {}, env);
     expect(res.status).toBe(200);
     const data = await res.json<{ status: string }>();
     expect(data.status).toBe("ok");
