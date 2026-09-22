@@ -11,11 +11,8 @@ import { calculatorsRouter } from "./calculators";
 import { analyticsRouter } from "./analytics";
 import { bodyMeasurementsRouter } from "./body-measurements";
 
-const privateRoutes = new Hono<Env>();
-
-privateRoutes.use("*", authMiddleware);
-
-privateRoutes
+export const privateRoutes = new Hono<Env>()
+  .use("*", authMiddleware)
   .route("/api/v1/users", usersRouter)
   .route("/api/v1", exercisesRouter)
   .route("/api/v1/workouts", workoutsRouter)
@@ -25,5 +22,3 @@ privateRoutes
   .route("/api/v1/calculators", calculatorsRouter)
   .route("/api/v1/analytics", analyticsRouter)
   .route("/api/v1/body-measurements", bodyMeasurementsRouter);
-
-export { privateRoutes };

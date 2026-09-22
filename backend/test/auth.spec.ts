@@ -221,11 +221,8 @@ describe("Private routes deny unauthenticated access", () => {
     ["GET", "/api/v1/analytics/volume"],
     ["GET", "/api/v1/body-measurements"],
     ["POST", "/api/v1/body-measurements"],
-  ] as [string, string][])(
-    "%s %s → 401 without token",
-    async (method, path) => {
-      const res = await app.request(path, { method }, env);
-      expect(res.status).toBe(401);
-    },
-  );
+  ] as [string, string][])("%s %s → 401 without token", async (method, path) => {
+    const res = await app.request(path, { method }, env);
+    expect(res.status).toBe(401);
+  });
 });

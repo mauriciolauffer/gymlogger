@@ -31,7 +31,10 @@ export async function buildWorkout(
     {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ title: opts?.title ?? "Workout", ...(opts?.start_time && { start_time: opts.start_time }) }),
+      body: JSON.stringify({
+        title: opts?.title ?? "Workout",
+        ...(opts?.start_time && { start_time: opts.start_time }),
+      }),
     },
     env,
   );

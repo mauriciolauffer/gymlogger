@@ -75,7 +75,7 @@ export const updateWorkoutSetSchema = z.object({
 export const createExerciseSchema = z.object({
   name: insertExerciseSchema.shape.name,
   category: insertExerciseSchema.shape.category,
-  body_part: insertExerciseSchema.shape.bodyPart,
+  body_part: insertExerciseSchema.shape.bodyPart.optional(),
   equipment: insertExerciseSchema.shape.equipment.optional(),
   instructions: insertExerciseSchema.shape.instructions.optional(),
   instruction_steps: z.array(z.string()).optional(),

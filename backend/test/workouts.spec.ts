@@ -102,7 +102,13 @@ describe("Workout session", () => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, set_type: "NO", weight: 100, reps: 5, rpe: 8 }),
+        body: JSON.stringify({
+          workout_exercise_id: workoutExercise.id,
+          set_type: "NO",
+          weight: 100,
+          reps: 5,
+          rpe: 8,
+        }),
       },
       env,
     );
@@ -116,7 +122,13 @@ describe("Workout session", () => {
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExercise.id, set_type: "NO", weight: 100, reps: 5, rpe: 9 }),
+        body: JSON.stringify({
+          workout_exercise_id: workoutExercise.id,
+          set_type: "NO",
+          weight: 100,
+          reps: 5,
+          rpe: 9,
+        }),
       },
       env,
     );
@@ -685,7 +697,9 @@ describe("Workout session", () => {
   });
 
   it("deletes a set from a workout", async () => {
-    const { workoutId, workoutExerciseId } = await buildWorkout(token, "ex_squat", [], { title: "Delete Set Test" });
+    const { workoutId, workoutExerciseId } = await buildWorkout(token, "ex_squat", [], {
+      title: "Delete Set Test",
+    });
 
     const addSetRes = await app.request(
       `/api/v1/workouts/${workoutId}/sets`,
@@ -790,7 +804,9 @@ describe("Workout session", () => {
 
   it("returns 404 when updating a set from another user's workout", async () => {
     const { token: otherToken } = await registerUser("other-sets@example.com", "password123");
-    const { workoutId, workoutExerciseId } = await buildWorkout(otherToken, "ex_bench_press", [], { title: "Other Workout" });
+    const { workoutId, workoutExerciseId } = await buildWorkout(otherToken, "ex_bench_press", [], {
+      title: "Other Workout",
+    });
 
     const addSetRes = await app.request(
       `/api/v1/workouts/${workoutId}/sets`,
@@ -817,7 +833,9 @@ describe("Workout session", () => {
 
   it("returns 404 when deleting set from another user's workout", async () => {
     const { token: otherToken } = await registerUser("del-set-other@example.com", "password123");
-    const { workoutId, workoutExerciseId } = await buildWorkout(otherToken, "ex_bench_press", [], { title: "Other Delete" });
+    const { workoutId, workoutExerciseId } = await buildWorkout(otherToken, "ex_bench_press", [], {
+      title: "Other Delete",
+    });
 
     const addSetRes = await app.request(
       `/api/v1/workouts/${workoutId}/sets`,
@@ -896,12 +914,9 @@ describe("Workout session", () => {
   });
 
   it("deleting a workout removes its child exercises and sets", async () => {
-    const { workoutId } = await buildWorkout(
-      token,
-      "ex_bench_press",
-      [{ weight: 80, reps: 5 }],
-      { title: "Cascade Delete Test" },
-    );
+    const { workoutId } = await buildWorkout(token, "ex_bench_press", [{ weight: 80, reps: 5 }], {
+      title: "Cascade Delete Test",
+    });
 
     await app.request(
       `/api/v1/workouts/${workoutId}`,
@@ -918,12 +933,9 @@ describe("Workout session", () => {
   });
 
   it("finishing a workout with a PR set marks has_pr true on the workout", async () => {
-    const { workoutId } = await buildWorkout(
-      token,
-      "ex_bench_press",
-      [{ weight: 100, reps: 5 }],
-      { title: "PR Flag Test" },
-    );
+    const { workoutId } = await buildWorkout(token, "ex_bench_press", [{ weight: 100, reps: 5 }], {
+      title: "PR Flag Test",
+    });
 
     const finishRes = await app.request(
       `/api/v1/workouts/${workoutId}/finish`,

@@ -50,7 +50,9 @@ describe("Analytics", () => {
   });
 
   it("monthly-report includes topPRs when PRs were set in the period", async () => {
-    await buildWorkout(token, "ex_bench_press", [{ weight: 120, reps: 3 }], { title: "Monthly PR Workout" });
+    await buildWorkout(token, "ex_bench_press", [{ weight: 120, reps: 3 }], {
+      title: "Monthly PR Workout",
+    });
 
     const res = await app.request(
       "/api/v1/analytics/monthly-report?year=2026&month=9",
@@ -204,7 +206,11 @@ describe("Analytics", () => {
     await buildWorkout(
       token,
       "ex_bench_press",
-      [{ weight: 80, reps: 10 }, { weight: 90, reps: 8 }, { weight: 100, reps: 5 }],
+      [
+        { weight: 80, reps: 10 },
+        { weight: 90, reps: 8 },
+        { weight: 100, reps: 5 },
+      ],
       { title: "Multi Set Session" },
     );
 
@@ -227,7 +233,10 @@ describe("Analytics", () => {
     await buildWorkout(
       token,
       "ex_squat",
-      [{ weight: 0, reps: 0 }, { weight: 140, reps: 3 }],
+      [
+        { weight: 0, reps: 0 },
+        { weight: 140, reps: 3 },
+      ],
       { title: "Mixed Reps" },
     );
 

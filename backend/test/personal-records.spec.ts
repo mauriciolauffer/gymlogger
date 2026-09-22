@@ -11,9 +11,9 @@ describe("Personal record detection", () => {
   });
 
   it("flags a set as PR when it is the first for an exercise", async () => {
-    const { workoutId, workoutExerciseId } = await buildWorkout(
-      token, "ex_bench_press", [], { title: "Bench Day" },
-    );
+    const { workoutId, workoutExerciseId } = await buildWorkout(token, "ex_bench_press", [], {
+      title: "Bench Day",
+    });
     const setRes = await app.request(
       `/api/v1/workouts/${workoutId}/sets`,
       {
@@ -79,7 +79,9 @@ describe("Personal record detection", () => {
   });
 
   it("filters personal records by exerciseId", async () => {
-    await buildWorkout(token, "ex_bench_press", [{ weight: 100, reps: 5 }], { title: "PR Workout" });
+    await buildWorkout(token, "ex_bench_press", [{ weight: 100, reps: 5 }], {
+      title: "PR Workout",
+    });
 
     const res = await app.request(
       "/api/v1/personal-records?exerciseId=ex_bench_press",
@@ -104,13 +106,12 @@ describe("Personal record detection", () => {
   });
 
   it("updates PR record when a heavier set is logged in a separate workout", async () => {
-    await buildWorkout(token, "ex_squat", [{ weight: 100, reps: 5 }], { title: "PR Cross-workout" });
-    const { workoutId, workoutExerciseId } = await buildWorkout(
-      token,
-      "ex_squat",
-      [],
-      { title: "PR Cross-workout" },
-    );
+    await buildWorkout(token, "ex_squat", [{ weight: 100, reps: 5 }], {
+      title: "PR Cross-workout",
+    });
+    const { workoutId, workoutExerciseId } = await buildWorkout(token, "ex_squat", [], {
+      title: "PR Cross-workout",
+    });
     const set2Res = await app.request(
       `/api/v1/workouts/${workoutId}/sets`,
       {
@@ -136,12 +137,9 @@ describe("Personal record detection", () => {
   });
 
   it("has_pr is set on the workout that contains the PR set", async () => {
-    const { workoutId } = await buildWorkout(
-      token,
-      "ex_bench_press",
-      [{ weight: 100, reps: 5 }],
-      { title: "has_pr workout" },
-    );
+    const { workoutId } = await buildWorkout(token, "ex_bench_press", [{ weight: 100, reps: 5 }], {
+      title: "has_pr workout",
+    });
 
     const getRes = await app.request(
       `/api/v1/workouts/${workoutId}`,

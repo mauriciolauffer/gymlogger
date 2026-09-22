@@ -21,7 +21,9 @@ export const exercisesRouter = new Hono<Env>()
     const { q, category, bodyPart, equipment, target, muscleGroupId, custom } = c.req.query();
     const db = getDb(c);
 
-    const conditions: SQL[] = [or(eq(exercises.isCustom, false), eq(exercises.userId, user.userId))!];
+    const conditions: SQL[] = [
+      or(eq(exercises.isCustom, false), eq(exercises.userId, user.userId))!,
+    ];
 
     if (custom === "true") {
       conditions.push(eq(exercises.isCustom, true));
@@ -136,7 +138,7 @@ export const exercisesRouter = new Hono<Env>()
         id,
         name,
         category,
-        bodyPart: body_part,
+        bodyPart: body_part ?? "",
         equipment: equipment ?? null,
         instructions: instructions ?? null,
         instructionSteps: instruction_steps ? JSON.stringify(instruction_steps) : null,

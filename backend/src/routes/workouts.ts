@@ -322,7 +322,11 @@ export const workoutsRouter = new Hono<Env>()
       .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
       .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
       .where(
-        and(eq(workoutSets.id, setId), eq(workouts.id, workoutId), eq(workouts.userId, user.userId)),
+        and(
+          eq(workoutSets.id, setId),
+          eq(workouts.id, workoutId),
+          eq(workouts.userId, user.userId),
+        ),
       )
       .get();
 
@@ -382,7 +386,11 @@ export const workoutsRouter = new Hono<Env>()
       .innerJoin(workoutExercises, eq(workoutSets.workoutExerciseId, workoutExercises.id))
       .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
       .where(
-        and(eq(workoutSets.id, setId), eq(workouts.id, workoutId), eq(workouts.userId, user.userId)),
+        and(
+          eq(workoutSets.id, setId),
+          eq(workouts.id, workoutId),
+          eq(workouts.userId, user.userId),
+        ),
       )
       .get();
 
@@ -428,7 +436,11 @@ export const workoutsRouter = new Hono<Env>()
       .where(eq(workouts.id, workoutId))
       .run();
 
-    const finishedWorkout = await db.select().from(workouts).where(eq(workouts.id, workoutId)).get();
+    const finishedWorkout = await db
+      .select()
+      .from(workouts)
+      .where(eq(workouts.id, workoutId))
+      .get();
     return c.json({
       message: "Workout completed",
       workout: finishedWorkout
