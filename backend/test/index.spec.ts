@@ -25,6 +25,13 @@ describe("Index", () => {
     expect(data.status).toBe("ok");
   });
 
+  it("GET /api/docs returns 404 when NODE_ENV is not development", async () => {
+    const res = await app.request("/api/docs", {}, env);
+    expect(res.status).toBe(404);
+    const data = await res.json<{ error: string }>();
+    expect(data.error).toBe("Endpoint not found");
+  });
+
   it("onError passes HTTPException through with its original status (app instance)", async () => {
     const res = await app.request(
       "/api/v1/users/profile",
