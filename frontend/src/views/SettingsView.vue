@@ -14,6 +14,7 @@ import "@ui5/webcomponents/dist/StepInput.js";
 import "@ui5/webcomponents/dist/Switch.js";
 
 import { settingsStore, type UserSettings } from "../store/settings";
+import { THEME } from "../db/constants";
 
 const settings = ref<UserSettings>({ ...settingsStore.settings });
 const saving = ref(false);
@@ -56,7 +57,8 @@ const handleSave = async () => {
           <ui5-label slot="labelContent">Weight</ui5-label>
           <ui5-segmented-button
             @selection-change="
-              settings.preferred_weight_unit = $event.detail.selectedItems[0]?.dataset.value
+              const v = $event.detail.selectedItems[0]?.dataset.value;
+              if (v) settings.preferred_weight_unit = v as typeof settings.preferred_weight_unit;
             "
           >
             <ui5-segmented-button-item
@@ -76,7 +78,8 @@ const handleSave = async () => {
           <ui5-label slot="labelContent">Distance / Length</ui5-label>
           <ui5-segmented-button
             @selection-change="
-              settings.preferred_length_unit = $event.detail.selectedItems[0]?.dataset.value
+              const v = $event.detail.selectedItems[0]?.dataset.value;
+              if (v) settings.preferred_length_unit = v as typeof settings.preferred_length_unit;
             "
           >
             <ui5-segmented-button-item
@@ -97,16 +100,17 @@ const handleSave = async () => {
         <ui5-form-item>
           <ui5-label slot="labelContent">Theme</ui5-label>
           <ui5-segmented-button
-            @selection-change="settings.theme = $event.detail.selectedItems[0]?.dataset.value"
+            @selection-change="
+              const v = $event.detail.selectedItems[0]?.dataset.value;
+              if (v) settings.theme = v as typeof settings.theme;
+            "
           >
-            <ui5-segmented-button-item data-value="system" :selected="settings.theme === 'system'"
-              >System</ui5-segmented-button-item
-            >
-            <ui5-segmented-button-item data-value="light" :selected="settings.theme === 'light'"
-              >Light</ui5-segmented-button-item
-            >
-            <ui5-segmented-button-item data-value="dark" :selected="settings.theme === 'dark'"
-              >Dark</ui5-segmented-button-item
+            <ui5-segmented-button-item
+              v-for="[code, { label }] in THEME"
+              :key="code"
+              :data-value="code"
+              :selected="settings.theme === code"
+              >{{ label }}</ui5-segmented-button-item
             >
           </ui5-segmented-button>
         </ui5-form-item>

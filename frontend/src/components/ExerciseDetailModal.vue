@@ -8,7 +8,8 @@ import "@ui5/webcomponents/dist/ListItemStandard.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/Panel.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { PerformanceRes } from "../api/types";
 
 const props = defineProps<{
   open: boolean;
@@ -18,12 +19,7 @@ const props = defineProps<{
 const emit = defineEmits(["close"]);
 
 const loading = ref(false);
-const analyticsData = ref<{
-  oneRmCurve: Array<{ date: string; value: number }>;
-  maxWeightCurve: Array<{ date: string; value: number }>;
-  maxRepsCurve: Array<{ date: string; value: number }>;
-  sessions: Array<{ workout_id: string; title: string; start_time: string; set_count: number }>;
-} | null>(null);
+const analyticsData = ref<PerformanceRes | null>(null);
 
 const errorMsg = ref("");
 
@@ -31,7 +27,9 @@ const fetchPerformance = async (exerciseId: string) => {
   loading.value = true;
   errorMsg.value = "";
   try {
-    const data = await api.get(`/api/v1/analytics/performance?exerciseId=${exerciseId}`);
+    const data = (await (
+      await client.api.v1.analytics.performance.$get({ query: { exerciseId } })
+    ).json()) as PerformanceRes;
     analyticsData.value = data;
   } catch (err: any) {
     errorMsg.value = err.message || "Failed to load exercise performance curves.";
@@ -83,8 +81,12 @@ const formatDate = (iso: string) => {
       <div v-else-if="analyticsData" class="analytics-container">
         <!-- 1RM Progression Curve -->
         <ui5-panel header-text="1RM Progression Curve (REQ-05)" collapsed="false">
-          <div class="curve-list" v-if="analyticsData.oneRmCurve?.length">
-            <div v-for="(point, idx) in analyticsData.oneRmCurve" :key="idx" class="curve-point">
+          <div class="curve-list" v-if="analyticsData.oneRepMaxCurve?.length">
+            <div
+              v-for="(point, idx) in analyticsData.oneRepMaxCurve"
+              :key="idx"
+              class="curve-point"
+            >
               <span class="date">{{ formatDate(point.date) }}</span>
               <span class="val">{{ point.value }} kg</span>
             </div>
@@ -109,13 +111,13 @@ const formatDate = (iso: string) => {
 
         <!-- Chronological Session History -->
         <ui5-panel header-text="Chronological Session History" collapsed="false">
-          <ui5-list v-if="analyticsData.sessions?.length">
+          <ui5-list v-if="analyticsData.history?.length">
             <ui5-list-item-standard
-              v-for="s in analyticsData.sessions"
-              :key="s.workout_id"
-              :description="formatDate(s.start_time)"
+              v-for="s in analyticsData.history"
+              :key="s.workoutId"
+              :description="formatDate(s.date)"
             >
-              {{ s.title }} ({{ s.set_count }} sets)
+              {{ s.workoutId }} ({{ s.sets.length }} sets)
             </ui5-list-item-standard>
           </ui5-list>
           <p v-else class="empty-text">No past sessions found for this exercise.</p>

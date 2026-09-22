@@ -1,8 +1,13 @@
 import { reactive } from "vue";
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { InferResponseType } from "hono/client";
+import type { Theme } from "../db/constants";
+
+type SettingsGetRes = InferResponseType<typeof client.api.v1.users.settings.$get, 200>;
+type SettingsPutRes = InferResponseType<typeof client.api.v1.users.settings.$put, 200>;
 
 export interface UserSettings {
-  theme: "system" | "light" | "dark";
+  theme: Theme;
   preferred_weight_unit: "kg" | "lbs";
   preferred_length_unit: "cm" | "in";
   language: string;
@@ -11,7 +16,7 @@ export interface UserSettings {
 }
 
 const state = reactive<UserSettings>({
-  theme: "system",
+  theme: "S",
   preferred_weight_unit: "kg" as "kg" | "lbs",
   preferred_length_unit: "cm",
   language: "en",
@@ -26,7 +31,7 @@ export const settingsStore = {
 
   async fetchSettings() {
     try {
-      const data = await api.get<{ settings: UserSettings }>("/api/v1/users/settings");
+      const data = (await (await client.api.v1.users.settings.$get()).json()) as SettingsGetRes;
       if (data.settings) {
         Object.assign(state, data.settings);
       }
@@ -37,7 +42,12 @@ export const settingsStore = {
 
   async updateSettings(newSettings: Partial<UserSettings>) {
     try {
-      const data = await api.put<{ settings: UserSettings }>("/api/v1/users/settings", newSettings);
+      const httpRes = await client.api.v1.users.settings.$put({ json: newSettings });
+      if (!httpRes.ok) {
+        const body = (await httpRes.json()) as { error?: string };
+        throw new Error(body.error || `Request failed with status ${httpRes.status}`);
+      }
+      const data = (await httpRes.json()) as SettingsPutRes;
       if (data.settings) {
         Object.assign(state, data.settings);
       }

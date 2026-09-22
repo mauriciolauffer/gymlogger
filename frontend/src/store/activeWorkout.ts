@@ -1,28 +1,31 @@
 import { reactive } from "vue";
-import { api } from "../api/client";
+import { client } from "../api/client";
 import { settingsStore } from "./settings";
+import type { SetType } from "../db/constants";
 
 export interface ActiveWorkoutSet {
   id: string;
-  workout_exercise_id: string;
-  set_type: "normal" | "warmup" | "drop" | "failure";
+  workoutExerciseId: string;
+  setType: SetType;
   weight: number;
-  weight_unit: string;
+  weightUnit: string;
   reps: number;
   rpe?: number | null;
-  estimated_1rm?: number;
-  order_index: number;
+  estimated1rm?: number | null;
+  isPr?: boolean;
+  prType?: string | null;
+  orderIndex: number;
 }
 
 export interface ActiveWorkoutExercise {
   id: string;
-  workout_id: string;
-  exercise_id: string;
-  exercise_name?: string;
+  workoutId: string;
+  exerciseId: string;
+  exerciseName?: string;
   category?: string;
   notes?: string | null;
-  superset_id?: string | null;
-  order_index: number;
+  supersetId?: string | null;
+  orderIndex: number;
   sets: ActiveWorkoutSet[];
   previousSets?: ActiveWorkoutSet[];
 }
@@ -30,11 +33,38 @@ export interface ActiveWorkoutExercise {
 export interface ActiveWorkout {
   id: string;
   title: string;
-  start_time: string;
-  total_volume: number;
-  set_count: number;
+  startTime: string | Date;
+  totalVolume: number;
+  setCount: number;
   notes?: string | null;
   exercises: ActiveWorkoutExercise[];
+}
+
+interface LogSetBody {
+  set_type?: string;
+  weight?: number;
+  weight_unit?: string;
+  reps?: number;
+  rpe?: number | null;
+  order_index?: number;
+}
+
+interface LogSetResponse {
+  set: {
+    id: string;
+    workout_exercise_id: string;
+    set_type: string;
+    weight: number;
+    weight_unit: string;
+    reps: number;
+    rpe?: number | null;
+    estimated_1rm?: number | null;
+    is_pr?: number;
+    pr_type?: string | null;
+    order_index: number;
+  };
+  isPr: boolean;
+  prTypes: string[];
 }
 
 interface RestTimerState {
@@ -87,7 +117,7 @@ export const activeWorkoutStore = {
     if (state.durationTimerId) clearInterval(state.durationTimerId);
     if (!state.workout) return;
 
-    const startMs = new Date(state.workout.start_time).getTime();
+    const startMs = new Date(state.workout.startTime).getTime();
     state.durationTimerId = setInterval(() => {
       state.elapsedSeconds = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
     }, 1000);
@@ -101,13 +131,12 @@ export const activeWorkoutStore = {
   },
 
   async startWorkout(title = "Workout", templateId?: string) {
-    const res = await api.post<{ workout: ActiveWorkout }>("/api/v1/workouts/start", {
-      title,
-      template_id: templateId,
-    });
-    const fullWorkout = await api.get<{ workout: ActiveWorkout }>(
-      `/api/v1/workouts/${res.workout.id}`,
-    );
+    const res = (await (
+      await client.api.v1.workouts.start.$post({ json: { title, template_id: templateId } })
+    ).json()) as unknown as { workout: ActiveWorkout };
+    const fullWorkout = (await (
+      await client.api.v1.workouts[":id"].$get({ param: { id: res.workout.id } })
+    ).json()) as unknown as { workout: ActiveWorkout };
     if (fullWorkout && fullWorkout.workout) {
       state.workout = fullWorkout.workout;
       state.workout.exercises = state.workout.exercises || [];
@@ -119,7 +148,9 @@ export const activeWorkoutStore = {
   },
 
   async fetchActiveWorkout(id: string) {
-    const res = await api.get<{ workout: ActiveWorkout }>(`/api/v1/workouts/${id}`);
+    const res = (await (
+      await client.api.v1.workouts[":id"].$get({ param: { id } })
+    ).json()) as unknown as { workout: ActiveWorkout };
     state.workout = res.workout;
     if (state.workout) {
       state.workout.exercises = state.workout.exercises || [];
@@ -130,15 +161,17 @@ export const activeWorkoutStore = {
 
   async addExercise(exerciseId: string, supersetId?: string) {
     if (!state.workout) return;
-    const res = await api.post<{ workoutExercise: ActiveWorkoutExercise }>(
-      `/api/v1/workouts/${state.workout.id}/exercises`,
-      { exercise_id: exerciseId, superset_id: supersetId },
-    );
+    const res = (await (
+      await client.api.v1.workouts[":id"].exercises.$post({
+        param: { id: state.workout.id },
+        json: { exercise_id: exerciseId, superset_id: supersetId },
+      })
+    ).json()) as unknown as { workoutExercise: ActiveWorkoutExercise };
     let previousSets: ActiveWorkoutSet[] = [];
     try {
-      const prevData = await api.get<{ sets: ActiveWorkoutSet[] }>(
-        `/api/v1/workouts/previous-values?exerciseId=${exerciseId}`,
-      );
+      const prevData = (await (
+        await client.api.v1.workouts["previous-values"].$get({ query: { exerciseId } })
+      ).json()) as { sets: ActiveWorkoutSet[] };
       previousSets = prevData.sets || [];
     } catch {
       // non-fatal
@@ -154,27 +187,40 @@ export const activeWorkoutStore = {
     this.saveLocal();
   },
 
-  async logSet(workoutExerciseId: string, setData: Partial<ActiveWorkoutSet>) {
+  async logSet(workoutExerciseId: string, setData: LogSetBody) {
     if (!state.workout) return null;
-    const res = await api.post<{ set: ActiveWorkoutSet; isPr: boolean; prTypes: string[] }>(
-      `/api/v1/workouts/${state.workout.id}/sets`,
-      {
-        workout_exercise_id: workoutExerciseId,
-        ...setData,
-      },
-    );
+    const res = (await (
+      await client.api.v1.workouts[":id"].sets.$post({
+        param: { id: state.workout.id },
+        json: { workout_exercise_id: workoutExerciseId, ...setData, rpe: setData.rpe ?? undefined },
+      })
+    ).json()) as unknown as LogSetResponse;
+
+    const normalizedSet: ActiveWorkoutSet = {
+      id: res.set.id,
+      workoutExerciseId: res.set.workout_exercise_id,
+      setType: res.set.set_type as ActiveWorkoutSet["setType"],
+      weight: res.set.weight,
+      weightUnit: res.set.weight_unit,
+      reps: res.set.reps,
+      rpe: res.set.rpe,
+      estimated1rm: res.set.estimated_1rm,
+      isPr: !!res.set.is_pr,
+      prType: res.set.pr_type,
+      orderIndex: res.set.order_index,
+    };
 
     const exercise = state.workout.exercises?.find((e) => e.id === workoutExerciseId);
     if (exercise) {
-      exercise.sets.push(res.set);
+      exercise.sets.push(normalizedSet);
     }
 
-    const updated = await api.get<{ workout: ActiveWorkout }>(
-      `/api/v1/workouts/${state.workout.id}`,
-    );
+    const updated = (await (
+      await client.api.v1.workouts[":id"].$get({ param: { id: state.workout.id } })
+    ).json()) as unknown as { workout: ActiveWorkout };
     if (updated && updated.workout) {
-      state.workout.total_volume = updated.workout.total_volume;
-      state.workout.set_count = updated.workout.set_count;
+      state.workout.totalVolume = updated.workout.totalVolume;
+      state.workout.setCount = updated.workout.setCount;
     }
 
     this.saveLocal();
@@ -187,10 +233,18 @@ export const activeWorkoutStore = {
 
   async updateSet(setId: string, setData: Partial<ActiveWorkoutSet>) {
     if (!state.workout) return null;
-    const res = await api.put<{ set: ActiveWorkoutSet; isPr: boolean; prTypes: string[] }>(
-      `/api/v1/workouts/${state.workout.id}/sets/${setId}`,
-      setData,
-    );
+    const body: Record<string, unknown> = {};
+    if (setData.setType !== undefined) body.set_type = setData.setType;
+    if (setData.weight !== undefined) body.weight = setData.weight;
+    if (setData.weightUnit !== undefined) body.weight_unit = setData.weightUnit;
+    if (setData.reps !== undefined) body.reps = setData.reps;
+    if (setData.rpe !== undefined) body.rpe = setData.rpe;
+    const res = (await (
+      await client.api.v1.workouts[":id"].sets[":setId"].$put({
+        param: { id: state.workout.id, setId },
+        json: body,
+      })
+    ).json()) as unknown as { set: ActiveWorkoutSet; isPr: boolean; prTypes: string[] };
 
     if (state.workout.exercises) {
       for (const ex of state.workout.exercises) {
@@ -202,12 +256,12 @@ export const activeWorkoutStore = {
       }
     }
 
-    const updated = await api.get<{ workout: ActiveWorkout }>(
-      `/api/v1/workouts/${state.workout.id}`,
-    );
+    const updated = (await (
+      await client.api.v1.workouts[":id"].$get({ param: { id: state.workout.id } })
+    ).json()) as unknown as { workout: ActiveWorkout };
     if (updated && updated.workout) {
-      state.workout.total_volume = updated.workout.total_volume;
-      state.workout.set_count = updated.workout.set_count;
+      state.workout.totalVolume = updated.workout.totalVolume;
+      state.workout.setCount = updated.workout.setCount;
     }
 
     this.saveLocal();
@@ -216,7 +270,9 @@ export const activeWorkoutStore = {
 
   async deleteSet(setId: string) {
     if (!state.workout) return;
-    await api.delete(`/api/v1/workouts/${state.workout.id}/sets/${setId}`);
+    await client.api.v1.workouts[":id"].sets[":setId"].$delete({
+      param: { id: state.workout.id, setId },
+    });
 
     if (state.workout.exercises) {
       for (const ex of state.workout.exercises) {
@@ -224,12 +280,12 @@ export const activeWorkoutStore = {
       }
     }
 
-    const updated = await api.get<{ workout: ActiveWorkout }>(
-      `/api/v1/workouts/${state.workout.id}`,
-    );
+    const updated = (await (
+      await client.api.v1.workouts[":id"].$get({ param: { id: state.workout.id } })
+    ).json()) as unknown as { workout: ActiveWorkout };
     if (updated && updated.workout) {
-      state.workout.total_volume = updated.workout.total_volume;
-      state.workout.set_count = updated.workout.set_count;
+      state.workout.totalVolume = updated.workout.totalVolume;
+      state.workout.setCount = updated.workout.setCount;
     }
 
     this.saveLocal();
@@ -237,12 +293,12 @@ export const activeWorkoutStore = {
 
   async finishWorkout(notes?: string) {
     if (!state.workout) return;
-    const res = await api.put<{ workout: ActiveWorkout }>(
-      `/api/v1/workouts/${state.workout.id}/finish`,
-      {
-        notes,
-      },
-    );
+    const res = (await (
+      await client.api.v1.workouts[":id"].finish.$put({
+        param: { id: state.workout.id },
+        json: { notes },
+      })
+    ).json()) as unknown as { workout: ActiveWorkout };
     this.stopDurationTimer();
     this.stopRestTimer();
     state.workout = null;

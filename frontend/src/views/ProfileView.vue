@@ -14,14 +14,18 @@ import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/DatePicker.js";
 import "@ui5/webcomponents/dist/TextArea.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { InferResponseType } from "hono/client";
+import { SEX } from "../db/constants";
+
+type ProfileGetRes = InferResponseType<typeof client.api.v1.users.profile.$get, 200>;
 
 const profile = ref({
   email: "",
   name: "",
   location: "",
   birthday: "",
-  sex: "prefer_not_to_say",
+  sex: "P",
   height: 0,
   height_unit: "cm",
   bio: "",
@@ -34,13 +38,18 @@ const message = ref<{ text: string; type: "Positive" | "Negative" } | null>(null
 const fetchProfile = async () => {
   loading.value = true;
   try {
-    const res = await api.get<{ profile: typeof profile.value }>("/api/v1/users/profile");
+    const httpRes = await client.api.v1.users.profile.$get();
+    if (!httpRes.ok) {
+      const body = (await httpRes.json()) as { error?: string };
+      throw new Error(body.error || `Request failed with status ${httpRes.status}`);
+    }
+    const res = (await httpRes.json()) as ProfileGetRes;
     if (res.profile) {
       profile.value = {
         ...profile.value,
         ...res.profile,
         height: res.profile.height ?? 0,
-        sex: res.profile.sex || "prefer_not_to_say",
+        sex: res.profile.sex || "P",
         height_unit: res.profile.heightUnit || res.profile.height_unit || "cm",
       };
     }
@@ -56,14 +65,16 @@ const handleSave = async () => {
   saving.value = true;
   message.value = null;
   try {
-    await api.put("/api/v1/users/profile", {
-      name: profile.value.name,
-      location: profile.value.location,
-      birthday: profile.value.birthday,
-      sex: profile.value.sex,
-      height: Number(profile.value.height) > 0 ? Number(profile.value.height) : undefined,
-      height_unit: profile.value.height_unit,
-      bio: profile.value.bio,
+    await client.api.v1.users.profile.$put({
+      json: {
+        name: profile.value.name,
+        location: profile.value.location,
+        birthday: profile.value.birthday,
+        sex: profile.value.sex,
+        height: Number(profile.value.height) > 0 ? Number(profile.value.height) : undefined,
+        height_unit: profile.value.height_unit,
+        bio: profile.value.bio,
+      },
     });
     message.value = { text: "Profile updated successfully!", type: "Positive" };
   } catch (err) {
@@ -128,12 +139,13 @@ onMounted(() => {
         <ui5-form-item>
           <ui5-label slot="labelContent">Sex</ui5-label>
           <ui5-select @change="profile.sex = $event.target.selectedOption.value">
-            <ui5-option value="prefer_not_to_say" :selected="profile.sex === 'prefer_not_to_say'"
-              >Prefer not to say</ui5-option
+            <ui5-option
+              v-for="[code, { label }] in SEX"
+              :key="code"
+              :value="code"
+              :selected="profile.sex === code"
+              >{{ label }}</ui5-option
             >
-            <ui5-option value="male" :selected="profile.sex === 'male'">Male</ui5-option>
-            <ui5-option value="female" :selected="profile.sex === 'female'">Female</ui5-option>
-            <ui5-option value="other" :selected="profile.sex === 'other'">Other</ui5-option>
           </ui5-select>
         </ui5-form-item>
 

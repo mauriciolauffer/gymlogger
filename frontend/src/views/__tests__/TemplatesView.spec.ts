@@ -7,6 +7,8 @@ vi.mock("vue-router", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+const mockRes = (body: unknown) => Promise.resolve(body as unknown as Response);
+
 const mockTemplate = {
   id: "t1",
   title: "Push Workout",
@@ -15,29 +17,29 @@ const mockTemplate = {
 };
 
 const makeFetch = () =>
-  vi.fn<typeof fetch>().mockImplementation((url: string, opts?: RequestInit) => {
+  vi.fn<typeof fetch>().mockImplementation((url: string | Request | URL, opts?: RequestInit) => {
     if (opts?.method === "DELETE") {
-      return Promise.resolve({ ok: true, json: async () => ({ message: "Deleted" }) });
+      return mockRes({ ok: true, json: async () => ({ message: "Deleted" }) });
     }
-    if (url.includes("/start")) {
-      return Promise.resolve({
+    if (String(url).includes("/start")) {
+      return mockRes({
         ok: true,
         json: async () => ({
           workout: {
             id: "w_tpl",
             title: "Push Workout",
-            start_time: new Date().toISOString(),
-            total_volume: 0,
-            set_count: 0,
+            startTime: new Date().toISOString(),
+            totalVolume: 0,
+            setCount: 0,
             exercises: [],
           },
         }),
       });
     }
-    if (url.includes("/workout-templates/t1")) {
-      return Promise.resolve({ ok: true, json: async () => ({ template: mockTemplate }) });
+    if (String(url).includes("/workout-templates/t1")) {
+      return mockRes({ ok: true, json: async () => ({ template: mockTemplate }) });
     }
-    return Promise.resolve({ ok: true, json: async () => ({ templates: [mockTemplate] }) });
+    return mockRes({ ok: true, json: async () => ({ templates: [mockTemplate] }) });
   });
 
 describe("TemplatesView", () => {

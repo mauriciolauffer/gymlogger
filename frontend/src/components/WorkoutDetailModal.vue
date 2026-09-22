@@ -4,10 +4,21 @@ import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
+import { SET_TYPE } from "../db/constants";
+import type { ActiveWorkoutExercise } from "../store/activeWorkout";
+
+interface WorkoutDetail {
+  title: string;
+  startTime: string | Date;
+  durationSeconds?: number;
+  totalVolume?: number;
+  notes?: string | null;
+  exercises: ActiveWorkoutExercise[];
+}
 
 defineProps<{
   open: boolean;
-  workout: any | null;
+  workout: WorkoutDetail | null;
 }>();
 
 const emit = defineEmits(["close"]);
@@ -35,23 +46,23 @@ const formatDuration = (secs: number) => {
   >
     <div class="dialog-content" v-if="workout">
       <div class="summary-bar">
-        <span>📅 {{ formatDate(workout.start_time) }}</span>
-        <span>⏱ {{ formatDuration(workout.duration_seconds) }}</span>
-        <span>🏋️ {{ workout.total_volume || 0 }} kg</span>
+        <span>📅 {{ formatDate(workout.startTime) }}</span>
+        <span>⏱ {{ formatDuration(workout.durationSeconds) }}</span>
+        <span>🏋️ {{ workout.totalVolume || 0 }} kg</span>
       </div>
 
       <p class="notes" v-if="workout.notes">Notes: {{ workout.notes }}</p>
 
       <div class="exercises-container">
         <div v-for="ex in workout.exercises" :key="ex.id" class="exercise-block">
-          <ui5-title level="H4" class="ex-title">{{ ex.exercise_name }}</ui5-title>
+          <ui5-title level="H4" class="ex-title">{{ ex.exerciseName }}</ui5-title>
 
           <div class="sets-list">
             <div v-for="(s, idx) in ex.sets" :key="s.id" class="set-item">
               <span class="set-idx">Set {{ idx + 1 }}:</span>
-              <span>{{ s.weight }} {{ s.weight_unit || "kg" }} × {{ s.reps }} reps</span>
-              <span class="set-type" v-if="s.set_type && s.set_type !== 'normal'">
-                ({{ s.set_type }})
+              <span>{{ s.weight }} {{ s.weightUnit || "kg" }} × {{ s.reps }} reps</span>
+              <span class="set-type" v-if="s.setType && s.setType !== 'NO'">
+                ({{ SET_TYPE.get(s.setType)?.label ?? s.setType }})
               </span>
             </div>
           </div>

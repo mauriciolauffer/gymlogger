@@ -7,47 +7,49 @@ vi.mock("vue-router", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+const mockRes = (body: unknown) => Promise.resolve(body as unknown as Response);
+
 const workoutList = [
   {
     id: "w1",
     title: "Upper Body Hypertrophy",
-    start_time: "2026-01-01T10:00:00Z",
-    duration_seconds: 2700,
-    total_volume: 8500,
+    startTime: "2026-01-01T10:00:00Z",
+    durationSeconds: 2700,
+    totalVolume: 8500,
   },
 ];
 
-const makeFetch = (overrides?: (url: string, opts?: RequestInit) => unknown) =>
-  vi.fn<typeof fetch>().mockImplementation((url: string, opts?: RequestInit) => {
+const makeFetch = (overrides?: (url: string | Request | URL, opts?: RequestInit) => unknown) =>
+  vi.fn<typeof fetch>().mockImplementation((url: string | Request | URL, opts?: RequestInit) => {
     const result = overrides?.(url, opts);
-    if (result !== undefined) return result;
+    if (result !== undefined) return result as Promise<Response>;
     if (opts?.method === "DELETE") {
-      return Promise.resolve({ ok: true, json: async () => ({ message: "Deleted" }) });
+      return mockRes({ ok: true, json: async () => ({ message: "Deleted" }) });
     }
-    if (url.includes("/start")) {
-      return Promise.resolve({
+    if (String(url).includes("/start")) {
+      return mockRes({
         ok: true,
         json: async () => ({
           workout: {
             id: "w_new",
             title: "Empty Session",
-            start_time: new Date().toISOString(),
-            total_volume: 0,
-            set_count: 0,
+            startTime: new Date().toISOString(),
+            totalVolume: 0,
+            setCount: 0,
             exercises: [],
           },
         }),
       });
     }
-    if (url.includes("/workouts/w1")) {
-      return Promise.resolve({
+    if (String(url).includes("/workouts/w1")) {
+      return mockRes({
         ok: true,
         json: async () => ({
           workout: { id: "w1", title: "Upper Body Hypertrophy", exercises: [] },
         }),
       });
     }
-    return Promise.resolve({ ok: true, json: async () => ({ workouts: workoutList }) });
+    return mockRes({ ok: true, json: async () => ({ workouts: workoutList }) });
   });
 
 describe("WorkoutHistoryView", () => {
@@ -114,5 +116,16 @@ describe("WorkoutHistoryView", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("No workout sessions logged yet");
+  });
+
+  it("renders formatted duration and total volume from camelCase API fields", async () => {
+    vi.stubGlobal("fetch", makeFetch());
+    const wrapper = mount(WorkoutHistoryView);
+    await flushPromises();
+
+    const item = wrapper.find("ui5-list-item-standard");
+    const description = item.attributes("description") ?? "";
+    expect(description).toContain("45m");
+    expect(description).toContain("8500");
   });
 });

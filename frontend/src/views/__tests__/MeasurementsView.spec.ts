@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
+import { nextTick } from "vue";
 import MeasurementsView from "../MeasurementsView.vue";
 
 const mockMeasurement = {
@@ -66,18 +67,97 @@ describe("MeasurementsView", () => {
     expect(wrapper.findComponent({ name: "LogMeasurementModal" }).props("open")).toBe(true);
   });
 
-  it("shows empty state when no measurements exist", async () => {
+  it("shows loading state while fetching", async () => {
+    let resolve: (value: unknown) => void = () => {};
+    const pendingFetch = new Promise((r) => {
+      resolve = r;
+    });
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(pendingFetch));
+
+    const wrapper = mount(MeasurementsView);
+    await nextTick(); // let onMounted start and set loading=true
+    expect(wrapper.text()).toContain("Loading measurements");
+
+    resolve({
+      ok: true,
+      json: async () => ({ measurements: [] }),
+    });
+    await flushPromises();
+    expect(wrapper.text()).not.toContain("Loading measurements");
+  });
+
+  it("calls delete API and refetches on confirm", async () => {
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ measurements: [mockMeasurement] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const wrapper = mount(MeasurementsView);
+    await flushPromises();
+
+    const deleteBtn = wrapper.findAll("ui5-button").find((b) => b.text().includes("Delete"));
+    await deleteBtn!.trigger("click");
+    await flushPromises();
+
+    // Called once on mount, once on DELETE, once after delete to refetch
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it("does not delete when confirm is cancelled", async () => {
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ measurements: [mockMeasurement] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const wrapper = mount(MeasurementsView);
+    await flushPromises();
+
+    const callCountBefore = fetchMock.mock.calls.length;
+    const deleteBtn = wrapper.findAll("ui5-button").find((b) => b.text().includes("Delete"));
+    await deleteBtn!.trigger("click");
+    await flushPromises();
+
+    // No additional fetch calls (no delete + no refetch)
+    expect(fetchMock.mock.calls.length).toBe(callCountBefore);
+  });
+
+  it("displays formatted metrics including body fat and waist", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ measurements: [] }),
+        json: async () => ({ measurements: [mockMeasurement] }),
       }),
     );
 
     const wrapper = mount(MeasurementsView);
     await flushPromises();
 
-    expect(wrapper.text()).toContain("No body measurements");
+    const card = wrapper.find("ui5-card-header");
+    const subtitle = card.attributes("subtitle-text") ?? "";
+    expect(subtitle).toContain("Weight:");
+    expect(subtitle).toContain("Body Fat:");
+    expect(subtitle).toContain("Waist:");
+  });
+
+  it("refetches measurements when LogMeasurementModal emits saved", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ measurements: [] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const wrapper = mount(MeasurementsView);
+    await flushPromises();
+
+    const callsBefore = fetchMock.mock.calls.length;
+    wrapper.findComponent({ name: "LogMeasurementModal" }).vm.$emit("saved");
+    await flushPromises();
+
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(callsBefore);
   });
 });

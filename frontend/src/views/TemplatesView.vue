@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, shallowRef, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
@@ -8,7 +8,8 @@ import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { TemplatesGetRes, TemplateGetRes } from "../api/types";
 import { activeWorkoutStore } from "../store/activeWorkout";
 import TemplateEditorModal from "../components/TemplateEditorModal.vue";
 
@@ -21,14 +22,14 @@ interface WorkoutTemplate {
 const router = useRouter();
 
 const templates = ref<WorkoutTemplate[]>([]);
-const loading = ref(false);
+const loading = shallowRef(false);
 const editingTemplate = ref<WorkoutTemplate | null>(null);
-const showEditorModal = ref(false);
+const showEditorModal = shallowRef(false);
 
 const fetchTemplates = async () => {
   loading.value = true;
   try {
-    const res = await api.get<{ templates: WorkoutTemplate[] }>("/api/v1/workout-templates");
+    const res = (await (await client.api.v1["workout-templates"].$get()).json()) as TemplatesGetRes;
     templates.value = res.templates || [];
   } catch (err) {
     console.error("Failed to fetch templates", err);
@@ -44,7 +45,9 @@ const handleCreateNew = () => {
 
 const handleEdit = async (tplId: string) => {
   try {
-    const res = await api.get<{ template: WorkoutTemplate }>(`/api/v1/workout-templates/${tplId}`);
+    const res = (await (
+      await client.api.v1["workout-templates"][":id"].$get({ param: { id: tplId } })
+    ).json()) as TemplateGetRes;
     editingTemplate.value = res.template;
     showEditorModal.value = true;
   } catch (err) {
@@ -55,7 +58,7 @@ const handleEdit = async (tplId: string) => {
 const handleDelete = async (tplId: string) => {
   if (!confirm("Are you sure you want to delete this template?")) return;
   try {
-    await api.delete(`/api/v1/workout-templates/${tplId}`);
+    await client.api.v1["workout-templates"][":id"].$delete({ param: { id: tplId } });
     fetchTemplates();
   } catch (err) {
     console.error("Failed to delete template", err);

@@ -2,15 +2,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import ExercisesView from "../ExercisesView.vue";
 
+const mockRes = (body: unknown) => Promise.resolve(body as unknown as Response);
+
 const makeFetch = () =>
-  vi.fn<typeof fetch>().mockImplementation((url: string) => {
-    if (url.includes("/muscle-groups")) {
-      return Promise.resolve({
+  vi.fn<typeof fetch>().mockImplementation((url: string | Request | URL) => {
+    if (String(url).includes("/muscle-groups")) {
+      return mockRes({
         ok: true,
         json: async () => ({ muscleGroups: [{ id: "mg1", name: "Chest" }] }),
       });
     }
-    return Promise.resolve({
+    return mockRes({
       ok: true,
       json: async () => ({
         exercises: [
@@ -67,11 +69,11 @@ describe("ExercisesView", () => {
   it("shows empty state when no exercises match filters", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((url: string) => {
-        if (url.includes("/muscle-groups")) {
-          return Promise.resolve({ ok: true, json: async () => ({ muscleGroups: [] }) });
+      vi.fn<typeof fetch>().mockImplementation((url: string | Request | URL) => {
+        if (String(url).includes("/muscle-groups")) {
+          return mockRes({ ok: true, json: async () => ({ muscleGroups: [] }) });
         }
-        return Promise.resolve({ ok: true, json: async () => ({ exercises: [] }) });
+        return mockRes({ ok: true, json: async () => ({ exercises: [] }) });
       }),
     );
     const wrapper = mount(ExercisesView);

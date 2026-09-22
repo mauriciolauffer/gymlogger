@@ -3,10 +3,12 @@ import vue from "@vitejs/plugin-vue";
 import * as compiler from "vue/compiler-sfc"; // 1. Import the compiler directly
 import { cloudflare } from "@cloudflare/vite-plugin";
 
+const isTest = process.env.NODE_ENV === "test" || !!process.env.VITEST;
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    cloudflare(),
+    ...(isTest ? [] : [cloudflare()]),
     vue({
       compiler: compiler,
       template: {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, shallowRef, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
@@ -9,28 +9,29 @@ import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
 import { formatDate, formatDuration } from "../utils/formatters";
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { WorkoutsGetRes, WorkoutGetRes } from "../api/types";
 import { activeWorkoutStore } from "../store/activeWorkout";
 import WorkoutDetailModal from "../components/WorkoutDetailModal.vue";
 
 interface WorkoutSummary {
   id: string;
   title: string;
-  start_time: string;
-  duration_seconds: number;
-  total_volume?: number;
+  startTime: string | Date;
+  durationSeconds: number;
+  totalVolume?: number;
 }
 
 const router = useRouter();
 
 const workouts = ref<WorkoutSummary[]>([]);
-const loading = ref(false);
+const loading = shallowRef(false);
 const selectedWorkout = ref<WorkoutSummary | null>(null);
 
 const fetchWorkouts = async () => {
   loading.value = true;
   try {
-    const res = await api.get<{ workouts: WorkoutSummary[] }>("/api/v1/workouts");
+    const res = (await (await client.api.v1.workouts.$get()).json()) as WorkoutsGetRes;
     workouts.value = res.workouts || [];
   } catch (err) {
     console.error("Failed to fetch workouts history", err);
@@ -46,7 +47,9 @@ const handleStartNewWorkout = async () => {
 
 const handleViewWorkout = async (workoutId: string) => {
   try {
-    const res = await api.get<{ workout: WorkoutSummary }>(`/api/v1/workouts/${workoutId}`);
+    const res = (await (
+      await client.api.v1.workouts[":id"].$get({ param: { id: workoutId } })
+    ).json()) as WorkoutGetRes;
     selectedWorkout.value = res.workout;
   } catch (err) {
     console.error("Failed to load workout details", err);
@@ -57,7 +60,7 @@ const handleDeleteWorkout = async (workoutId: string, event: Event) => {
   event.stopPropagation();
   if (!confirm("Are you sure you want to delete this workout log?")) return;
   try {
-    await api.delete(`/api/v1/workouts/${workoutId}`);
+    await client.api.v1.workouts[":id"].$delete({ param: { id: workoutId } });
     fetchWorkouts();
   } catch (err) {
     console.error("Failed to delete workout", err);
@@ -88,7 +91,7 @@ onMounted(() => {
         <ui5-list-item-standard
           v-for="w in workouts"
           :key="w.id"
-          :description="`${formatDate(w.start_time)} • ${formatDuration(w.duration_seconds)} • ${w.total_volume || 0} kg`"
+          :description="`${formatDate(w.startTime)} • ${formatDuration(w.durationSeconds)} • ${w.totalVolume || 0} kg`"
           @click="handleViewWorkout(w.id)"
         >
           {{ w.title }}

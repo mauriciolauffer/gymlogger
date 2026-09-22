@@ -6,14 +6,14 @@ describe("WorkoutDetailModal", () => {
   it("displays workout exercises and sets details", () => {
     const mockWorkout = {
       title: "Chest & Triceps",
-      start_time: "2026-01-01T10:00:00Z",
-      duration_seconds: 3600,
-      total_volume: 5000,
+      startTime: "2026-01-01T10:00:00Z",
+      durationSeconds: 3600,
+      totalVolume: 5000,
       exercises: [
         {
           id: "we1",
-          exercise_name: "Bench Press",
-          sets: [{ id: "s1", weight: 100, reps: 5, set_type: "normal" }],
+          exerciseName: "Bench Press",
+          sets: [{ id: "s1", weight: 100, weightUnit: "kg", reps: 5, setType: "NO" }],
         },
       ],
     };

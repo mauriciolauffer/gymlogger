@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, shallowRef, watch, onMounted } from "vue";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Input.js";
 import "@ui5/webcomponents/dist/Title.js";
@@ -10,7 +10,8 @@ import "@ui5/webcomponents/dist/ListItemStandard.js";
 import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { MuscleGroupsRes, ExercisesRes } from "../api/types";
 import CreateExerciseModal from "../components/CreateExerciseModal.vue";
 import ExerciseDetailModal from "../components/ExerciseDetailModal.vue";
 
@@ -29,18 +30,18 @@ interface MuscleGroup {
 
 const exercises = ref<Exercise[]>([]);
 const muscleGroups = ref<MuscleGroup[]>([]);
-const searchQuery = ref("");
-const selectedMuscleGroup = ref("");
-const selectedEquipment = ref("");
-const showCustomOnly = ref(false);
-const loading = ref(false);
+const searchQuery = shallowRef("");
+const selectedMuscleGroup = shallowRef("");
+const selectedEquipment = shallowRef("");
+const showCustomOnly = shallowRef(false);
+const loading = shallowRef(false);
 
-const showCreateModal = ref(false);
+const showCreateModal = shallowRef(false);
 const selectedExerciseForDetail = ref<Exercise | null>(null);
 
 const fetchMuscleGroups = async () => {
   try {
-    const res = await api.get<{ muscleGroups: MuscleGroup[] }>("/api/v1/muscle-groups");
+    const res = (await (await client.api.v1["muscle-groups"].$get()).json()) as MuscleGroupsRes;
     muscleGroups.value = res.muscleGroups || [];
   } catch (err) {
     console.error("Failed to fetch muscle groups", err);
@@ -50,13 +51,15 @@ const fetchMuscleGroups = async () => {
 const fetchExercises = async () => {
   loading.value = true;
   try {
-    const params = new URLSearchParams();
-    if (searchQuery.value) params.append("q", searchQuery.value);
-    if (selectedEquipment.value) params.append("equipment", selectedEquipment.value);
-    if (selectedMuscleGroup.value) params.append("muscleGroupId", selectedMuscleGroup.value);
-    if (showCustomOnly.value) params.append("custom", "true");
+    const queryObj: Record<string, string> = {};
+    if (searchQuery.value) queryObj.q = searchQuery.value;
+    if (selectedEquipment.value) queryObj.equipment = selectedEquipment.value;
+    if (selectedMuscleGroup.value) queryObj.muscleGroupId = selectedMuscleGroup.value;
+    if (showCustomOnly.value) queryObj.custom = "true";
 
-    const res = await api.get<{ exercises: Exercise[] }>(`/api/v1/exercises?${params.toString()}`);
+    const res = (await (
+      await client.api.v1.exercises.$get({ query: queryObj })
+    ).json()) as ExercisesRes;
     exercises.value = res.exercises || [];
   } catch (err) {
     console.error("Failed to fetch exercises", err);
@@ -67,19 +70,16 @@ const fetchExercises = async () => {
 
 const handleSearchInput = (e: Event) => {
   searchQuery.value = (e.target as HTMLInputElement).value;
-  fetchExercises();
 };
 
 const handleEquipmentChange = (e: Event) => {
   const select = e.target as HTMLElement & { selectedOption: { value: string } };
   selectedEquipment.value = select.selectedOption.value;
-  fetchExercises();
 };
 
 const handleMuscleGroupChange = (e: Event) => {
   const select = e.target as HTMLElement & { selectedOption: { value: string } };
   selectedMuscleGroup.value = select.selectedOption.value;
-  fetchExercises();
 };
 
 const handleExerciseClick = (ex: Exercise) => {
@@ -90,9 +90,12 @@ const handleExerciseCreated = (_newEx: Exercise) => {
   fetchExercises();
 };
 
+watch([searchQuery, selectedMuscleGroup, selectedEquipment, showCustomOnly], fetchExercises, {
+  immediate: true,
+});
+
 onMounted(() => {
   fetchMuscleGroups();
-  fetchExercises();
 });
 </script>
 

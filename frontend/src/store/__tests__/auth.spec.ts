@@ -72,4 +72,25 @@ describe("Auth Store", () => {
     expect(authStore.token).toBeNull();
     expect(authStore.user).toBeNull();
   });
+
+  it("logout skips sign-out call when no token is present", async () => {
+    authStore.clearAuth();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await authStore.logout();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(authStore.token).toBeNull();
+  });
+
+  it("user getter returns null when no user is stored", () => {
+    authStore.clearAuth();
+    expect(authStore.user).toBeNull();
+  });
+
+  it("token getter reflects current token state", () => {
+    authStore.clearAuth();
+    expect(authStore.token).toBeNull();
+  });
 });

@@ -9,7 +9,8 @@ import "@ui5/webcomponents/dist/Panel.js";
 import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { MonthlyReportRes, SetsPerMuscleGroupRes, ConsistencyRes } from "../api/types";
 import { formatDurationHours } from "../utils/formatters";
 
 interface MonthlyReport {
@@ -78,13 +79,17 @@ const fetchAnalytics = async () => {
     const endDate = `${nextY}-${String(nextM).padStart(2, "0")}-01`;
 
     const [reportData, spmgRes, consistencyRes] = await Promise.all([
-      api.get<MonthlyReport>(
-        `/api/v1/analytics/monthly-report?year=${selectedYear.value}&month=${selectedMonth.value}`,
-      ),
-      api.get<{ setsPerMuscleGroup: SetsPerMuscleGroup[] }>(
-        `/api/v1/analytics/sets-per-muscle-group?from=${startDate}&to=${endDate}`,
-      ),
-      api.get<ConsistencyData>("/api/v1/analytics/consistency"),
+      (
+        await client.api.v1.analytics["monthly-report"].$get({
+          query: { year: String(selectedYear.value), month: String(selectedMonth.value) },
+        })
+      ).json() as MonthlyReportRes,
+      (
+        await client.api.v1.analytics["sets-per-muscle-group"].$get({
+          query: { from: startDate, to: endDate },
+        })
+      ).json() as SetsPerMuscleGroupRes,
+      (await client.api.v1.analytics.consistency.$get()).json() as ConsistencyRes,
     ]);
 
     report.value = reportData;

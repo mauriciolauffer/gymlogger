@@ -8,7 +8,7 @@ import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
 
 defineProps<{
   open: boolean;
@@ -38,17 +38,23 @@ const handleSave = async () => {
 
   loading.value = true;
   try {
-    await api.post("/api/v1/body-measurements", {
-      weight: weight.value ? Number(weight.value) : undefined,
-      weight_unit: weightUnit.value,
-      body_fat_pct: bodyFatPct.value ? Number(bodyFatPct.value) : undefined,
-      chest: chest.value ? Number(chest.value) : undefined,
-      waist: waist.value ? Number(waist.value) : undefined,
-      biceps: biceps.value ? Number(biceps.value) : undefined,
-      thighs: thighs.value ? Number(thighs.value) : undefined,
-      length_unit: circumferenceUnit.value,
-      photo_url: photoUrl.value || undefined,
+    const httpRes = await client.api.v1["body-measurements"].$post({
+      json: {
+        weight: weight.value ? Number(weight.value) : undefined,
+        weight_unit: weightUnit.value,
+        body_fat_pct: bodyFatPct.value ? Number(bodyFatPct.value) : undefined,
+        chest: chest.value ? Number(chest.value) : undefined,
+        waist: waist.value ? Number(waist.value) : undefined,
+        biceps: biceps.value ? Number(biceps.value) : undefined,
+        thighs: thighs.value ? Number(thighs.value) : undefined,
+        length_unit: circumferenceUnit.value,
+        photo_url: photoUrl.value || undefined,
+      },
     });
+    if (!httpRes.ok) {
+      const body = (await httpRes.json()) as { error?: string };
+      throw new Error(body.error || `Request failed with status ${httpRes.status}`);
+    }
     emit("saved");
     emit("close");
   } catch (err: any) {

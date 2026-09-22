@@ -38,11 +38,34 @@ describe("LogMeasurementModal", () => {
     expect(wrapper.text()).toContain("Please enter at least one measurement metric.");
   });
 
-  it("emits 'close' when cancel is clicked", async () => {
+  it("shows error message when API call fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: "Invalid measurement data" }),
+      }),
+    );
+
     const wrapper = mount(LogMeasurementModal, { props: { open: true } });
 
-    const cancelBtn = wrapper.findAll("ui5-button").find((b) => b.text().includes("Cancel"));
-    await cancelBtn!.trigger("click");
+    const weightInput = wrapper.find("ui5-input");
+    (weightInput.element as HTMLInputElement).value = "80.0";
+    await weightInput.trigger("input");
+
+    const saveBtn = wrapper.findAll("ui5-button").find((b) => b.text().includes("Save"));
+    await saveBtn!.trigger("click");
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Invalid measurement data");
+  });
+
+  it("emits close when dialog close event fires", async () => {
+    const wrapper = mount(LogMeasurementModal, { props: { open: true } });
+
+    const dialog = wrapper.find("ui5-dialog");
+    await dialog.trigger("close");
 
     expect(wrapper.emitted("close")).toBeTruthy();
   });

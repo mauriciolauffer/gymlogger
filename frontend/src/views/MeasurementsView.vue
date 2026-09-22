@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, shallowRef, onMounted } from "vue";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Title.js";
 import "@ui5/webcomponents/dist/Card.js";
@@ -7,13 +7,14 @@ import "@ui5/webcomponents/dist/CardHeader.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { MeasurementsGetRes } from "../api/types";
 import { formatDate } from "../utils/formatters";
 import LogMeasurementModal from "../components/LogMeasurementModal.vue";
 
 interface MeasurementLog {
   id: string;
-  logged_at: string;
+  loggedAt: string;
   weight?: number;
   weight_unit?: string;
   body_fat_pct?: number;
@@ -25,13 +26,15 @@ interface MeasurementLog {
 }
 
 const logs = ref<MeasurementLog[]>([]);
-const loading = ref(false);
-const showLogModal = ref(false);
+const loading = shallowRef(false);
+const showLogModal = shallowRef(false);
 
 const fetchMeasurements = async () => {
   loading.value = true;
   try {
-    const res = await api.get<{ measurements: MeasurementLog[] }>("/api/v1/body-measurements");
+    const res = (await (
+      await client.api.v1["body-measurements"].$get()
+    ).json()) as MeasurementsGetRes;
     logs.value = res.measurements || [];
   } catch (err) {
     console.error("Failed to fetch body measurements", err);
@@ -44,7 +47,7 @@ const handleDelete = async (id: string, event: Event) => {
   event.stopPropagation();
   if (!confirm("Are you sure you want to delete this measurement entry?")) return;
   try {
-    await api.delete(`/api/v1/body-measurements/${id}`);
+    await client.api.v1["body-measurements"][":id"].$delete({ param: { id } });
     fetchMeasurements();
   } catch (err) {
     console.error("Failed to delete measurement", err);
@@ -83,7 +86,7 @@ onMounted(() => {
       <ui5-card v-for="item in logs" :key="item.id" class="log-card">
         <ui5-card-header
           slot="header"
-          :title-text="formatDate(item.date || item.created_at)"
+          :title-text="formatDate(item.loggedAt)"
           :subtitle-text="formatMetrics(item)"
         >
           <ui5-button

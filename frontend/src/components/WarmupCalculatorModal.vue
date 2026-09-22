@@ -7,7 +7,10 @@ import "@ui5/webcomponents/dist/Label.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { InferResponseType } from "hono/client";
+
+type WarmupRes = InferResponseType<typeof client.api.v1.calculators.warmup.$get, 200>;
 
 const props = defineProps<{
   open: boolean;
@@ -26,9 +29,9 @@ const fetchWarmup = async (w: number) => {
   if (!w || w <= 0) return;
   loading.value = true;
   try {
-    const data = await api.get<{ warmupSets: any[] }>(
-      `/api/v1/calculators/warmup?targetWeight=${w}`,
-    );
+    const data = (await (
+      await client.api.v1.calculators.warmup.$get({ query: { targetWeight: String(w) } })
+    ).json()) as WarmupRes;
     warmupSets.value = data.warmupSets || [];
   } catch (err) {
     console.error("Failed to calculate warmups", err);

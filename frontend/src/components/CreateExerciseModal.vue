@@ -8,7 +8,8 @@ import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { ExercisePostRes } from "../api/types";
 
 const props = defineProps<{
   open: boolean;
@@ -34,13 +35,17 @@ const handleCreate = async () => {
 
   loading.value = true;
   try {
-    const res = await api.post("/api/v1/exercises", {
-      name: name.value.trim(),
-      category: category.value,
-      equipment: equipment.value,
-      target: target.value || undefined,
-      muscle_group_id: muscleGroupId.value || undefined,
-    });
+    const res = (await (
+      await client.api.v1.exercises.$post({
+        json: {
+          name: name.value.trim(),
+          category: category.value,
+          equipment: equipment.value,
+          target: target.value || undefined,
+          muscle_group_id: muscleGroupId.value || undefined,
+        },
+      })
+    ).json()) as ExercisePostRes;
     emit("created", res.exercise);
     handleClose();
   } catch (err: any) {

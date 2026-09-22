@@ -100,12 +100,12 @@ describe("Users — profile and settings", () => {
     const { status, data } = await apiCall(
       "PUT",
       "/users/settings",
-      { preferred_weight_unit: "lbs", theme: "dark" },
+      { preferred_weight_unit: "lbs", theme: "D" },
       authToken,
     );
     expect(status).toBe(200);
     expect(data.settings.preferred_weight_unit).toBe("lbs");
-    expect(data.settings.theme).toBe("dark");
+    expect(data.settings.theme).toBe("D");
   });
 });
 
@@ -157,7 +157,7 @@ describe("Workouts — full lifecycle", () => {
     const { status, data } = await apiCall(
       "POST",
       `/workouts/${workoutId}/sets`,
-      { workout_exercise_id: workoutExerciseId, weight: 80, reps: 8, set_type: "normal" },
+      { workout_exercise_id: workoutExerciseId, weight: 80, reps: 8, set_type: "NO" },
       authToken,
     );
     expect(status).toBe(201);

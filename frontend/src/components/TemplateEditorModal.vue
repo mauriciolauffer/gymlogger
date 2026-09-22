@@ -10,7 +10,10 @@ import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/List.js";
 import "@ui5/webcomponents/dist/ListItemStandard.js";
 
-import { api } from "../api/client";
+import { client } from "../api/client";
+import type { InferResponseType } from "hono/client";
+
+type ExercisesRes = InferResponseType<typeof client.api.v1.exercises.$get, 200>;
 
 const props = defineProps<{
   open: boolean;
@@ -29,7 +32,7 @@ const loading = ref(false);
 
 const fetchAvailableExercises = async () => {
   try {
-    const res = await api.get<{ exercises: any[] }>("/api/v1/exercises");
+    const res = (await (await client.api.v1.exercises.$get()).json()) as ExercisesRes;
     availableExercises.value = res.exercises || [];
   } catch (err) {
     console.error("Failed to load exercises", err);
@@ -98,9 +101,12 @@ const handleSave = async () => {
 
   try {
     if (props.template && props.template.id) {
-      await api.put(`/api/v1/workout-templates/${props.template.id}`, payload);
+      await client.api.v1["workout-templates"][":id"].$put({
+        param: { id: props.template.id },
+        json: payload,
+      });
     } else {
-      await api.post("/api/v1/workout-templates", payload);
+      await client.api.v1["workout-templates"].$post({ json: payload });
     }
     emit("saved");
     emit("close");
