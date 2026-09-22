@@ -144,3 +144,7 @@ agent/
 playwright/.auth/
 playwright-report/
 test-results/
+
+# Hono
+backend/openapi/
+backend/.hono-docs/

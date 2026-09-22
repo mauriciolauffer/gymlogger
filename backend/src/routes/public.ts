@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import type { Env } from "../index";
 import { createAuth } from "../lib/auth";
+import { docsRouter } from "./docs";
 
 export const publicRoutes = new Hono<Env>()
+  .get("/favicon.ico", (c) => c.body(null, 204))
   .get("/health", (c) => {
     return c.json({ status: "ok" });
   })
@@ -10,4 +12,5 @@ export const publicRoutes = new Hono<Env>()
     return createAuth(c.env.DB, c.env.JWT_SECRET, c.env.APP_BASE_URL, c.env.CORS_ORIGIN).handler(
       c.req.raw,
     );
-  });
+  })
+  .route("/api/docs", docsRouter);

@@ -6,7 +6,8 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "dist",
-    "noEmit": false
+    "noEmit": false,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*", "worker-configuration.d.ts"]
+  "include": ["src/**/*", "worker-configuration.d.ts", "openapi/*.json"]
 }
