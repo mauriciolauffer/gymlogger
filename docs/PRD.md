@@ -10,9 +10,9 @@ relations:
   - type: references
     target: USER_STORIES.md
   - type: references
-    target: DATABASE_SCHEMA.md
+    target: schema.dbml
   - type: references
-    target: API_ENDPOINTS.md
+    target: openapi.yml
 ---
 
 # Product Requirement Document (PRD) - GymLogger
@@ -219,8 +219,8 @@ User-level preferences (theme, weight unit, length unit, language) are configura
 
 All documentation files in `/docs` follow the Open Knowledge Format (OKF) standard with structured YAML frontmatter and interlinked relations:
 
-- **Database Schema**: Refer to [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for the complete Cloudflare D1 relational database schema, including `users`, `user_settings`, and `units` lookup tables.
-- **API Endpoints**: Refer to [docs/API_ENDPOINTS.md](API_ENDPOINTS.md) for the complete REST API endpoint specifications.
+- **Database Schema**: Refer to [docs/schema.dbml](schema.dbml) for the complete Cloudflare D1 relational database schema.
+- **API Endpoints**: Refer to [docs/openapi.yml](openapi.yml) for the complete REST API endpoint specifications (OpenAPI 3.0).
 - **User Stories**: Refer to [docs/USER_STORIES.md](USER_STORIES.md) for functional user stories and acceptance criteria.
 - **Manifest Index**: Refer to [docs/manifest.yaml](manifest.yaml) for the OKF bundle manifest.
 

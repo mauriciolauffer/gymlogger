@@ -148,3 +148,6 @@ test-results/
 # Hono
 backend/openapi/
 backend/.hono-docs/
+
+# Drizzle
+backend/drizzle/

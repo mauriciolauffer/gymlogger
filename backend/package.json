@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "wrangler dev",
     "build": "tsc",
-    "migrate:local": "wrangler d1 execute gymlogger-db --local --file migrations/0001_initial.sql",
+    "migrate:local": "wrangler d1 execute gymlogger-db --local --file migrations/0000_dbcreation.sql",
+    "seed:local": "wrangler d1 execute gymlogger-db --local --file migrations/seed.sql",
     "deploy": "wrangler deploy",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
+    "generate:migration": "drizzle-kit generate --name=dbcreation",
+    "generate:dbml": "drizzle-docs generate ./src/db/schema.ts -d sqlite -f markdown -o ../docs/schema.md",
     "generate:openapi": "hono-docs generate --config ./hono-docs.ts"
   },
   "dependencies": {
@@ -25,6 +28,7 @@
   },
   "devDependencies": {
     "@rcmade/hono-docs": "^1.4.0",
+    "drizzle-docs-generator": "^0.8.2",
     "drizzle-kit": "^0.31.10",
     "drizzle-seed": "^0.3.1"
   }

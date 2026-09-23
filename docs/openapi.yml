@@ -1,0 +1,4081 @@
+openapi: 3.0.0
+security: []
+info:
+  title: GymLogger API
+  version: 1.0.0
+  description: GymLogger backend API — generated from Hono route types.
+servers:
+  - url: http://localhost:8787
+    description: Local development
+tags:
+  - name: GymLogger
+components:
+  schemas:
+    format:
+      type: object
+    PutApiV1UsersProfileResponse400ErrorIssuesItemVariant2OriginVariant9:
+      allOf:
+        - type: string
+        - {}
+    PutApiV1UsersProfileResponse400ErrorIssuesItemVariant2Maximum:
+      oneOf:
+        - type: number
+        - {}
+    PutApiV1UsersProfileResponse400ErrorIssuesItemVariant6Input:
+      type: object
+      additionalProperties: {}
+    PutApiV1UsersProfileResponse400ErrorIssuesItemVariant2Origin:
+      oneOf:
+        - type: string
+          enum:
+            - string
+        - type: string
+          enum:
+            - number
+        - type: string
+          enum:
+            - bigint
+        - type: string
+          enum:
+            - array
+        - type: string
+          enum:
+            - date
+        - type: string
+          enum:
+            - int
+        - type: string
+          enum:
+            - file
+        - type: string
+          enum:
+            - set
+        - $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt2OriginVariant9"
+    GetApiV1UsersProfileResponse404:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    ZodIssueInvalidValue:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - invalid_value
+        values: {}
+        input: {}
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - values
+        - path
+        - message
+    PutApiV1UsersProfileResponse400ErrorIssuesItemVariant1ExpectedVariant22:
+      allOf:
+        - type: string
+        - type: object
+    PutApiV1UsersProfileResponse400ErrorIssuesItemVariant4Format:
+      oneOf:
+        - type: string
+          enum:
+            - includes
+        - type: string
+          enum:
+            - date
+        - type: string
+          enum:
+            - duration
+        - type: string
+          enum:
+            - email
+        - $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt2OriginVariant9"
+        - type: string
+          enum:
+            - url
+        - type: string
+          enum:
+            - emoji
+        - type: string
+          enum:
+            - uuid
+        - type: string
+          enum:
+            - guid
+        - type: string
+          enum:
+            - nanoid
+        - type: string
+          enum:
+            - cuid
+        - type: string
+          enum:
+            - cuid2
+        - type: string
+          enum:
+            - ulid
+        - type: string
+          enum:
+            - xid
+        - type: string
+          enum:
+            - ksuid
+        - type: string
+          enum:
+            - datetime
+        - type: string
+          enum:
+            - time
+        - type: string
+          enum:
+            - ipv4
+        - type: string
+          enum:
+            - ipv6
+        - type: string
+          enum:
+            - cidrv4
+        - type: string
+          enum:
+            - cidrv6
+        - type: string
+          enum:
+            - base64
+        - type: string
+          enum:
+            - base64url
+        - type: string
+          enum:
+            - json_string
+        - type: string
+          enum:
+            - e164
+        - type: string
+          enum:
+            - credit_card
+        - type: string
+          enum:
+            - iban
+        - type: string
+          enum:
+            - lowercase
+        - type: string
+          enum:
+            - uppercase
+        - type: string
+          enum:
+            - regex
+        - type: string
+          enum:
+            - jwt
+        - type: string
+          enum:
+            - starts_with
+        - type: string
+          enum:
+            - ends_with
+    ZodIssueInvalidKey:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - invalid_key
+        origin:
+          type: string
+          enum:
+            - record
+            - map
+        issues: {}
+        input: {}
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - origin
+        - issues
+        - path
+        - message
+    ZodIssueInvalidElement:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - invalid_element
+        origin:
+          type: string
+          enum:
+            - map
+            - set
+        key: {}
+        issues: {}
+        input: {}
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - origin
+        - key
+        - issues
+        - path
+        - message
+    PutApiV1UsersProfileResponse400ErrorZod:
+      type: object
+      properties:
+        output: {}
+        def: {}
+      required:
+        - output
+        - def
+    ZodIssueInvalidUnionNoMatch:
+      type: object
+      properties: &a7
+        code:
+          type: string
+          enum:
+            - invalid_union
+        errors:
+          type: array
+          items: {}
+        input: {}
+        discriminator:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+              nt7OptionsItem"
+        inclusive:
+          type: boolean
+          enum:
+            - true
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - errors
+        - path
+        - message
+    ZodIssueInvalidType:
+      type: object
+      properties: &a1
+        code:
+          type: string
+          enum:
+            - invalid_type
+        expected:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt1Expected"
+        input: {}
+        path:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+              nt1PathItem"
+        message:
+          type: string
+      required:
+        - code
+        - expected
+        - path
+        - message
+    ZodIssueInvalidUnionMultipleMatch:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - invalid_union
+        errors:
+          type: array
+          items:
+            oneOf: []
+          minItems: 0
+          maxItems: 0
+        input: {}
+        discriminator:
+          type: string
+        inclusive:
+          type: boolean
+          enum:
+            - false
+        matches:
+          type: array
+          items:
+            type: number
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - errors
+        - inclusive
+        - matches
+        - path
+        - message
+    ZodIssueTooSmall:
+      type: object
+      properties: &a3
+        code:
+          type: string
+          enum:
+            - too_small
+        origin:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt2Origin"
+        minimum:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt2Maximum"
+        inclusive:
+          type: boolean
+        exact:
+          type: boolean
+        input: {}
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - origin
+        - minimum
+        - path
+        - message
+    ZodIssueNotMultipleOf:
+      type: object
+      properties: &a5
+        code:
+          type: string
+          enum:
+            - not_multiple_of
+        divisor:
+          type: number
+        input:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt2Maximum"
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - divisor
+        - path
+        - message
+    ZodIssueCustom:
+      type: object
+      properties: &a8
+        code:
+          type: string
+          enum:
+            - custom
+        params:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt6Input"
+        input: {}
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - path
+        - message
+    PutApiV1UsersProfileResponse400ErrorIssuesItemVariant1PathItem:
+      oneOf:
+        - type: string
+        - type: number
+        - {}
+    PutApiV1UsersProfileResponse400ErrorIssuesItemVariant7OptionsItem:
+      oneOf:
+        - type: string
+        - type: number
+        - {}
+        - type: boolean
+          enum:
+            - false
+        - type: boolean
+          enum:
+            - true
+        - {}
+      nullable: true
+    PutApiV1UsersProfileResponse400ErrorIssuesItemVariant1Expected:
+      oneOf:
+        - type: string
+          enum:
+            - string
+        - type: string
+          enum:
+            - number
+        - type: string
+          enum:
+            - bigint
+        - type: string
+          enum:
+            - boolean
+        - type: string
+          enum:
+            - symbol
+        - type: string
+          enum:
+            - undefined
+        - type: string
+          enum:
+            - object
+        - type: string
+          enum:
+            - function
+        - type: string
+          enum:
+            - array
+        - type: string
+          enum:
+            - date
+        - type: string
+          enum:
+            - int
+        - type: string
+          enum:
+            - "null"
+        - type: string
+          enum:
+            - void
+        - type: string
+          enum:
+            - never
+        - type: string
+          enum:
+            - record
+        - type: string
+          enum:
+            - file
+        - type: string
+          enum:
+            - tuple
+        - type: string
+          enum:
+            - map
+        - type: string
+          enum:
+            - set
+        - type: string
+          enum:
+            - nonoptional
+        - type: string
+          enum:
+            - nan
+        - $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt1ExpectedVariant22"
+    ZodIssueTooBig:
+      type: object
+      properties: &a2
+        code:
+          type: string
+          enum:
+            - too_big
+        origin:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt2Origin"
+        maximum:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt2Maximum"
+        inclusive:
+          type: boolean
+        exact:
+          type: boolean
+        input: {}
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - origin
+        - maximum
+        - path
+        - message
+    ZodIssueInvalidStringFormat:
+      type: object
+      properties: &a4
+        code:
+          type: string
+          enum:
+            - invalid_format
+        format:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt4Format"
+        pattern:
+          type: string
+        input:
+          type: string
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - format
+        - path
+        - message
+    ZodIssueUnrecognizedKeys:
+      type: object
+      properties: &a6
+        code:
+          type: string
+          enum:
+            - unrecognized_keys
+        keys:
+          type: array
+          items:
+            type: string
+        input:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+            nt6Input"
+        path: {}
+        message:
+          type: string
+      required:
+        - code
+        - keys
+        - path
+        - message
+    PutApiV1UsersProfileResponse400ErrorIssuesItem:
+      oneOf:
+        - type: object
+          properties: *a1
+          required:
+            - code
+            - expected
+            - path
+            - message
+        - type: object
+          properties: *a2
+          required:
+            - code
+            - origin
+            - maximum
+            - path
+            - message
+        - type: object
+          properties: *a3
+          required:
+            - code
+            - origin
+            - minimum
+            - path
+            - message
+        - type: object
+          properties: *a4
+          required:
+            - code
+            - format
+            - path
+            - message
+        - type: object
+          properties: *a5
+          required:
+            - code
+            - divisor
+            - path
+            - message
+        - type: object
+          properties: *a6
+          required:
+            - code
+            - keys
+            - path
+            - message
+        - type: object
+          properties: *a7
+          required:
+            - code
+            - errors
+            - path
+            - message
+        - $ref: "#/components/schemas/ZodIssueInvalidUnionMultipleMatch"
+        - $ref: "#/components/schemas/ZodIssueInvalidKey"
+        - $ref: "#/components/schemas/ZodIssueInvalidElement"
+        - $ref: "#/components/schemas/ZodIssueInvalidValue"
+        - type: object
+          properties: *a8
+          required:
+            - code
+            - path
+            - message
+    PostApiV1WorkoutsIdExercisesBody:
+      type: object
+      properties:
+        exercise_id:
+          type: string
+        superset_id:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        order_index:
+          type: number
+      required:
+        - exercise_id
+    DeleteApiV1ExercisesIdResponsedefault:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+    PostApiV1BodyMeasurementsBody:
+      type: object
+      properties:
+        date:
+          type: string
+        weight:
+          type: number
+          nullable: true
+        weight_unit:
+          type: string
+          nullable: true
+        body_fat_pct:
+          type: number
+          nullable: true
+        chest:
+          type: number
+          nullable: true
+        waist:
+          type: number
+          nullable: true
+        hips:
+          type: number
+          nullable: true
+        shoulders:
+          type: number
+          nullable: true
+        biceps:
+          type: number
+          nullable: true
+        forearms:
+          type: number
+          nullable: true
+        thighs:
+          type: number
+          nullable: true
+        calves:
+          type: number
+          nullable: true
+        neck:
+          type: number
+          nullable: true
+        length_unit:
+          type: string
+          nullable: true
+    PostApiV1BodyMeasurementsResponse201Measurement:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        date:
+          type: string
+        weight:
+          type: number
+          nullable: true
+        weightUnit:
+          type: string
+          nullable: true
+        bodyFatPct:
+          type: number
+          nullable: true
+        chest:
+          type: number
+          nullable: true
+        waist:
+          type: number
+          nullable: true
+        hips:
+          type: number
+          nullable: true
+        shoulders:
+          type: number
+          nullable: true
+        biceps:
+          type: number
+          nullable: true
+        forearms:
+          type: number
+          nullable: true
+        thighs:
+          type: number
+          nullable: true
+        calves:
+          type: number
+          nullable: true
+        neck:
+          type: number
+          nullable: true
+        lengthUnit:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - userId
+        - date
+        - weight
+        - weightUnit
+        - bodyFatPct
+        - chest
+        - waist
+        - hips
+        - shoulders
+        - biceps
+        - forearms
+        - thighs
+        - calves
+        - neck
+        - lengthUnit
+        - photoUrl
+        - createdAt
+    GetApiV1PersonalRecordsResponsedefaultPersonalRecordsItem:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        exerciseId:
+          type: string
+        prType:
+          type: string
+          enum:
+            - RM
+            - WT
+            - VO
+            - RP
+        value:
+          type: number
+        valueUnit:
+          type: string
+          nullable: true
+        achievedAt:
+          type: string
+        workoutSetId:
+          type: string
+          nullable: true
+        exerciseName:
+          type: string
+      required:
+        - id
+        - userId
+        - exerciseId
+        - prType
+        - value
+        - valueUnit
+        - achievedAt
+        - workoutSetId
+        - exerciseName
+    PostApiV1WorkoutTemplatesBody:
+      type: object
+      properties:
+        title:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostApiV1WorkoutsIdExercisesBody"
+      required:
+        - title
+    ZodError:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PostApiV1BodyMeasurementsBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    GetApiV1UsersProfileResponsedefaultProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        location:
+          type: string
+          nullable: true
+        birthday:
+          type: string
+          nullable: true
+        sex:
+          type: string
+          enum:
+            - M
+            - F
+            - O
+            - P
+          nullable: true
+        height:
+          type: number
+          nullable: true
+        heightUnit:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true
+        email:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - location
+        - birthday
+        - sex
+        - height
+        - heightUnit
+        - bio
+        - createdAt
+        - email
+        - name
+    PutApiV1WorkoutsIdSetsSetIdBody:
+      type: object
+      properties:
+        set_type:
+          type: string
+          nullable: true
+        weight:
+          type: number
+        weight_unit:
+          type: string
+          nullable: true
+        reps:
+          type: number
+        rpe:
+          type: number
+    PostApiV1ExercisesResponse201Exercise:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        bodyPart:
+          type: string
+        equipment:
+          type: string
+          nullable: true
+        instructions:
+          type: string
+          nullable: true
+        instructionSteps:
+          type: string
+          nullable: true
+        muscleGroupId:
+          type: string
+          nullable: true
+        target:
+          type: string
+          nullable: true
+        mediaId:
+          type: string
+          nullable: true
+        image:
+          type: string
+          nullable: true
+        gifUrl:
+          type: string
+          nullable: true
+        attribution:
+          type: string
+          nullable: true
+        isCustom:
+          type: boolean
+          nullable: true
+        userId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - name
+        - category
+        - bodyPart
+        - equipment
+        - instructions
+        - instructionSteps
+        - muscleGroupId
+        - target
+        - mediaId
+        - image
+        - gifUrl
+        - attribution
+        - isCustom
+        - userId
+        - createdAt
+    GetApiV1UsersSettingsResponsedefaultSettings:
+      type: object
+      properties:
+        theme:
+          type: string
+          enum:
+            - L
+            - D
+            - S
+          nullable: true
+        preferred_weight_unit:
+          type: string
+          nullable: true
+        preferred_length_unit:
+          type: string
+          nullable: true
+        language:
+          type: string
+          nullable: true
+        rest_timer_duration_seconds:
+          type: number
+          nullable: true
+        notifications_enabled:
+          type: boolean
+          nullable: true
+        updated_at:
+          type: string
+          nullable: true
+      required:
+        - theme
+        - preferred_weight_unit
+        - preferred_length_unit
+        - language
+        - rest_timer_duration_seconds
+        - notifications_enabled
+        - updated_at
+      nullable: true
+    PostApiV1WorkoutTemplatesResponse201:
+      type: object
+      properties:
+        message:
+          type: string
+        template:
+          $ref: "#/components/schemas/PostApiV1WorkoutTemplatesResponse201Template"
+      required:
+        - message
+        - template
+    PostApiV1WorkoutTemplatesResponse201TemplateExercisesItem:
+      type: object
+      properties:
+        id:
+          type: string
+        templateId:
+          type: string
+        exerciseId:
+          type: string
+        supersetId:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        orderIndex:
+          type: number
+      required:
+        - id
+        - templateId
+        - exerciseId
+        - supersetId
+        - notes
+        - orderIndex
+    PostApiV1ExercisesBody:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        body_part:
+          type: string
+        equipment:
+          type: string
+          nullable: true
+        instructions:
+          type: string
+          nullable: true
+        instruction_steps:
+          type: array
+          items:
+            type: string
+        muscle_group_id:
+          type: string
+          nullable: true
+        target:
+          type: string
+          nullable: true
+        secondary_muscle_ids: {}
+      required:
+        - name
+        - category
+    PutApiV1WorkoutsIdFinishBody:
+      type: object
+      properties:
+        notes:
+          type: string
+          nullable: true
+    PutApiV1WorkoutsIdSetsSetIdResponsedefaultSet:
+      type: object
+      properties:
+        id:
+          type: string
+        workoutExerciseId:
+          type: string
+        setType:
+          type: string
+          enum:
+            - NO
+            - WU
+            - DP
+            - FA
+          nullable: true
+        weight:
+          type: number
+        weightUnit:
+          type: string
+          nullable: true
+        reps:
+          type: number
+        rpe:
+          type: number
+          nullable: true
+        estimated1rm:
+          type: number
+          nullable: true
+        estimated1rmFormula:
+          type: string
+          enum:
+            - EP
+            - BR
+          nullable: true
+        isPr:
+          type: boolean
+          nullable: true
+        prType:
+          type: string
+          nullable: true
+        orderIndex:
+          type: number
+      required:
+        - id
+        - workoutExerciseId
+        - setType
+        - weight
+        - weightUnit
+        - reps
+        - rpe
+        - estimated1rm
+        - estimated1rmFormula
+        - isPr
+        - prType
+        - orderIndex
+    PutApiV1UsersSettingsBody:
+      type: object
+      properties:
+        theme:
+          type: string
+          enum:
+            - L
+            - D
+            - S
+        preferred_weight_unit:
+          type: string
+          enum:
+            - kg
+            - lbs
+        preferred_length_unit:
+          type: string
+          enum:
+            - cm
+            - in
+        language:
+          type: string
+          nullable: true
+        rest_timer_duration_seconds:
+          type: number
+        notifications_enabled:
+          type: boolean
+          nullable: true
+    GetApiV1WorkoutTemplatesResponsedefaultTemplatesItemExercisesItem:
+      type: object
+      properties:
+        id:
+          type: string
+        templateId:
+          type: string
+        exerciseId:
+          type: string
+        supersetId:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        orderIndex:
+          type: number
+        exerciseName:
+          type: string
+        category:
+          type: string
+        equipment:
+          type: string
+          nullable: true
+      required:
+        - id
+        - templateId
+        - exerciseId
+        - supersetId
+        - notes
+        - orderIndex
+        - exerciseName
+        - category
+        - equipment
+    PostApiV1WorkoutTemplatesResponse201Template:
+      type: object
+      properties:
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostApiV1WorkoutTemplatesResponse201TemplateExercis\
+              esItem"
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          nullable: true
+      required:
+        - exercises
+    PostApiV1WorkoutsStartBody:
+      type: object
+      properties:
+        title:
+          type: string
+        start_time:
+          type: string
+        template_id:
+          type: string
+    PutApiV1ExercisesIdBody:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        body_part:
+          type: string
+        equipment:
+          type: string
+          nullable: true
+        instructions:
+          type: string
+          nullable: true
+        instruction_steps:
+          type: array
+          items:
+            type: string
+        muscle_group_id:
+          type: string
+          nullable: true
+        target:
+          type: string
+          nullable: true
+        secondary_muscle_ids: {}
+    PostApiV1ExercisesResponse400ErrorIssuesItem:
+      oneOf:
+        - type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - invalid_type
+            expected:
+              $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                nt1Expected"
+            input: {}
+            path:
+              type: array
+              items:
+                $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                  nt1PathItem"
+            message:
+              type: string
+          required:
+            - code
+            - expected
+            - path
+            - message
+        - type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - too_big
+            origin:
+              $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                nt2Origin"
+            maximum:
+              $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                nt2Maximum"
+            inclusive:
+              type: boolean
+            exact:
+              type: boolean
+            input: {}
+            path: {}
+            message:
+              type: string
+          required:
+            - code
+            - origin
+            - maximum
+            - path
+            - message
+        - type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - too_small
+            origin:
+              $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                nt2Origin"
+            minimum:
+              $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                nt2Maximum"
+            inclusive:
+              type: boolean
+            exact:
+              type: boolean
+            input: {}
+            path: {}
+            message:
+              type: string
+          required:
+            - code
+            - origin
+            - minimum
+            - path
+            - message
+        - type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - invalid_format
+            format:
+              $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                nt4Format"
+            pattern:
+              type: string
+            input:
+              type: string
+            path: {}
+            message:
+              type: string
+          required:
+            - code
+            - format
+            - path
+            - message
+        - type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - not_multiple_of
+            divisor:
+              type: number
+            input:
+              $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                nt2Maximum"
+            path: {}
+            message:
+              type: string
+          required:
+            - code
+            - divisor
+            - path
+            - message
+        - type: object
+          properties: &a9
+            code:
+              type: string
+              enum:
+                - unrecognized_keys
+            keys: {}
+            input:
+              $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                nt6Input"
+            path: {}
+            message:
+              type: string
+          required:
+            - code
+            - keys
+            - path
+            - message
+        - type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - invalid_union
+            errors:
+              type: array
+              items: {}
+            input: {}
+            discriminator:
+              type: string
+            options:
+              type: array
+              items:
+                $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                  nt7OptionsItem"
+            inclusive:
+              type: boolean
+              enum:
+                - true
+            path: {}
+            message:
+              type: string
+          required:
+            - code
+            - errors
+            - path
+            - message
+        - $ref: "#/components/schemas/ZodIssueInvalidUnionMultipleMatch"
+        - $ref: "#/components/schemas/ZodIssueInvalidKey"
+        - $ref: "#/components/schemas/ZodIssueInvalidElement"
+        - $ref: "#/components/schemas/ZodIssueInvalidValue"
+        - type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - custom
+            params:
+              $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItemVaria\
+                nt6Input"
+            input: {}
+            path: {}
+            message:
+              type: string
+          required:
+            - code
+            - path
+            - message
+    PostApiV1BodyMeasurementsResponse201:
+      type: object
+      properties:
+        message:
+          type: string
+        measurement:
+          $ref: "#/components/schemas/PostApiV1BodyMeasurementsResponse201Measurement"
+      required:
+        - message
+        - measurement
+    PostApiV1WorkoutsIdSetsBody:
+      type: object
+      properties:
+        workout_exercise_id:
+          type: string
+        set_type:
+          type: string
+          nullable: true
+        weight:
+          type: number
+        weight_unit:
+          type: string
+          nullable: true
+        reps:
+          type: number
+        rpe:
+          type: number
+        order_index:
+          type: number
+      required:
+        - workout_exercise_id
+    PostApiV1WorkoutsStartResponse201Workout:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        templateId:
+          type: string
+          nullable: true
+        title:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+          nullable: true
+        durationSeconds:
+          type: number
+          nullable: true
+        totalVolume:
+          type: number
+          nullable: true
+        volumeUnit:
+          type: string
+          nullable: true
+        setCount:
+          type: number
+          nullable: true
+        hasPr:
+          type: boolean
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - userId
+        - templateId
+        - title
+        - startTime
+        - endTime
+        - durationSeconds
+        - totalVolume
+        - volumeUnit
+        - setCount
+        - hasPr
+        - notes
+        - createdAt
+    PostApiV1ExercisesResponse201:
+      type: object
+      properties:
+        message:
+          type: string
+        exercise:
+          $ref: "#/components/schemas/PostApiV1ExercisesResponse201Exercise"
+      required:
+        - message
+        - exercise
+    ZodSafeParseError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError"
+      required:
+        - success
+        - error
+    PutApiV1WorkoutTemplatesIdBody:
+      type: object
+      properties:
+        title:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostApiV1WorkoutsIdExercisesBody"
+    GetApiV1MuscleGroupsResponsedefaultMuscleGroupsItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - name
+    ZodIssueUnrecognizedKeys_2:
+      type: object
+      properties: *a9
+      required:
+        - code
+        - keys
+        - path
+        - message
+    PutApiV1UsersProfileBody:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+          nullable: true
+        birthday:
+          type: string
+          nullable: true
+        sex:
+          type: string
+          enum:
+            - M
+            - F
+            - O
+            - P
+          nullable: true
+        height:
+          type: number
+          nullable: true
+        height_unit:
+          type: string
+          enum:
+            - cm
+            - in
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+    ZodError_2:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PutApiV1WorkoutsIdFinishBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodError_3:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PutApiV1UsersSettingsBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodSafeParseError_2:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_10"
+      required:
+        - success
+        - error
+    ZodError_4:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PostApiV1WorkoutsIdSetsBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodSafeParseError_3:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_6"
+      required:
+        - success
+        - error
+    ZodSafeParseError_4:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_8"
+      required:
+        - success
+        - error
+    ZodError_5:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PostApiV1WorkoutTemplatesBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodError_6:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PostApiV1WorkoutsIdExercisesBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodSafeParseError_5:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_2"
+      required:
+        - success
+        - error
+    ZodSafeParseError_6:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_3"
+      required:
+        - success
+        - error
+    ZodSafeParseError_7:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_9"
+      required:
+        - success
+        - error
+    ZodSafeParseError_8:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_11"
+      required:
+        - success
+        - error
+    ZodSafeParseError_9:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_12"
+      required:
+        - success
+        - error
+    ZodSafeParseError_10:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_4"
+      required:
+        - success
+        - error
+    ZodSafeParseError_11:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_7"
+      required:
+        - success
+        - error
+    ZodError_7:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PutApiV1ExercisesIdBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostApiV1ExercisesResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodError_8:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PutApiV1WorkoutsIdSetsSetIdBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodSafeParseError_12:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError_5"
+      required:
+        - success
+        - error
+    ZodError_9:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PostApiV1ExercisesBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PostApiV1ExercisesResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodError_10:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PutApiV1WorkoutTemplatesIdBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodError_11:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PostApiV1WorkoutsStartBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+    ZodError_12:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PutApiV1UsersProfileBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
+paths:
+  /favicon.ico:
+    get:
+      summary: Get Favicon.ico
+      responses:
+        "204":
+          description: Status 204
+          content:
+            application/json:
+              schema: {}
+      tags:
+        - GymLogger
+  /api/health:
+    get:
+      summary: Get Health
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                required:
+                  - status
+      tags:
+        - GymLogger
+  /api/auth/*:
+    get:
+      summary: Get Auth By Wildcard
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+      tags:
+        - GymLogger
+    post:
+      summary: Create Auth By Wildcard
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+      tags:
+        - GymLogger
+  /api/docs:
+    get:
+      summary: Get Docs
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+      tags:
+        - GymLogger
+  /api/docs/openapi.json:
+    get:
+      summary: Get Docs Openapi.json
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema: {}
+      tags:
+        - GymLogger
+  /api/v1/users/profile:
+    get:
+      summary: Get Users Profile
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    $ref: "#/components/schemas/GetApiV1UsersProfileResponsedefaultProfile"
+                required:
+                  - profile
+      tags:
+        - GymLogger
+    put:
+      summary: Update Users Profile
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_9"
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  profile:
+                    $ref: "#/components/schemas/GetApiV1UsersProfileResponsedefaultProfile"
+                required:
+                  - message
+                  - profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutApiV1UsersProfileBody"
+      tags:
+        - GymLogger
+  /api/v1/users/settings:
+    get:
+      summary: Get Users Settings
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  settings:
+                    $ref: "#/components/schemas/GetApiV1UsersSettingsResponsedefaultSettings"
+                required:
+                  - settings
+      tags:
+        - GymLogger
+    put:
+      summary: Update Users Settings
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_6"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  settings:
+                    $ref: "#/components/schemas/GetApiV1UsersSettingsResponsedefaultSettings"
+                required:
+                  - message
+                  - settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutApiV1UsersSettingsBody"
+      tags:
+        - GymLogger
+  /api/v1/muscle-groups:
+    get:
+      summary: Get Muscle groups
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  muscleGroups:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GetApiV1MuscleGroupsResponsedefaultMuscleGroupsItem"
+                required:
+                  - muscleGroups
+      tags:
+        - GymLogger
+  /api/v1/exercises:
+    get:
+      summary: Get Exercises
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exercises:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        category:
+                          type: string
+                        bodyPart:
+                          type: string
+                        equipment:
+                          type: string
+                          nullable: true
+                        instructions:
+                          type: string
+                          nullable: true
+                        instructionSteps:
+                          type: string
+                          nullable: true
+                        muscleGroupId:
+                          type: string
+                          nullable: true
+                        target:
+                          type: string
+                          nullable: true
+                        mediaId:
+                          type: string
+                          nullable: true
+                        image:
+                          type: string
+                          nullable: true
+                        gifUrl:
+                          type: string
+                          nullable: true
+                        attribution:
+                          type: string
+                          nullable: true
+                        isCustom:
+                          type: boolean
+                          nullable: true
+                        userId:
+                          type: string
+                          nullable: true
+                        createdAt:
+                          type: string
+                          nullable: true
+                        muscleGroupName:
+                          type: string
+                          nullable: true
+                      required:
+                        - id
+                        - name
+                        - category
+                        - bodyPart
+                        - equipment
+                        - instructions
+                        - instructionSteps
+                        - muscleGroupId
+                        - target
+                        - mediaId
+                        - image
+                        - gifUrl
+                        - attribution
+                        - isCustom
+                        - userId
+                        - createdAt
+                        - muscleGroupName
+                required:
+                  - exercises
+      tags:
+        - GymLogger
+    post:
+      summary: Create Exercises
+      responses:
+        "201":
+          description: Status 201
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostApiV1ExercisesResponse201"
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_7"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostApiV1ExercisesBody"
+      tags:
+        - GymLogger
+  /api/v1/exercises/{id}:
+    get:
+      summary: Get Exercises By Id
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exercise:
+                    type: object
+                    properties:
+                      secondaryMuscles:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/GetApiV1MuscleGroupsResponsedefaultMuscleGroupsItem"
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      category:
+                        type: string
+                      bodyPart:
+                        type: string
+                      equipment:
+                        type: string
+                        nullable: true
+                      instructions:
+                        type: string
+                        nullable: true
+                      instructionSteps:
+                        type: string
+                        nullable: true
+                      muscleGroupId:
+                        type: string
+                        nullable: true
+                      target:
+                        type: string
+                        nullable: true
+                      mediaId:
+                        type: string
+                        nullable: true
+                      image:
+                        type: string
+                        nullable: true
+                      gifUrl:
+                        type: string
+                        nullable: true
+                      attribution:
+                        type: string
+                        nullable: true
+                      isCustom:
+                        type: boolean
+                        nullable: true
+                      userId:
+                        type: string
+                        nullable: true
+                      createdAt:
+                        type: string
+                        nullable: true
+                      muscleGroupName:
+                        type: string
+                        nullable: true
+                    required:
+                      - secondaryMuscles
+                      - id
+                      - name
+                      - category
+                      - bodyPart
+                      - equipment
+                      - instructions
+                      - instructionSteps
+                      - muscleGroupId
+                      - target
+                      - mediaId
+                      - image
+                      - gifUrl
+                      - attribution
+                      - isCustom
+                      - userId
+                      - createdAt
+                      - muscleGroupName
+                required:
+                  - exercise
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger
+    put:
+      summary: Update Exercises By Id
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_11"
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostApiV1ExercisesResponse201"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutApiV1ExercisesIdBody"
+      tags:
+        - GymLogger
+    delete:
+      summary: Delete Exercises By Id
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteApiV1ExercisesIdResponsedefault"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger
+  /api/v1/workouts/previous-values:
+    get:
+      summary: Get Workouts Previous values
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      sets:
+                        type: array
+                        items: {}
+                      previousWorkoutDate: {}
+                    required:
+                      - sets
+                      - previousWorkoutDate
+                  - type: object
+                    properties:
+                      sets:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            setType:
+                              type: string
+                              enum:
+                                - NO
+                                - WU
+                                - DP
+                                - FA
+                              nullable: true
+                            weight:
+                              type: number
+                            weightUnit:
+                              type: string
+                              nullable: true
+                            reps:
+                              type: number
+                            rpe:
+                              type: number
+                              nullable: true
+                            orderIndex:
+                              type: number
+                          required:
+                            - id
+                            - setType
+                            - weight
+                            - weightUnit
+                            - reps
+                            - rpe
+                            - orderIndex
+                      previousWorkoutDate:
+                        type: string
+                    required:
+                      - sets
+                      - previousWorkoutDate
+      tags:
+        - GymLogger
+  /api/v1/workouts/start:
+    post:
+      summary: Create Workouts Start
+      responses:
+        "201":
+          description: Status 201
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  workout:
+                    $ref: "#/components/schemas/PostApiV1WorkoutsStartResponse201Workout"
+                required:
+                  - message
+                  - workout
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_8"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostApiV1WorkoutsStartBody"
+      tags:
+        - GymLogger
+  /api/v1/workouts/{id}/exercises:
+    post:
+      summary: Create Workouts By Id Exercises
+      responses:
+        "201":
+          description: Status 201
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  workoutExercise:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      workoutId:
+                        type: string
+                      exerciseId:
+                        type: string
+                      supersetId:
+                        type: string
+                        nullable: true
+                      notes:
+                        type: string
+                        nullable: true
+                      orderIndex:
+                        type: number
+                    required:
+                      - id
+                      - workoutId
+                      - exerciseId
+                      - supersetId
+                      - notes
+                      - orderIndex
+                required:
+                  - message
+                  - workoutExercise
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_3"
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostApiV1WorkoutsIdExercisesBody"
+      tags:
+        - GymLogger
+  /api/v1/workouts/{id}/sets:
+    post:
+      summary: Create Workouts By Id Sets
+      responses:
+        "201":
+          description: Status 201
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  set:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      workout_exercise_id:
+                        type: string
+                      set_type:
+                        type: string
+                        enum:
+                          - NO
+                          - WU
+                          - DP
+                          - FA
+                        nullable: true
+                      weight:
+                        type: number
+                      weight_unit:
+                        type: string
+                        nullable: true
+                      reps:
+                        type: number
+                      rpe:
+                        type: number
+                        nullable: true
+                      estimated_1rm:
+                        type: number
+                        nullable: true
+                      estimated_1rm_formula:
+                        type: string
+                        enum:
+                          - EP
+                          - BR
+                        nullable: true
+                      is_pr:
+                        type: number
+                      pr_type:
+                        type: string
+                        nullable: true
+                      order_index:
+                        type: number
+                    required:
+                      - id
+                      - workout_exercise_id
+                      - set_type
+                      - weight
+                      - weight_unit
+                      - reps
+                      - rpe
+                      - estimated_1rm
+                      - estimated_1rm_formula
+                      - is_pr
+                      - pr_type
+                      - order_index
+                    nullable: true
+                  isPr:
+                    type: boolean
+                  prTypes:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+                  - set
+                  - isPr
+                  - prTypes
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_10"
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostApiV1WorkoutsIdSetsBody"
+      tags:
+        - GymLogger
+  /api/v1/workouts/{id}/sets/{setId}:
+    put:
+      summary: Update Workouts By Id Sets By Set Id
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_4"
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  set:
+                    $ref: "#/components/schemas/PutApiV1WorkoutsIdSetsSetIdResponsedefaultSet"
+                  isPr:
+                    type: boolean
+                  prTypes:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - message
+                  - set
+                  - isPr
+                  - prTypes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: setId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutApiV1WorkoutsIdSetsSetIdBody"
+      tags:
+        - GymLogger
+    delete:
+      summary: Delete Workouts By Id Sets By Set Id
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteApiV1ExercisesIdResponsedefault"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: setId
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger
+  /api/v1/workouts/{id}/finish:
+    put:
+      summary: Update Workouts By Id Finish
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_5"
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  workout:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      user_id:
+                        type: string
+                      template_id:
+                        type: string
+                        nullable: true
+                      title:
+                        type: string
+                      start_time:
+                        type: string
+                      end_time:
+                        type: string
+                        nullable: true
+                      duration_seconds:
+                        type: number
+                        nullable: true
+                      total_volume:
+                        type: number
+                        nullable: true
+                      volume_unit:
+                        type: string
+                        nullable: true
+                      set_count:
+                        type: number
+                        nullable: true
+                      has_pr:
+                        type: boolean
+                        nullable: true
+                      notes:
+                        type: string
+                        nullable: true
+                      created_at:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - user_id
+                      - template_id
+                      - title
+                      - start_time
+                      - end_time
+                      - duration_seconds
+                      - total_volume
+                      - volume_unit
+                      - set_count
+                      - has_pr
+                      - notes
+                      - created_at
+                    nullable: true
+                required:
+                  - message
+                  - workout
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutApiV1WorkoutsIdFinishBody"
+      tags:
+        - GymLogger
+  /api/v1/workouts:
+    get:
+      summary: Get Workouts
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workouts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PostApiV1WorkoutsStartResponse201Workout"
+                required:
+                  - workouts
+      tags:
+        - GymLogger
+  /api/v1/workouts/{id}:
+    get:
+      summary: Get Workouts By Id
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workout:
+                    type: object
+                    properties:
+                      exercises:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            workoutId:
+                              type: string
+                            exerciseId:
+                              type: string
+                            supersetId:
+                              type: string
+                              nullable: true
+                            notes:
+                              type: string
+                              nullable: true
+                            orderIndex:
+                              type: number
+                            exerciseName:
+                              type: string
+                            category:
+                              type: string
+                            equipment:
+                              type: string
+                              nullable: true
+                            muscleGroupId:
+                              type: string
+                              nullable: true
+                            sets:
+                              type: array
+                              items:
+                                $ref: "#/components/schemas/PutApiV1WorkoutsIdSetsSetIdResponsedefaultSet"
+                          required:
+                            - id
+                            - workoutId
+                            - exerciseId
+                            - supersetId
+                            - notes
+                            - orderIndex
+                            - exerciseName
+                            - category
+                            - equipment
+                            - muscleGroupId
+                            - sets
+                      id:
+                        type: string
+                      userId:
+                        type: string
+                      templateId:
+                        type: string
+                        nullable: true
+                      title:
+                        type: string
+                      startTime:
+                        type: string
+                      endTime:
+                        type: string
+                        nullable: true
+                      durationSeconds:
+                        type: number
+                        nullable: true
+                      totalVolume:
+                        type: number
+                        nullable: true
+                      volumeUnit:
+                        type: string
+                        nullable: true
+                      setCount:
+                        type: number
+                        nullable: true
+                      hasPr:
+                        type: boolean
+                        nullable: true
+                      notes:
+                        type: string
+                        nullable: true
+                      createdAt:
+                        type: string
+                        nullable: true
+                    required:
+                      - exercises
+                      - id
+                      - userId
+                      - templateId
+                      - title
+                      - startTime
+                      - endTime
+                      - durationSeconds
+                      - totalVolume
+                      - volumeUnit
+                      - setCount
+                      - hasPr
+                      - notes
+                      - createdAt
+                required:
+                  - workout
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger
+    delete:
+      summary: Delete Workouts By Id
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteApiV1ExercisesIdResponsedefault"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger
+  /api/v1/workout-templates:
+    get:
+      summary: Get Workout templates
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        userId:
+                          type: string
+                        title:
+                          type: string
+                        notes:
+                          type: string
+                          nullable: true
+                        createdAt:
+                          type: string
+                          nullable: true
+                        updatedAt:
+                          type: string
+                          nullable: true
+                        exercises:
+                          type: array
+                          items:
+                            $ref:
+                              "#/components/schemas/GetApiV1WorkoutTemplatesResponsedefaultTemplatesIte\
+                              mExercisesItem"
+                      required:
+                        - id
+                        - userId
+                        - title
+                        - notes
+                        - createdAt
+                        - updatedAt
+                        - exercises
+                required:
+                  - templates
+      tags:
+        - GymLogger
+    post:
+      summary: Create Workout templates
+      responses:
+        "201":
+          description: Status 201
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostApiV1WorkoutTemplatesResponse201"
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_12"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostApiV1WorkoutTemplatesBody"
+      tags:
+        - GymLogger
+  /api/v1/workout-templates/{id}:
+    get:
+      summary: Get Workout templates By Id
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  template:
+                    type: object
+                    properties:
+                      exercises:
+                        type: array
+                        items:
+                          $ref:
+                            "#/components/schemas/GetApiV1WorkoutTemplatesResponsedefaultTemplatesIte\
+                            mExercisesItem"
+                      id:
+                        type: string
+                      userId:
+                        type: string
+                      title:
+                        type: string
+                      notes:
+                        type: string
+                        nullable: true
+                      createdAt:
+                        type: string
+                        nullable: true
+                      updatedAt:
+                        type: string
+                        nullable: true
+                    required:
+                      - exercises
+                      - id
+                      - userId
+                      - title
+                      - notes
+                      - createdAt
+                      - updatedAt
+                required:
+                  - template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger
+    put:
+      summary: Update Workout templates By Id
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError_2"
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostApiV1WorkoutTemplatesResponse201"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PutApiV1WorkoutTemplatesIdBody"
+      tags:
+        - GymLogger
+    delete:
+      summary: Delete Workout templates By Id
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteApiV1ExercisesIdResponsedefault"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger
+  /api/v1/workouts/{id}/live:
+    get:
+      summary: Get Workouts By Id Live
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workoutId:
+                    type: string
+                  status:
+                    type: string
+                  elapsedSeconds:
+                    type: number
+                    nullable: true
+                  restTimerDurationSeconds:
+                    type: number
+                  lastSet:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      weight:
+                        type: number
+                      reps:
+                        type: number
+                      weightUnit:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - weight
+                      - reps
+                      - weightUnit
+                    nullable: true
+                required:
+                  - workoutId
+                  - status
+                  - elapsedSeconds
+                  - restTimerDurationSeconds
+                  - lastSet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger
+  /api/v1/personal-records:
+    get:
+      summary: Get Personal records
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  personalRecords:
+                    type: array
+                    items:
+                      $ref:
+                        "#/components/schemas/GetApiV1PersonalRecordsResponsedefaultPersonalRecor\
+                        dsItem"
+                required:
+                  - personalRecords
+      tags:
+        - GymLogger
+  /api/v1/calculators/warmup:
+    get:
+      summary: Get Calculators Warmup
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  targetWeight:
+                    type: number
+                  warmUpSets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        percent:
+                          type: number
+                        weight:
+                          type: number
+                        reps:
+                          type: number
+                        set_type:
+                          type: string
+                        notes:
+                          type: string
+                      required:
+                        - percent
+                        - weight
+                        - reps
+                        - set_type
+                        - notes
+                required:
+                  - targetWeight
+                  - warmUpSets
+      tags:
+        - GymLogger
+  /api/v1/analytics/performance:
+    get:
+      summary: Get Analytics Performance
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exercise:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      category:
+                        type: string
+                      target:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - name
+                      - category
+                      - target
+                  oneRepMaxCurve:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                        value:
+                          type: number
+                        formula:
+                          type: string
+                      required:
+                        - date
+                        - value
+                        - formula
+                  maxWeightCurve:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                        value:
+                          type: number
+                      required:
+                        - date
+                        - value
+                  maxRepsCurve:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                        value:
+                          type: number
+                        weight:
+                          type: number
+                      required:
+                        - date
+                        - value
+                        - weight
+                  history:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        workoutId:
+                          type: string
+                        date:
+                          type: string
+                        sets:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              setId:
+                                type: string
+                              weight:
+                                type: number
+                              reps:
+                                type: number
+                              rpe:
+                                type: number
+                                nullable: true
+                              setType:
+                                type: string
+                                nullable: true
+                              estimated1RM:
+                                type: number
+                                nullable: true
+                            required:
+                              - setId
+                              - weight
+                              - reps
+                              - rpe
+                              - setType
+                              - estimated1RM
+                      required:
+                        - workoutId
+                        - date
+                        - sets
+                required:
+                  - exercise
+                  - oneRepMaxCurve
+                  - maxWeightCurve
+                  - maxRepsCurve
+                  - history
+      tags:
+        - GymLogger
+  /api/v1/analytics/monthly-report:
+    get:
+      summary: Get Analytics Monthly report
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: object
+                    properties:
+                      year:
+                        type: number
+                      month:
+                        type: number
+                    required:
+                      - year
+                      - month
+                  totalWorkouts:
+                    type: number
+                  totalVolume:
+                    type: number
+                  totalDurationSeconds:
+                    type: number
+                  topPRs:
+                    type: array
+                    items:
+                      $ref:
+                        "#/components/schemas/GetApiV1PersonalRecordsResponsedefaultPersonalRecor\
+                        dsItem"
+                  muscleDistribution:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        muscle_group:
+                          type: string
+                        set_count:
+                          type: number
+                      required:
+                        - muscle_group
+                        - set_count
+                required:
+                  - period
+                  - totalWorkouts
+                  - totalVolume
+                  - totalDurationSeconds
+                  - topPRs
+                  - muscleDistribution
+      tags:
+        - GymLogger
+  /api/v1/analytics/muscle-distribution:
+    get:
+      summary: Get Analytics Muscle distribution
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalSets:
+                    type: number
+                  distribution:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        muscleGroupId:
+                          type: string
+                        muscleGroup:
+                          type: string
+                        setCount:
+                          type: number
+                        percentage:
+                          type: number
+                      required:
+                        - muscleGroupId
+                        - muscleGroup
+                        - setCount
+                        - percentage
+                required:
+                  - totalSets
+                  - distribution
+      tags:
+        - GymLogger
+  /api/v1/analytics/sets-per-muscle-group:
+    get:
+      summary: Get Analytics Sets per muscle group
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  setsPerMuscleGroup:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        muscleGroupId:
+                          type: string
+                        muscleGroup:
+                          type: string
+                        setCount:
+                          type: number
+                        hypertrophyTargetMin:
+                          type: number
+                        hypertrophyTargetMax:
+                          type: number
+                      required:
+                        - muscleGroupId
+                        - muscleGroup
+                        - setCount
+                        - hypertrophyTargetMin
+                        - hypertrophyTargetMax
+                required:
+                  - setsPerMuscleGroup
+      tags:
+        - GymLogger
+  /api/v1/analytics/consistency:
+    get:
+      summary: Get Analytics Consistency
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentStreakDays:
+                    type: number
+                  totalWorkouts:
+                    type: number
+                  activeDates:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - currentStreakDays
+                  - totalWorkouts
+                  - activeDates
+      tags:
+        - GymLogger
+  /api/v1/analytics/year-in-review:
+    get:
+      summary: Get Analytics Year in review
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  year:
+                    type: number
+                  totalWorkouts:
+                    type: number
+                  totalVolume:
+                    type: number
+                  totalDurationSeconds:
+                    type: number
+                  topPRs:
+                    type: array
+                    items:
+                      $ref:
+                        "#/components/schemas/GetApiV1PersonalRecordsResponsedefaultPersonalRecor\
+                        dsItem"
+                required:
+                  - year
+                  - totalWorkouts
+                  - totalVolume
+                  - totalDurationSeconds
+                  - topPRs
+      tags:
+        - GymLogger
+  /api/v1/body-measurements:
+    get:
+      summary: Get Body measurements
+      responses:
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  measurements:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        user_id:
+                          type: string
+                        date:
+                          type: string
+                        weight:
+                          type: number
+                          nullable: true
+                        weight_unit:
+                          type: string
+                        body_fat_pct:
+                          type: number
+                          nullable: true
+                        chest:
+                          type: number
+                          nullable: true
+                        waist:
+                          type: number
+                          nullable: true
+                        hips:
+                          type: number
+                          nullable: true
+                        shoulders:
+                          type: number
+                          nullable: true
+                        biceps:
+                          type: number
+                          nullable: true
+                        forearms:
+                          type: number
+                          nullable: true
+                        thighs:
+                          type: number
+                          nullable: true
+                        calves:
+                          type: number
+                          nullable: true
+                        neck:
+                          type: number
+                          nullable: true
+                        length_unit:
+                          type: string
+                        photo_url:
+                          type: string
+                          nullable: true
+                        created_at:
+                          type: string
+                          nullable: true
+                      required:
+                        - id
+                        - user_id
+                        - date
+                        - weight
+                        - weight_unit
+                        - body_fat_pct
+                        - chest
+                        - waist
+                        - hips
+                        - shoulders
+                        - biceps
+                        - forearms
+                        - thighs
+                        - calves
+                        - neck
+                        - length_unit
+                        - photo_url
+                        - created_at
+                required:
+                  - measurements
+      tags:
+        - GymLogger
+    post:
+      summary: Create Body measurements
+      responses:
+        "201":
+          description: Status 201
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostApiV1BodyMeasurementsResponse201"
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostApiV1BodyMeasurementsBody"
+      tags:
+        - GymLogger
+  /api/v1/body-measurements/{id}:
+    get:
+      summary: Get Body measurements By Id
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  measurement:
+                    $ref: "#/components/schemas/PostApiV1BodyMeasurementsResponse201Measurement"
+                required:
+                  - measurement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger
+    put:
+      summary: Update Body measurements By Id
+      responses:
+        "400":
+          description: Status 400
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZodSafeParseError"
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostApiV1BodyMeasurementsResponse201"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostApiV1BodyMeasurementsBody"
+      tags:
+        - GymLogger
+    delete:
+      summary: Delete Body measurements By Id
+      responses:
+        "404":
+          description: Status 404
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetApiV1UsersProfileResponse404"
+        default:
+          description: Generic status from T["status"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteApiV1ExercisesIdResponsedefault"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - GymLogger

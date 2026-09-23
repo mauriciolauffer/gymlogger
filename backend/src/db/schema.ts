@@ -17,6 +17,7 @@ import type { Sex, Theme, SetType, Formula1rm, PrType } from "./constants";
 // BETTER AUTH TABLES (SQLite)
 // ==========================================
 
+/** Managed by Better Auth — core user identity. */
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -27,6 +28,7 @@ export const user = sqliteTable("user", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 
+/** Managed by Better Auth — active user sessions with expiry. */
 export const session = sqliteTable(
   "session",
   {
@@ -44,6 +46,7 @@ export const session = sqliteTable(
   (table) => [index("idx_session_user_id").on(table.userId)],
 );
 
+/** Managed by Better Auth — OAuth/credential provider links per user. */
 export const account = sqliteTable("account", {
   id: text("id").primaryKey(),
   accountId: text("account_id").notNull(),
@@ -63,6 +66,7 @@ export const account = sqliteTable("account", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
 
+/** Managed by Better Auth — email/phone verification tokens. */
 export const verification = sqliteTable("verification", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
@@ -90,6 +94,7 @@ export const sessionRelations = relations(session, ({ one }) => ({
 // GYMLOGGER DOMAIN TABLES
 // ==========================================
 
+/** Lookup table for weight and length units (e.g. kg, lbs, cm, in). Seeded at migration time. */
 export const units = sqliteTable("units", {
   code: text("code").primaryKey(),
   type: text("type").notNull(),
@@ -97,6 +102,7 @@ export const units = sqliteTable("units", {
   symbol: text("symbol").notNull(),
 });
 
+/** Optional extended profile for a user (bio, height, birthday, location). */
 export const usersProfile = sqliteTable("user_profile", {
   id: text("id").primaryKey(),
   location: text("location"),
@@ -108,6 +114,7 @@ export const usersProfile = sqliteTable("user_profile", {
   createdAt: integer("created_at", { mode: "timestamp" }),
 });
 
+/** Per-user app preferences: theme, preferred units, language, rest timer, notifications. */
 export const userSettings = sqliteTable("user_settings", {
   userId: text("user_id").primaryKey(),
   theme: text("theme").$type<Theme>().default("S"),
@@ -119,11 +126,13 @@ export const userSettings = sqliteTable("user_settings", {
   updatedAt: integer("updated_at", { mode: "timestamp" }),
 });
 
+/** Lookup table for muscle groups (e.g. Chest, Back, Quads). Seeded at migration time. */
 export const muscleGroups = sqliteTable("muscle_groups", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),
 });
 
+/** Exercise library — preset (is_custom=false) and user-created exercises. */
 export const exercises = sqliteTable(
   "exercises",
   {
@@ -150,6 +159,7 @@ export const exercises = sqliteTable(
   ],
 );
 
+/** Join table linking exercises to their secondary muscle groups. */
 export const exerciseSecondaryMuscles = sqliteTable(
   "exercise_secondary_muscles",
   {
@@ -159,6 +169,7 @@ export const exerciseSecondaryMuscles = sqliteTable(
   (table) => [primaryKey({ columns: [table.exerciseId, table.muscleGroupId] })],
 );
 
+/** Reusable workout templates created by users. */
 export const workoutTemplates = sqliteTable(
   "workout_templates",
   {
@@ -172,6 +183,7 @@ export const workoutTemplates = sqliteTable(
   (table) => [index("idx_workout_templates_user_id").on(table.userId)],
 );
 
+/** Ordered exercises within a workout template. */
 export const workoutTemplateExercises = sqliteTable(
   "workout_template_exercises",
   {
@@ -188,6 +200,7 @@ export const workoutTemplateExercises = sqliteTable(
   ],
 );
 
+/** A single completed (or in-progress) workout session. Totals are denormalized for fast list views. */
 export const workouts = sqliteTable(
   "workouts",
   {
@@ -211,6 +224,7 @@ export const workouts = sqliteTable(
   ],
 );
 
+/** Ordered exercises performed within a workout session. */
 export const workoutExercises = sqliteTable(
   "workout_exercises",
   {
@@ -227,6 +241,7 @@ export const workoutExercises = sqliteTable(
   ],
 );
 
+/** Individual sets logged for a workout exercise, including weight, reps, RPE, and 1RM estimates. */
 export const workoutSets = sqliteTable(
   "workout_sets",
   {
@@ -246,6 +261,7 @@ export const workoutSets = sqliteTable(
   (table) => [index("idx_workout_sets_exercise").on(table.workoutExerciseId)],
 );
 
+/** Cache of best personal records per user/exercise/type. Unique on (user_id, exercise_id, pr_type). */
 export const personalRecords = sqliteTable(
   "personal_records",
   {
@@ -265,6 +281,7 @@ export const personalRecords = sqliteTable(
   ],
 );
 
+/** User body composition and measurement log (weight, body fat, circumferences). */
 export const bodyMeasurements = sqliteTable(
   "body_measurements",
   {
@@ -296,6 +313,7 @@ export const bodyMeasurements = sqliteTable(
 
 export function getDb(c: Context<Env>) {
   return drizzle(c.env.DB, {
+    logger: true,
     schema: {
       user,
       session,

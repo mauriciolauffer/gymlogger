@@ -1,0 +1,277 @@
+Table "account" {
+  "id" text [primary key, not null]
+  "account_id" text [not null]
+  "provider_id" text [not null]
+  "user_id" text [not null]
+  "issuer" text
+  "access_token" text
+  "refresh_token" text
+  "id_token" text
+  "access_token_expires_at" integer
+  "refresh_token_expires_at" integer
+  "scope" text
+  "password" text
+  "created_at" integer [not null]
+  "updated_at" integer [not null]
+
+  Note: 'Managed by Better Auth — OAuth/credential provider links per user.'
+}
+
+Table "body_measurements" {
+  "id" text [primary key, not null]
+  "user_id" text [not null]
+  "date" text [not null]
+  "weight" real
+  "weight_unit" text [default: 'kg']
+  "body_fat_pct" real
+  "chest" real
+  "waist" real
+  "hips" real
+  "shoulders" real
+  "biceps" real
+  "forearms" real
+  "thighs" real
+  "calves" real
+  "neck" real
+  "length_unit" text [default: 'cm']
+  "photo_url" text
+  "created_at" integer
+
+  indexes {
+    ("user_id", "date") [name: 'idx_body_measurements_user_date']
+  }
+
+  Note: 'User body composition and measurement log (weight, body fat, circumferences).'
+}
+
+Table "exercise_secondary_muscles" {
+  "exercise_id" text [not null]
+  "muscle_group_id" text [not null]
+
+  indexes {
+    ("exercise_id", "muscle_group_id") [pk]
+  }
+
+  Note: 'Join table linking exercises to their secondary muscle groups.'
+}
+
+Table "exercises" {
+  "id" text [primary key, not null]
+  "name" text [not null]
+  "category" text [not null]
+  "body_part" text [not null]
+  "equipment" text
+  "instructions" text
+  "instruction_steps" text
+  "muscle_group_id" text
+  "target" text
+  "media_id" text
+  "image" text
+  "gif_url" text
+  "attribution" text
+  "is_custom" integer [default: false]
+  "user_id" text
+  "created_at" integer
+
+  indexes {
+    ("muscle_group_id") [name: 'idx_exercises_muscle_group']
+    ("user_id") [name: 'idx_exercises_custom']
+  }
+
+  Note: 'Exercise library — preset (is_custom=false) and user-created exercises.'
+}
+
+Table "muscle_groups" {
+  "id" text [primary key, not null]
+  "name" text [not null, unique]
+
+  Note: 'Lookup table for muscle groups (e.g. Chest, Back, Quads). Seeded at migration time.'
+}
+
+Table "personal_records" {
+  "id" text [primary key, not null]
+  "user_id" text [not null]
+  "exercise_id" text [not null]
+  "pr_type" text [not null]
+  "value" real [not null]
+  "value_unit" text
+  "achieved_at" integer [not null]
+  "workout_set_id" text
+
+  indexes {
+    ("user_id", "exercise_id", "pr_type") [unique, name: 'idx_personal_records_unique']
+    ("user_id", "exercise_id") [name: 'idx_personal_records_user_exercise']
+    ("user_id", "achieved_at") [name: 'idx_personal_records_achieved_at']
+  }
+
+  Note: 'Cache of best personal records per user/exercise/type. Unique on (user_id, exercise_id, pr_type).'
+}
+
+Table "session" {
+  "id" text [primary key, not null]
+  "expires_at" integer [not null]
+  "token" text [not null, unique]
+  "created_at" integer [not null]
+  "updated_at" integer [not null]
+  "ip_address" text
+  "user_agent" text
+  "user_id" text [not null]
+
+  indexes {
+    ("user_id") [name: 'idx_session_user_id']
+  }
+
+  Note: 'Managed by Better Auth — active user sessions with expiry.'
+}
+
+Table "units" {
+  "code" text [primary key, not null]
+  "type" text [not null]
+  "name" text [not null]
+  "symbol" text [not null]
+
+  Note: 'Lookup table for weight and length units (e.g. kg, lbs, cm, in). Seeded at migration time.'
+}
+
+Table "user" {
+  "id" text [primary key, not null]
+  "name" text [not null]
+  "email" text [not null, unique]
+  "email_verified" integer [not null, default: false]
+  "image" text
+  "created_at" integer [not null]
+  "updated_at" integer [not null]
+
+  Note: 'Managed by Better Auth — core user identity.'
+}
+
+Table "user_settings" {
+  "user_id" text [primary key, not null]
+  "theme" text [default: 'S']
+  "preferred_weight_unit" text [default: 'kg']
+  "preferred_length_unit" text [default: 'cm']
+  "language" text [default: 'en']
+  "rest_timer_duration_seconds" integer [default: 90]
+  "notifications_enabled" integer [default: true]
+  "updated_at" integer
+
+  Note: 'Per-user app preferences: theme, preferred units, language, rest timer, notifications.'
+}
+
+Table "user_profile" {
+  "id" text [primary key, not null]
+  "location" text
+  "birthday" text
+  "sex" text
+  "height" real
+  "height_unit" text [default: 'cm']
+  "bio" text
+  "created_at" integer
+
+  Note: 'Optional extended profile for a user (bio, height, birthday, location).'
+}
+
+Table "verification" {
+  "id" text [primary key, not null]
+  "identifier" text [not null]
+  "value" text [not null]
+  "expires_at" integer [not null]
+  "created_at" integer
+  "updated_at" integer
+
+  Note: 'Managed by Better Auth — email/phone verification tokens.'
+}
+
+Table "workout_exercises" {
+  "id" text [primary key, not null]
+  "workout_id" text [not null]
+  "exercise_id" text [not null]
+  "superset_id" text
+  "notes" text
+  "order_index" integer [not null]
+
+  indexes {
+    ("workout_id") [name: 'idx_workout_exercises_workout_id']
+    ("exercise_id") [name: 'idx_workout_exercises_exercise_id']
+  }
+
+  Note: 'Ordered exercises performed within a workout session.'
+}
+
+Table "workout_sets" {
+  "id" text [primary key, not null]
+  "workout_exercise_id" text [not null]
+  "set_type" text [default: 'NO']
+  "weight" real [not null, default: 0]
+  "weight_unit" text [default: 'kg']
+  "reps" integer [not null, default: 0]
+  "rpe" real
+  "estimated_1rm" real
+  "estimated_1rm_formula" text
+  "is_pr" integer [default: false]
+  "pr_type" text
+  "order_index" integer [not null]
+
+  indexes {
+    ("workout_exercise_id") [name: 'idx_workout_sets_exercise']
+  }
+
+  Note: 'Individual sets logged for a workout exercise, including weight, reps, RPE, and 1RM estimates.'
+}
+
+Table "workout_template_exercises" {
+  "id" text [primary key, not null]
+  "template_id" text [not null]
+  "exercise_id" text [not null]
+  "superset_id" text
+  "notes" text
+  "order_index" integer [not null]
+
+  indexes {
+    ("template_id") [name: 'idx_workout_template_exercises_template_id']
+    ("exercise_id") [name: 'idx_workout_template_exercises_exercise_id']
+  }
+
+  Note: 'Ordered exercises within a workout template.'
+}
+
+Table "workout_templates" {
+  "id" text [primary key, not null]
+  "user_id" text [not null]
+  "title" text [not null]
+  "notes" text
+  "created_at" integer
+  "updated_at" integer
+
+  indexes {
+    ("user_id") [name: 'idx_workout_templates_user_id']
+  }
+
+  Note: 'Reusable workout templates created by users.'
+}
+
+Table "workouts" {
+  "id" text [primary key, not null]
+  "user_id" text [not null]
+  "template_id" text
+  "title" text [not null]
+  "start_time" integer [not null]
+  "end_time" integer
+  "duration_seconds" integer
+  "total_volume" real [default: 0]
+  "volume_unit" text [default: 'kg']
+  "set_count" integer [default: 0]
+  "has_pr" integer [default: false]
+  "notes" text
+  "created_at" integer
+
+  indexes {
+    ("user_id") [name: 'idx_workouts_user_id']
+    ("user_id", "start_time") [name: 'idx_workouts_start_time']
+  }
+
+  Note: 'A single completed (or in-progress) workout session. Totals are denormalized for fast list views.'
+}
+
+Ref: "account"."user_id" > "user"."id"
+Ref: "session"."user_id" > "user"."id"

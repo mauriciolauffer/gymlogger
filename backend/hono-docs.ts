@@ -13,6 +13,7 @@ export default defineConfig({
   },
   outputs: {
     openApiJson: "./openapi/openapi.json",
+    openApiYaml: "../docs/openapi.yml",
   },
   apis: [
     {
