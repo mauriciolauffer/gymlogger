@@ -40,8 +40,8 @@ export default defineConfig({
   webServer: [
     {
       // Wrangler dev API server
-      command: "pnpm dev:api",
-      url: "http://localhost:8787/health",
+      command: "pnpm migrate:local && pnpm seed:local && pnpm dev:api",
+      url: "http://localhost:8787/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
       stdout: "pipe",

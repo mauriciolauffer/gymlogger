@@ -92,6 +92,7 @@ onMounted(() => {
 
 <template>
   <div class="profile-container">
+    <h2>User Profile</h2>
     <ui5-message-strip
       v-if="message"
       :design="message.type"

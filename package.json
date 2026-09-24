@@ -21,6 +21,8 @@
     "test:ui": "pnpm --filter gymlogger-ui test",
     "test:cov:api": "pnpm --filter gymlogger-api test:cov",
     "test:cov:ui": "pnpm --filter gymlogger-ui test:cov",
+    "migrate:local": "pnpm --filter gymlogger-api migrate:local",
+    "seed:local": "pnpm --filter gymlogger-api seed:local",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:ui": "playwright test --ui",
