@@ -1,5 +1,11 @@
+import { testClient } from "hono/testing";
 import { env } from "cloudflare:workers";
 import app from "../src/index.ts";
+import type { AppType } from "../src/index.ts";
+
+export function createClient() {
+  return testClient<AppType>(app, env);
+}
 
 export async function registerUser(
   email: string,
@@ -26,42 +32,31 @@ export async function buildWorkout(
   sets: { weight?: number; reps?: number; set_type?: string; rpe?: number }[],
   opts?: { title?: string; start_time?: string },
 ): Promise<{ workoutId: string; workoutExerciseId: string }> {
-  const wRes = await app.request(
-    "/api/v1/workouts/start",
+  const client = createClient();
+
+  const wRes = await client.api.v1.workouts.start.$post(
     {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
+      json: {
         title: opts?.title ?? "Workout",
         ...(opts?.start_time && { start_time: opts.start_time }),
-      }),
+      },
     },
-    env,
+    { headers: { Authorization: `Bearer ${token}` } },
   );
   const { workout } = await wRes.json<{ workout: { id: string } }>();
 
-  const exRes = await app.request(
-    `/api/v1/workouts/${workout.id}/exercises`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ exercise_id: exerciseId }),
-    },
-    env,
+  const exRes = await client.api.v1.workouts[":id"].exercises.$post(
+    { param: { id: workout.id }, json: { exercise_id: exerciseId } },
+    { headers: { Authorization: `Bearer ${token}` } },
   );
   const { workoutExercise } = await exRes.json<{ workoutExercise: { id: string } }>();
 
   const requests = [];
   for (const s of sets) {
     requests.push(
-      app.request(
-        `/api/v1/workouts/${workout.id}/sets`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ workout_exercise_id: workoutExercise.id, ...s }),
-        },
-        env,
+      client.api.v1.workouts[":id"].sets.$post(
+        { param: { id: workout.id }, json: { workout_exercise_id: workoutExercise.id, ...s } },
+        { headers: { Authorization: `Bearer ${token}` } },
       ),
     );
   }

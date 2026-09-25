@@ -3,15 +3,15 @@ import { env } from "cloudflare:workers";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import app from "../src/index.ts";
-import { registerUser } from "./helpers.ts";
+import { createClient, registerUser } from "./helpers.ts";
 
 describe("Index", () => {
   it("returns 404 for unknown route", async () => {
     const { token } = await registerUser("notfound@example.com", "password123");
-    const res = await app.request(
-      "/api/v1/nonexistent-route-xyz",
+    const client = createClient();
+    const res = await client.api.v1["nonexistent-route-xyz"].$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(404);
     const data = await res.json<{ error: string }>();
@@ -19,7 +19,8 @@ describe("Index", () => {
   });
 
   it("GET /api/health returns ok", async () => {
-    const res = await app.request("/api/health", {}, env);
+    const client = createClient();
+    const res = await client.api.health.$get();
     expect(res.status).toBe(200);
     const data = await res.json<{ status: string }>();
     expect(data.status).toBe("ok");

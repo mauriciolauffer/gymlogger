@@ -2,24 +2,20 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "cloudflare:workers";
-import app from "../src/index.ts";
-import { registerUser } from "./helpers.ts";
+import { createClient, registerUser } from "./helpers.ts";
 import { userSettings } from "../src/db/schema.ts";
 
 describe("Live activity", () => {
   let token: string;
   let workoutId: string;
+  let client: ReturnType<typeof createClient>;
 
   beforeEach(async () => {
     ({ token } = await registerUser("live@example.com", "password123", "Live User"));
-    const startRes = await app.request(
-      "/api/v1/workouts/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Live Workout" }),
-      },
-      env,
+    client = createClient();
+    const startRes = await client.api.v1.workouts.start.$post(
+      { json: { title: "Live Workout" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     ({
       workout: { id: workoutId },
@@ -27,10 +23,9 @@ describe("Live activity", () => {
   });
 
   it("returns active status and elapsed seconds for an in-progress workout", async () => {
-    const res = await app.request(
-      `/api/v1/workouts/${workoutId}/live`,
+    const res = await client.api.v1.workouts[":id"].live.$get(
+      { param: { id: workoutId } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
@@ -44,20 +39,14 @@ describe("Live activity", () => {
   });
 
   it("returns completed status for a finished workout", async () => {
-    await app.request(
-      `/api/v1/workouts/${workoutId}/finish`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({}),
-      },
-      env,
+    await client.api.v1.workouts[":id"].finish.$put(
+      { param: { id: workoutId }, json: {} },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
-    const res = await app.request(
-      `/api/v1/workouts/${workoutId}/live`,
+    const res = await client.api.v1.workouts[":id"].live.$get(
+      { param: { id: workoutId } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ status: string }>();
@@ -70,23 +59,17 @@ describe("Live activity", () => {
       "password123",
       "Live No Settings",
     );
-    const wRes = await app.request(
-      "/api/v1/workouts/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
-        body: JSON.stringify({ title: "No Settings Workout" }),
-      },
-      env,
+    const wRes = await client.api.v1.workouts.start.$post(
+      { json: { title: "No Settings Workout" } },
+      { headers: { Authorization: `Bearer ${freshToken}` } },
     );
     const { workout } = await wRes.json<{ workout: { id: string } }>();
     const db = drizzle(env.DB);
     await db.delete(userSettings).where(eq(userSettings.userId, userId)).run();
 
-    const res = await app.request(
-      `/api/v1/workouts/${workout.id}/live`,
+    const res = await client.api.v1.workouts[":id"].live.$get(
+      { param: { id: workout.id } },
       { headers: { Authorization: `Bearer ${freshToken}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ restTimerDurationSeconds: number }>();
@@ -94,10 +77,9 @@ describe("Live activity", () => {
   });
 
   it("returns 404 for an unknown workout", async () => {
-    const res = await app.request(
-      "/api/v1/workouts/nonexistent/live",
+    const res = await client.api.v1.workouts[":id"].live.$get(
+      { param: { id: "nonexistent" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(404);
   });

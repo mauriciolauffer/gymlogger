@@ -1,20 +1,19 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:workers";
-import app from "../src/index.ts";
-import { registerUser } from "./helpers.ts";
+import { createClient, registerUser } from "./helpers.ts";
 
 describe("Calculators", () => {
   let token: string;
+  let client: ReturnType<typeof createClient>;
 
   beforeEach(async () => {
     ({ token } = await registerUser("calc@example.com", "password123", "Calc User"));
+    client = createClient();
   });
 
   it("returns warmup sets for a valid target weight", async () => {
-    const res = await app.request(
-      "/api/v1/calculators/warmup?targetWeight=100",
+    const res = await client.api.v1.calculators.warmup.$get(
+      { query: { targetWeight: "100" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
@@ -27,10 +26,9 @@ describe("Calculators", () => {
   });
 
   it("returns 400 when targetWeight is missing", async () => {
-    const res = await app.request(
-      "/api/v1/calculators/warmup",
+    const res = await client.api.v1.calculators.warmup.$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(400);
     const data = await res.json<{ error: string }>();
@@ -38,19 +36,17 @@ describe("Calculators", () => {
   });
 
   it("returns 400 for a negative targetWeight", async () => {
-    const res = await app.request(
-      "/api/v1/calculators/warmup?targetWeight=-50",
+    const res = await client.api.v1.calculators.warmup.$get(
+      { query: { targetWeight: "-50" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(400);
   });
 
   it("returns 400 for targetWeight of zero", async () => {
-    const res = await app.request(
-      "/api/v1/calculators/warmup?targetWeight=0",
+    const res = await client.api.v1.calculators.warmup.$get(
+      { query: { targetWeight: "0" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(400);
   });

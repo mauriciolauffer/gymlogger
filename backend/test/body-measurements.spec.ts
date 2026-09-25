@@ -1,24 +1,19 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:workers";
-import app from "../src/index.ts";
-import { registerUser } from "./helpers.ts";
+import { createClient, registerUser } from "./helpers.ts";
 
 describe("Body measurements", () => {
   let token: string;
+  let client: ReturnType<typeof createClient>;
 
   beforeEach(async () => {
     ({ token } = await registerUser("bm@example.com", "password123", "BM User"));
+    client = createClient();
   });
 
   it("creates a new body measurement", async () => {
-    const res = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ date: "2026-01-15", weight: 80, weight_unit: "kg" }),
-      },
-      env,
+    const res = await client.api.v1["body-measurements"].$post(
+      { json: { date: "2026-01-15", weight: 80, weight_unit: "kg" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(201);
     const data = await res.json<{ measurement: { weight: number } }>();
@@ -26,19 +21,13 @@ describe("Body measurements", () => {
   });
 
   it("lists body measurements", async () => {
-    await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ date: "2026-01-15", weight: 80 }),
-      },
-      env,
-    );
-    const res = await app.request(
-      "/api/v1/body-measurements",
+    await client.api.v1["body-measurements"].$post(
+      { json: { date: "2026-01-15", weight: 80 } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
+    );
+    const res = await client.api.v1["body-measurements"].$get(
+      {},
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ measurements: unknown[] }>();
@@ -46,45 +35,29 @@ describe("Body measurements", () => {
   });
 
   it("gets a specific body measurement by id", async () => {
-    const createRes = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ weight: 82 }),
-      },
-      env,
+    const createRes = await client.api.v1["body-measurements"].$post(
+      { json: { weight: 82 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { measurement } = await createRes.json<{ measurement: { id: string } }>();
 
-    const res = await app.request(
-      `/api/v1/body-measurements/${measurement.id}`,
+    const res = await client.api.v1["body-measurements"][":id"].$get(
+      { param: { id: measurement.id } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
   });
 
   it("updates a body measurement", async () => {
-    const createRes = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ weight: 80 }),
-      },
-      env,
+    const createRes = await client.api.v1["body-measurements"].$post(
+      { json: { weight: 80 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { measurement } = await createRes.json<{ measurement: { id: string } }>();
 
-    const res = await app.request(
-      `/api/v1/body-measurements/${measurement.id}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ weight: 79 }),
-      },
-      env,
+    const res = await client.api.v1["body-measurements"][":id"].$put(
+      { param: { id: measurement.id }, json: { weight: 79 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ measurement: { weight: number } }>();
@@ -92,40 +65,28 @@ describe("Body measurements", () => {
   });
 
   it("deletes a body measurement", async () => {
-    const createRes = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ weight: 80 }),
-      },
-      env,
+    const createRes = await client.api.v1["body-measurements"].$post(
+      { json: { weight: 80 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { measurement } = await createRes.json<{ measurement: { id: string } }>();
 
-    const res = await app.request(
-      `/api/v1/body-measurements/${measurement.id}`,
-      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
-      env,
+    const res = await client.api.v1["body-measurements"][":id"].$delete(
+      { param: { id: measurement.id } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
   });
 
   it("lists measurements with from/to date filter", async () => {
-    await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ date: "2026-03-15", weight: 80 }),
-      },
-      env,
+    await client.api.v1["body-measurements"].$post(
+      { json: { date: "2026-03-15", weight: 80 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
-    const res = await app.request(
-      "/api/v1/body-measurements?from=2026-01-01&to=2026-12-31",
+    const res = await client.api.v1["body-measurements"].$get(
+      { query: { from: "2026-01-01", to: "2026-12-31" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ measurements: unknown[] }>();
@@ -133,20 +94,14 @@ describe("Body measurements", () => {
   });
 
   it("lists measurements excluding out-of-range dates", async () => {
-    await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ date: "2026-06-01", weight: 82 }),
-      },
-      env,
+    await client.api.v1["body-measurements"].$post(
+      { json: { date: "2026-06-01", weight: 82 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
-    const res = await app.request(
-      "/api/v1/body-measurements?from=2030-01-01&to=2030-12-31",
+    const res = await client.api.v1["body-measurements"].$get(
+      { query: { from: "2030-01-01", to: "2030-12-31" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ measurements: unknown[] }>();
@@ -154,12 +109,9 @@ describe("Body measurements", () => {
   });
 
   it("creates measurement with all fields including length measurements", async () => {
-    const res = await app.request(
-      "/api/v1/body-measurements",
+    const res = await client.api.v1["body-measurements"].$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        json: {
           weight: 80,
           weight_unit: "kg",
           body_fat_pct: 15,
@@ -173,9 +125,9 @@ describe("Body measurements", () => {
           calves: 38,
           neck: 38,
           length_unit: "cm",
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(201);
     const data = await res.json<{
@@ -186,61 +138,43 @@ describe("Body measurements", () => {
   });
 
   it("returns 404 when getting non-existent measurement", async () => {
-    const res = await app.request(
-      "/api/v1/body-measurements/bm_nonexistent",
+    const res = await client.api.v1["body-measurements"][":id"].$get(
+      { param: { id: "bm_nonexistent" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(404);
   });
 
   it("returns 404 when updating non-existent measurement", async () => {
-    const res = await app.request(
-      "/api/v1/body-measurements/bm_nonexistent",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ weight: 75 }),
-      },
-      env,
+    const res = await client.api.v1["body-measurements"][":id"].$put(
+      { param: { id: "bm_nonexistent" }, json: { weight: 75 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(404);
   });
 
   it("returns 404 when deleting non-existent measurement", async () => {
-    const res = await app.request(
-      "/api/v1/body-measurements/bm_nonexistent",
-      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
-      env,
+    const res = await client.api.v1["body-measurements"][":id"].$delete(
+      { param: { id: "bm_nonexistent" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(404);
   });
 
   it("converts measurements from lbs to kg based on user settings", async () => {
-    await app.request(
-      "/api/v1/users/settings",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ preferred_weight_unit: "lbs" }),
-      },
-      env,
-    );
-
-    await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ date: "2026-05-01", weight: 176, weight_unit: "lbs" }),
-      },
-      env,
-    );
-
-    const listRes = await app.request(
-      "/api/v1/body-measurements",
+    await client.api.v1.users.settings.$put(
+      { json: { preferred_weight_unit: "lbs" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
+    );
+
+    await client.api.v1["body-measurements"].$post(
+      { json: { date: "2026-05-01", weight: 176, weight_unit: "lbs" } },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    const listRes = await client.api.v1["body-measurements"].$get(
+      {},
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(listRes.status).toBe(200);
     const data = await listRes.json<{ measurements: { weight: number; weight_unit: string }[] }>();
@@ -248,23 +182,16 @@ describe("Body measurements", () => {
   });
 
   it("updates multiple measurement fields", async () => {
-    const createRes = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ date: "2026-07-01", weight: 85, waist: 90 }),
-      },
-      env,
+    const createRes = await client.api.v1["body-measurements"].$post(
+      { json: { date: "2026-07-01", weight: 85, waist: 90 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { measurement } = await createRes.json<{ measurement: { id: string } }>();
 
-    const res = await app.request(
-      `/api/v1/body-measurements/${measurement.id}`,
+    const res = await client.api.v1["body-measurements"][":id"].$put(
       {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        param: { id: measurement.id },
+        json: {
           date: "2026-07-02",
           weight: 84.5,
           weight_unit: "kg",
@@ -279,9 +206,9 @@ describe("Body measurements", () => {
           calves: 37,
           neck: 39,
           length_unit: "cm",
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ measurement: { weight: number; waist: number } }>();
@@ -290,24 +217,14 @@ describe("Body measurements", () => {
   });
 
   it("creates measurement using settings preferred units when no unit given", async () => {
-    await app.request(
-      "/api/v1/users/settings",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ preferred_weight_unit: "lbs", preferred_length_unit: "in" }),
-      },
-      env,
+    await client.api.v1.users.settings.$put(
+      { json: { preferred_weight_unit: "lbs", preferred_length_unit: "in" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
-    const res = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ weight: 180, chest: 40 }),
-      },
-      env,
+    const res = await client.api.v1["body-measurements"].$post(
+      { json: { weight: 180, chest: 40 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(201);
     const data = await res.json<{
@@ -318,25 +235,15 @@ describe("Body measurements", () => {
   });
 
   it("update measurement with no patch fields succeeds", async () => {
-    const createRes = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ weight: 80 }),
-      },
-      env,
+    const createRes = await client.api.v1["body-measurements"].$post(
+      { json: { weight: 80 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { measurement } = await createRes.json<{ measurement: { id: string; weight: number } }>();
 
-    const res = await app.request(
-      `/api/v1/body-measurements/${measurement.id}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({}),
-      },
-      env,
+    const res = await client.api.v1["body-measurements"][":id"].$put(
+      { param: { id: measurement.id }, json: {} },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ measurement: { weight: number } }>();
@@ -350,20 +257,14 @@ describe("Body measurements", () => {
       "No Settings BM",
     );
 
-    await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
-        body: JSON.stringify({ weight: 75, weight_unit: "kg" }),
-      },
-      env,
+    await client.api.v1["body-measurements"].$post(
+      { json: { weight: 75, weight_unit: "kg" } },
+      { headers: { Authorization: `Bearer ${freshToken}` } },
     );
 
-    const res = await app.request(
-      "/api/v1/body-measurements",
+    const res = await client.api.v1["body-measurements"].$get(
+      {},
       { headers: { Authorization: `Bearer ${freshToken}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ measurements: { weight_unit: string }[] }>();
@@ -377,14 +278,9 @@ describe("Body measurements", () => {
       "No Settings BM2",
     );
 
-    const res = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
-        body: JSON.stringify({ weight: 80 }),
-      },
-      env,
+    const res = await client.api.v1["body-measurements"].$post(
+      { json: { weight: 80 } },
+      { headers: { Authorization: `Bearer ${freshToken}` } },
     );
     expect(res.status).toBe(201);
     const data = await res.json<{ measurement: { weightUnit: string; lengthUnit: string } }>();
@@ -393,14 +289,9 @@ describe("Body measurements", () => {
   });
 
   it("returns 400 when body_fat_pct exceeds 100", async () => {
-    const res = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ date: "2026-01-01", body_fat_pct: 101 }),
-      },
-      env,
+    const res = await client.api.v1["body-measurements"].$post(
+      { json: { date: "2026-01-01", body_fat_pct: 101 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(400);
   });

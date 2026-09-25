@@ -1,37 +1,34 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:workers";
-import app from "../src/index.ts";
-import { buildWorkout, registerUser } from "./helpers.ts";
+import { createClient, buildWorkout, registerUser } from "./helpers.ts";
 
 describe("Personal record detection", () => {
   let token: string;
+  let client: ReturnType<typeof createClient>;
 
   beforeEach(async () => {
     ({ token } = await registerUser("pr@example.com", "password123", "PR Athlete"));
+    client = createClient();
   });
 
   it("flags a set as PR when it is the first for an exercise", async () => {
     const { workoutId, workoutExerciseId } = await buildWorkout(token, "ex_bench_press", [], {
       title: "Bench Day",
     });
-    const setRes = await app.request(
-      `/api/v1/workouts/${workoutId}/sets`,
+    const setRes = await client.api.v1.workouts[":id"].sets.$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExerciseId, weight: 100, reps: 5 }),
+        param: { id: workoutId },
+        json: { workout_exercise_id: workoutExerciseId, weight: 100, reps: 5 },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(setRes.status).toBe(201);
     const setData = await setRes.json<{ isPr: boolean; set: { is_pr: number } }>();
     expect(setData.isPr).toBe(true);
     expect(setData.set.is_pr).toBe(1);
 
-    const prRes = await app.request(
-      "/api/v1/personal-records?exerciseId=ex_bench_press",
+    const prRes = await client.api.v1["personal-records"].$get(
+      { query: { exerciseId: "ex_bench_press" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(prRes.status).toBe(200);
     const prData = await prRes.json<{ personalRecords: unknown[] }>();
@@ -45,14 +42,12 @@ describe("Personal record detection", () => {
       [{ weight: 100, reps: 5 }],
       { title: "Bench Day 2" },
     );
-    const set2Res = await app.request(
-      `/api/v1/workouts/${workoutId}/sets`,
+    const set2Res = await client.api.v1.workouts[":id"].sets.$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExerciseId, weight: 120, reps: 5 }),
+        param: { id: workoutId },
+        json: { workout_exercise_id: workoutExerciseId, weight: 120, reps: 5 },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const set2Data = await set2Res.json<{ isPr: boolean }>();
     expect(set2Data.isPr).toBe(true);
@@ -65,14 +60,12 @@ describe("Personal record detection", () => {
       [{ weight: 120, reps: 5 }],
       { title: "Bench Day 3" },
     );
-    const set2Res = await app.request(
-      `/api/v1/workouts/${workoutId}/sets`,
+    const set2Res = await client.api.v1.workouts[":id"].sets.$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExerciseId, weight: 110, reps: 5 }),
+        param: { id: workoutId },
+        json: { workout_exercise_id: workoutExerciseId, weight: 110, reps: 5 },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const set2Data = await set2Res.json<{ isPr: boolean }>();
     expect(set2Data.isPr).toBe(false);
@@ -83,10 +76,9 @@ describe("Personal record detection", () => {
       title: "PR Workout",
     });
 
-    const res = await app.request(
-      "/api/v1/personal-records?exerciseId=ex_bench_press",
+    const res = await client.api.v1["personal-records"].$get(
+      { query: { exerciseId: "ex_bench_press" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ personalRecords: { exerciseId: string }[] }>();
@@ -95,10 +87,9 @@ describe("Personal record detection", () => {
   });
 
   it("lists all personal records without exerciseId filter", async () => {
-    const res = await app.request(
-      "/api/v1/personal-records",
+    const res = await client.api.v1["personal-records"].$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ personalRecords: unknown[] }>();
@@ -112,22 +103,19 @@ describe("Personal record detection", () => {
     const { workoutId, workoutExerciseId } = await buildWorkout(token, "ex_squat", [], {
       title: "PR Cross-workout",
     });
-    const set2Res = await app.request(
-      `/api/v1/workouts/${workoutId}/sets`,
+    const set2Res = await client.api.v1.workouts[":id"].sets.$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ workout_exercise_id: workoutExerciseId, weight: 120, reps: 5 }),
+        param: { id: workoutId },
+        json: { workout_exercise_id: workoutExerciseId, weight: 120, reps: 5 },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const set2Data = await set2Res.json<{ isPr: boolean }>();
     expect(set2Data.isPr).toBe(true);
 
-    const prRes = await app.request(
-      "/api/v1/personal-records?exerciseId=ex_squat",
+    const prRes = await client.api.v1["personal-records"].$get(
+      { query: { exerciseId: "ex_squat" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     const { personalRecords } = await prRes.json<{
       personalRecords: { prType: string; value: number }[];
@@ -141,10 +129,9 @@ describe("Personal record detection", () => {
       title: "has_pr workout",
     });
 
-    const getRes = await app.request(
-      `/api/v1/workouts/${workoutId}`,
+    const getRes = await client.api.v1.workouts[":id"].$get(
+      { param: { id: workoutId } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(getRes.status).toBe(200);
     const { workout: detail } = await getRes.json<{ workout: { hasPr: boolean } }>();

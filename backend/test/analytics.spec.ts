@@ -1,20 +1,19 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:workers";
-import app from "../src/index.ts";
-import { buildWorkout, registerUser } from "./helpers.ts";
+import { createClient, buildWorkout, registerUser } from "./helpers.ts";
 
 describe("Analytics", () => {
   let token: string;
+  let client: ReturnType<typeof createClient>;
 
   beforeEach(async () => {
     ({ token } = await registerUser("analytics@example.com", "password123", "Analytics User"));
+    client = createClient();
   });
 
   it("returns consistency stats", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/consistency",
+    const res = await client.api.v1.analytics.consistency.$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ currentStreakDays: number; totalWorkouts: number }>();
@@ -30,10 +29,9 @@ describe("Analytics", () => {
       );
     }
     await Promise.all(buildWorkouts);
-    const res = await app.request(
-      "/api/v1/analytics/consistency",
+    const res = await client.api.v1.analytics.consistency.$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ currentStreakDays: number; totalWorkouts: number }>();
@@ -42,10 +40,9 @@ describe("Analytics", () => {
   });
 
   it("monthly-report for December (month=12 edge case)", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/monthly-report?year=2026&month=12",
+    const res = await client.api.v1.analytics["monthly-report"].$get(
+      { query: { year: "2026", month: "12" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ period: { year: number; month: number } }>();
@@ -58,10 +55,9 @@ describe("Analytics", () => {
       title: "Monthly PR Workout",
     });
 
-    const res = await app.request(
-      "/api/v1/analytics/monthly-report?year=2026&month=9",
+    const res = await client.api.v1.analytics["monthly-report"].$get(
+      { query: { year: "2026", month: "9" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ topPRs: { exerciseId: string }[] }>();
@@ -72,10 +68,9 @@ describe("Analytics", () => {
   it("year-in-review includes topPRs when PRs were set in the year", async () => {
     await buildWorkout(token, "ex_squat", [{ weight: 150, reps: 5 }], { title: "Year PR Workout" });
 
-    const res = await app.request(
-      "/api/v1/analytics/year-in-review?year=2026",
+    const res = await client.api.v1.analytics["year-in-review"].$get(
+      { query: { year: "2026" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ topPRs: { exerciseId: string }[] }>();
@@ -83,10 +78,9 @@ describe("Analytics", () => {
   });
 
   it("monthly-report with no year/month uses defaults", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/monthly-report",
+    const res = await client.api.v1.analytics["monthly-report"].$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ period: { year: number; month: number } }>();
@@ -95,10 +89,9 @@ describe("Analytics", () => {
   });
 
   it("year-in-review with no year param uses current year", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/year-in-review",
+    const res = await client.api.v1.analytics["year-in-review"].$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ year: number }>();
@@ -106,10 +99,9 @@ describe("Analytics", () => {
   });
 
   it("muscle-distribution returns zero percentage when no sets logged", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/muscle-distribution",
+    const res = await client.api.v1.analytics["muscle-distribution"].$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ totalSets: number; distribution: { percentage: number }[] }>();
@@ -120,10 +112,9 @@ describe("Analytics", () => {
   });
 
   it("muscle-distribution with from/to filters", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/muscle-distribution?from=2026-01-01&to=2026-12-31",
+    const res = await client.api.v1.analytics["muscle-distribution"].$get(
+      { query: { from: "2026-01-01", to: "2026-12-31" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ totalSets: number; distribution: unknown[] }>();
@@ -131,10 +122,9 @@ describe("Analytics", () => {
   });
 
   it("sets-per-muscle-group with from/to filters", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/sets-per-muscle-group?from=2026-01-01&to=2026-12-31",
+    const res = await client.api.v1.analytics["sets-per-muscle-group"].$get(
+      { query: { from: "2026-01-01", to: "2026-12-31" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ setsPerMuscleGroup: unknown[] }>();
@@ -142,19 +132,17 @@ describe("Analytics", () => {
   });
 
   it("performance returns 400 when exerciseId is missing", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/performance",
+    const res = await client.api.v1.analytics.performance.$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(400);
   });
 
   it("performance returns 404 for unknown exerciseId", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/performance?exerciseId=nonexistent_exercise",
+    const res = await client.api.v1.analytics.performance.$get(
+      { query: { exerciseId: "nonexistent_exercise" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(404);
   });
@@ -171,10 +159,9 @@ describe("Analytics", () => {
       );
     }
     await Promise.all(buildWorkouts);
-    const res = await app.request(
-      "/api/v1/analytics/consistency",
+    const res = await client.api.v1.analytics.consistency.$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ currentStreakDays: number; totalWorkouts: number }>();
@@ -183,10 +170,9 @@ describe("Analytics", () => {
   });
 
   it("performance returns empty curves when no sets logged", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/performance?exerciseId=ex_bench_press",
+    const res = await client.api.v1.analytics.performance.$get(
+      { query: { exerciseId: "ex_bench_press" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
   });
@@ -194,10 +180,9 @@ describe("Analytics", () => {
   it("performance with zero-weight/zero-rep set excludes from curves", async () => {
     await buildWorkout(token, "ex_bench_press", [{ weight: 0, reps: 0 }], { title: "Zero Set" });
 
-    const res = await app.request(
-      "/api/v1/analytics/performance?exerciseId=ex_bench_press",
+    const res = await client.api.v1.analytics.performance.$get(
+      { query: { exerciseId: "ex_bench_press" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
@@ -222,10 +207,9 @@ describe("Analytics", () => {
       { title: "Multi Set Session" },
     );
 
-    const res = await app.request(
-      "/api/v1/analytics/performance?exerciseId=ex_bench_press",
+    const res = await client.api.v1.analytics.performance.$get(
+      { query: { exerciseId: "ex_bench_press" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
@@ -248,10 +232,9 @@ describe("Analytics", () => {
       { title: "Mixed Reps" },
     );
 
-    const res = await app.request(
-      "/api/v1/analytics/performance?exerciseId=ex_squat",
+    const res = await client.api.v1.analytics.performance.$get(
+      { query: { exerciseId: "ex_squat" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
@@ -263,10 +246,9 @@ describe("Analytics", () => {
   });
 
   it("monthly-report with non-numeric year falls back gracefully", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/monthly-report?year=abc&month=xyz",
+    const res = await client.api.v1.analytics["monthly-report"].$get(
+      { query: { year: "abc", month: "xyz" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ period: { year: number; month: number } }>();
@@ -277,10 +259,9 @@ describe("Analytics", () => {
   });
 
   it("year-in-review with non-numeric year falls back gracefully", async () => {
-    const res = await app.request(
-      "/api/v1/analytics/year-in-review?year=abc",
+    const res = await client.api.v1.analytics["year-in-review"].$get(
+      { query: { year: "abc" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ year: number }>();

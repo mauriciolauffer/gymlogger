@@ -2,22 +2,22 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "cloudflare:workers";
-import app from "../src/index.ts";
-import { registerUser } from "./helpers.ts";
+import { createClient, registerUser } from "./helpers.ts";
 import { usersProfile, userSettings } from "../src/db/schema.ts";
 
 describe("User profile", () => {
   let token: string;
+  let client: ReturnType<typeof createClient>;
 
   beforeEach(async () => {
     ({ token } = await registerUser("profile@example.com", "password123", "Profile User"));
+    client = createClient();
   });
 
   it("gets the user profile", async () => {
-    const res = await app.request(
-      "/api/v1/users/profile",
+    const res = await client.api.v1.users.profile.$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ profile: { email: string; name: string } }>();
@@ -26,21 +26,18 @@ describe("User profile", () => {
   });
 
   it("updates the user profile", async () => {
-    const res = await app.request(
-      "/api/v1/users/profile",
+    const res = await client.api.v1.users.profile.$put(
       {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        json: {
           name: "Updated Name",
           location: "Berlin",
           sex: "M",
           height: 180,
           height_unit: "cm",
           bio: "Lifter",
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ message: string; profile: { name: string; location: string } }>();
@@ -50,14 +47,9 @@ describe("User profile", () => {
   });
 
   it("updates profile with birthday and partial fields", async () => {
-    const res = await app.request(
-      "/api/v1/users/profile",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ birthday: "1990-05-15", location: "Berlin" }),
-      },
-      env,
+    const res = await client.api.v1.users.profile.$put(
+      { json: { birthday: "1990-05-15", location: "Berlin" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ profile: { birthday: string; location: string } }>();
@@ -66,14 +58,9 @@ describe("User profile", () => {
   });
 
   it("updates profile with only bio (other fields fall back to current values)", async () => {
-    const res = await app.request(
-      "/api/v1/users/profile",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ bio: "Just a bio update" }),
-      },
-      env,
+    const res = await client.api.v1.users.profile.$put(
+      { json: { bio: "Just a bio update" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ profile: { bio: string } }>();
@@ -81,41 +68,26 @@ describe("User profile", () => {
   });
 
   it("rejects invalid sex value", async () => {
-    const res = await app.request(
-      "/api/v1/users/profile",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ sex: "unknown_value" }),
-      },
-      env,
+    const res = await client.api.v1.users.profile.$put(
+      { json: { sex: "unknown_value" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(400);
   });
 
   it("ignores unknown fields on profile update", async () => {
-    const res = await app.request(
-      "/api/v1/users/profile",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ height_unit: "feet" }),
-      },
-      env,
+    const res = await client.api.v1.users.profile.$put(
+      { json: { height_unit: "feet" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     // height_unit is no longer a profile field — unknown fields are stripped, not rejected
     expect(res.status).toBe(200);
   });
 
   it("accepts height on body measurements (not profile)", async () => {
-    const res = await app.request(
-      "/api/v1/body-measurements",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ height: 175, length_unit: "cm" }),
-      },
-      env,
+    const res = await client.api.v1["body-measurements"].$post(
+      { json: { height: 175, length_unit: "cm" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(201);
   });
@@ -129,10 +101,9 @@ describe("User profile", () => {
     const db = drizzle(env.DB);
     await db.delete(usersProfile).where(eq(usersProfile.id, userId)).run();
 
-    const res = await app.request(
-      "/api/v1/users/profile",
+    const res = await client.api.v1.users.profile.$get(
+      {},
       { headers: { Authorization: `Bearer ${freshToken}` } },
-      env,
     );
     expect(res.status).toBe(404);
   });
@@ -146,14 +117,9 @@ describe("User profile", () => {
     const db = drizzle(env.DB);
     await db.delete(usersProfile).where(eq(usersProfile.id, userId)).run();
 
-    const res = await app.request(
-      "/api/v1/users/profile",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
-        body: JSON.stringify({ bio: "test" }),
-      },
-      env,
+    const res = await client.api.v1.users.profile.$put(
+      { json: { bio: "test" } },
+      { headers: { Authorization: `Bearer ${freshToken}` } },
     );
     expect(res.status).toBe(404);
   });
@@ -161,16 +127,17 @@ describe("User profile", () => {
 
 describe("User settings", () => {
   let token: string;
+  let client: ReturnType<typeof createClient>;
 
   beforeEach(async () => {
     ({ token } = await registerUser("settings@example.com", "password123", "Settings User"));
+    client = createClient();
   });
 
   it("gets user settings", async () => {
-    const res = await app.request(
-      "/api/v1/users/settings",
+    const res = await client.api.v1.users.settings.$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ settings: { preferred_weight_unit: string } }>();
@@ -183,10 +150,9 @@ describe("User settings", () => {
       "password123",
       "Users Ext",
     );
-    const res = await app.request(
-      "/api/v1/users/settings",
+    const res = await client.api.v1.users.settings.$get(
+      {},
       { headers: { Authorization: `Bearer ${freshToken}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
@@ -207,18 +173,15 @@ describe("User settings", () => {
   });
 
   it("updates user settings", async () => {
-    const res = await app.request(
-      "/api/v1/users/settings",
+    const res = await client.api.v1.users.settings.$put(
       {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        json: {
           preferred_weight_unit: "lbs",
           theme: "D",
           rest_timer_duration_seconds: 120,
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
@@ -234,14 +197,9 @@ describe("User settings", () => {
   });
 
   it("updates settings with notifications_enabled flag", async () => {
-    const res = await app.request(
-      "/api/v1/users/settings",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ notifications_enabled: false, preferred_length_unit: "in" }),
-      },
-      env,
+    const res = await client.api.v1.users.settings.$put(
+      { json: { notifications_enabled: false, preferred_length_unit: "in" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
@@ -252,14 +210,9 @@ describe("User settings", () => {
   });
 
   it("updates settings with language", async () => {
-    const res = await app.request(
-      "/api/v1/users/settings",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ language: "de" }),
-      },
-      env,
+    const res = await client.api.v1.users.settings.$put(
+      { json: { language: "de" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ settings: { language: string } }>();
@@ -267,24 +220,14 @@ describe("User settings", () => {
   });
 
   it("updates settings twice (upsert idempotency)", async () => {
-    await app.request(
-      "/api/v1/users/settings",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ theme: "D" }),
-      },
-      env,
+    await client.api.v1.users.settings.$put(
+      { json: { theme: "D" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
-    const res = await app.request(
-      "/api/v1/users/settings",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ theme: "L" }),
-      },
-      env,
+    const res = await client.api.v1.users.settings.$put(
+      { json: { theme: "L" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ settings: { theme: string } }>();
@@ -298,21 +241,18 @@ describe("User settings", () => {
       "Upsert User",
     );
 
-    const res = await app.request(
-      "/api/v1/users/settings",
+    const res = await client.api.v1.users.settings.$put(
       {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${freshToken}` },
-        body: JSON.stringify({
+        json: {
           theme: "D",
           preferred_weight_unit: "lbs",
           preferred_length_unit: "in",
           language: "es",
           rest_timer_duration_seconds: 60,
           notifications_enabled: false,
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${freshToken}` } },
     );
     expect(res.status).toBe(200);
     const data = await res.json<{
@@ -328,40 +268,25 @@ describe("User settings", () => {
   });
 
   it("rejects invalid theme", async () => {
-    const res = await app.request(
-      "/api/v1/users/settings",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ theme: "neon" }),
-      },
-      env,
+    const res = await client.api.v1.users.settings.$put(
+      { json: { theme: "neon" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(400);
   });
 
   it("rejects invalid weight unit", async () => {
-    const res = await app.request(
-      "/api/v1/users/settings",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ preferred_weight_unit: "stone" }),
-      },
-      env,
+    const res = await client.api.v1.users.settings.$put(
+      { json: { preferred_weight_unit: "stone" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(400);
   });
 
   it("rejects non-positive rest timer duration", async () => {
-    const res = await app.request(
-      "/api/v1/users/settings",
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ rest_timer_duration_seconds: 0 }),
-      },
-      env,
+    const res = await client.api.v1.users.settings.$put(
+      { json: { rest_timer_duration_seconds: 0 } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(400);
   });
@@ -375,10 +300,9 @@ describe("User settings", () => {
     const db = drizzle(env.DB);
     await db.delete(userSettings).where(eq(userSettings.userId, userId)).run();
 
-    const res = await app.request(
-      "/api/v1/users/settings",
+    const res = await client.api.v1.users.settings.$get(
+      {},
       { headers: { Authorization: `Bearer ${freshToken}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{

@@ -1,31 +1,28 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { env } from "cloudflare:workers";
-import app from "../src/index.ts";
-import { registerUser } from "./helpers.ts";
+import { createClient, registerUser } from "./helpers.ts";
 
 describe("Workout templates", () => {
   let token: string;
+  let client: ReturnType<typeof createClient>;
 
   beforeEach(async () => {
     ({ token } = await registerUser("template@example.com", "password123", "Template User"));
+    client = createClient();
   });
 
   it("creates, lists, updates, uses, and deletes a template", async () => {
-    const createRes = await app.request(
-      "/api/v1/workout-templates",
+    const createRes = await client.api.v1["workout-templates"].$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        json: {
           title: "Upper Body Power",
           notes: "Focus on heavy compound lifts",
           exercises: [
             { exercise_id: "ex_bench_press", order_index: 0 },
             { exercise_id: "ex_overhead_press", order_index: 1 },
           ],
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(createRes.status).toBe(201);
     const createData = await createRes.json<{ template: { id: string; exercises: unknown[] } }>();
@@ -33,76 +30,59 @@ describe("Workout templates", () => {
     expect(templateId).toContain("wt_");
     expect(createData.template.exercises.length).toBe(2);
 
-    const listRes = await app.request(
-      "/api/v1/workout-templates",
+    const listRes = await client.api.v1["workout-templates"].$get(
+      {},
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(listRes.status).toBe(200);
     const listData = await listRes.json<{ templates: unknown[] }>();
     expect(listData.templates.length).toBe(1);
 
-    const updateRes = await app.request(
-      `/api/v1/workout-templates/${templateId}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Upper Body Hypertrophy" }),
-      },
-      env,
+    const updateRes = await client.api.v1["workout-templates"][":id"].$put(
+      { param: { id: templateId }, json: { title: "Upper Body Hypertrophy" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(updateRes.status).toBe(200);
     const updateData = await updateRes.json<{ template: { title: string } }>();
     expect(updateData.template.title).toBe("Upper Body Hypertrophy");
 
-    const startRes = await app.request(
-      "/api/v1/workouts/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Session From Template", template_id: templateId }),
-      },
-      env,
+    const startRes = await client.api.v1.workouts.start.$post(
+      { json: { title: "Session From Template", template_id: templateId } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(startRes.status).toBe(201);
     const startData = await startRes.json<{ workout: { id: string } }>();
     const workoutId = startData.workout.id;
 
-    const getWorkoutRes = await app.request(
-      `/api/v1/workouts/${workoutId}`,
+    const getWorkoutRes = await client.api.v1.workouts[":id"].$get(
+      { param: { id: workoutId } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     const workoutData = await getWorkoutRes.json<{ workout: { exercises: unknown[] } }>();
     expect(workoutData.workout.exercises.length).toBe(2);
 
-    const delRes = await app.request(
-      `/api/v1/workout-templates/${templateId}`,
-      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
-      env,
+    const delRes = await client.api.v1["workout-templates"][":id"].$delete(
+      { param: { id: templateId } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(delRes.status).toBe(200);
   });
 
   it("returns template with exercises in GET /:id", async () => {
-    const createRes = await app.request(
-      "/api/v1/workout-templates",
+    const createRes = await client.api.v1["workout-templates"].$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        json: {
           title: "Detail Template",
           exercises: [{ exercise_id: "ex_bench_press", order_index: 0 }],
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { template } = await createRes.json<{ template: { id: string } }>();
 
-    const res = await app.request(
-      `/api/v1/workout-templates/${template.id}`,
+    const res = await client.api.v1["workout-templates"][":id"].$get(
+      { param: { id: template.id } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(200);
     const data = await res.json<{ template: { exercises: { exerciseName: string }[] } }>();
@@ -111,34 +91,29 @@ describe("Workout templates", () => {
   });
 
   it("updates a template replacing exercises array", async () => {
-    const createRes = await app.request(
-      "/api/v1/workout-templates",
+    const createRes = await client.api.v1["workout-templates"].$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        json: {
           title: "Replace Exercises",
           exercises: [{ exercise_id: "ex_bench_press", order_index: 0 }],
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { template } = await createRes.json<{ template: { id: string } }>();
 
-    const updateRes = await app.request(
-      `/api/v1/workout-templates/${template.id}`,
+    const updateRes = await client.api.v1["workout-templates"][":id"].$put(
       {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        param: { id: template.id },
+        json: {
           title: "Replaced",
           exercises: [
             { exercise_id: "ex_squat", order_index: 0 },
             { exercise_id: "ex_overhead_press", order_index: 1 },
           ],
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(updateRes.status).toBe(200);
     const data = await updateRes.json<{
@@ -146,38 +121,29 @@ describe("Workout templates", () => {
     }>();
     expect(data.template.title).toBe("Replaced");
 
-    const getRes = await app.request(
-      `/api/v1/workout-templates/${template.id}`,
+    const getRes = await client.api.v1["workout-templates"][":id"].$get(
+      { param: { id: template.id } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     const getData = await getRes.json<{ template: { exercises: unknown[] } }>();
     expect(getData.template.exercises.length).toBe(2);
   });
 
   it("updates template title only (no exercises replacement)", async () => {
-    const createRes = await app.request(
-      "/api/v1/workout-templates",
+    const createRes = await client.api.v1["workout-templates"].$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        json: {
           title: "Original Title",
           exercises: [{ exercise_id: "ex_bench_press", order_index: 0 }],
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { template } = await createRes.json<{ template: { id: string } }>();
 
-    const updateRes = await app.request(
-      `/api/v1/workout-templates/${template.id}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "New Title" }),
-      },
-      env,
+    const updateRes = await client.api.v1["workout-templates"][":id"].$put(
+      { param: { id: template.id }, json: { title: "New Title" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(updateRes.status).toBe(200);
     const data = await updateRes.json<{ template: { title: string } }>();
@@ -185,25 +151,15 @@ describe("Workout templates", () => {
   });
 
   it("updates template notes only (title unchanged)", async () => {
-    const createRes = await app.request(
-      "/api/v1/workout-templates",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Stable Title" }),
-      },
-      env,
+    const createRes = await client.api.v1["workout-templates"].$post(
+      { json: { title: "Stable Title" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { template } = await createRes.json<{ template: { id: string; title: string } }>();
 
-    const updateRes = await app.request(
-      `/api/v1/workout-templates/${template.id}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ notes: "Updated notes" }),
-      },
-      env,
+    const updateRes = await client.api.v1["workout-templates"][":id"].$put(
+      { param: { id: template.id }, json: { notes: "Updated notes" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(updateRes.status).toBe(200);
     const data = await updateRes.json<{ template: { title: string } }>();
@@ -211,14 +167,9 @@ describe("Workout templates", () => {
   });
 
   it("creates a template without exercises", async () => {
-    const res = await app.request(
-      "/api/v1/workout-templates",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "No Exercises", notes: "Some notes" }),
-      },
-      env,
+    const res = await client.api.v1["workout-templates"].$post(
+      { json: { title: "No Exercises", notes: "Some notes" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(201);
     const data = await res.json<{ template: { exercises: unknown[] } }>();
@@ -226,17 +177,14 @@ describe("Workout templates", () => {
   });
 
   it("creates template with exercises that have no order_index (auto-index)", async () => {
-    const res = await app.request(
-      "/api/v1/workout-templates",
+    const res = await client.api.v1["workout-templates"].$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        json: {
           title: "Auto Index Template",
           exercises: [{ exercise_id: "ex_bench_press" }, { exercise_id: "ex_squat" }],
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(201);
     const data = await res.json<{
@@ -246,28 +194,21 @@ describe("Workout templates", () => {
   });
 
   it("updates template with exercises that have no order_index", async () => {
-    const createRes = await app.request(
-      "/api/v1/workout-templates",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Update Auto Index" }),
-      },
-      env,
+    const createRes = await client.api.v1["workout-templates"].$post(
+      { json: { title: "Update Auto Index" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { template } = await createRes.json<{ template: { id: string } }>();
 
-    const updateRes = await app.request(
-      `/api/v1/workout-templates/${template.id}`,
+    const updateRes = await client.api.v1["workout-templates"][":id"].$put(
       {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        param: { id: template.id },
+        json: {
           title: "Updated",
           exercises: [{ exercise_id: "ex_bench_press" }],
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(updateRes.status).toBe(200);
     const data = await updateRes.json<{
@@ -277,101 +218,74 @@ describe("Workout templates", () => {
   });
 
   it("returns 404 for unknown template", async () => {
-    const res = await app.request(
-      "/api/v1/workout-templates/nonexistent",
+    const res = await client.api.v1["workout-templates"][":id"].$get(
+      { param: { id: "nonexistent" } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(res.status).toBe(404);
   });
 
   it("returns 404 when updating another user's template", async () => {
     const { token: otherToken } = await registerUser("tmpl-other@example.com", "password123");
-    const createRes = await app.request(
-      "/api/v1/workout-templates",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${otherToken}` },
-        body: JSON.stringify({ title: "Private Template" }),
-      },
-      env,
+    const createRes = await client.api.v1["workout-templates"].$post(
+      { json: { title: "Private Template" } },
+      { headers: { Authorization: `Bearer ${otherToken}` } },
     );
     const { template } = await createRes.json<{ template: { id: string } }>();
 
-    const res = await app.request(
-      `/api/v1/workout-templates/${template.id}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: "Stolen" }),
-      },
-      env,
+    const res = await client.api.v1["workout-templates"][":id"].$put(
+      { param: { id: template.id }, json: { title: "Stolen" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(404);
   });
 
   it("returns 404 when deleting another user's template", async () => {
     const { token: otherToken } = await registerUser("tmpl-del-other@example.com", "password123");
-    const createRes = await app.request(
-      "/api/v1/workout-templates",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${otherToken}` },
-        body: JSON.stringify({ title: "Another Private Template" }),
-      },
-      env,
+    const createRes = await client.api.v1["workout-templates"].$post(
+      { json: { title: "Another Private Template" } },
+      { headers: { Authorization: `Bearer ${otherToken}` } },
     );
     const { template } = await createRes.json<{ template: { id: string } }>();
 
-    const res = await app.request(
-      `/api/v1/workout-templates/${template.id}`,
-      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
-      env,
+    const res = await client.api.v1["workout-templates"][":id"].$delete(
+      { param: { id: template.id } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(404);
   });
 
   it("deleting a template removes its child exercise rows", async () => {
-    const createRes = await app.request(
-      "/api/v1/workout-templates",
+    const createRes = await client.api.v1["workout-templates"].$post(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+        json: {
           title: "Cascade Template",
           exercises: [
             { exercise_id: "ex_bench_press", order_index: 0 },
             { exercise_id: "ex_squat", order_index: 1 },
           ],
-        }),
+        },
       },
-      env,
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     const { template } = await createRes.json<{ template: { id: string } }>();
 
-    await app.request(
-      `/api/v1/workout-templates/${template.id}`,
-      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
-      env,
+    await client.api.v1["workout-templates"][":id"].$delete(
+      { param: { id: template.id } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
-    const getRes = await app.request(
-      `/api/v1/workout-templates/${template.id}`,
+    const getRes = await client.api.v1["workout-templates"][":id"].$get(
+      { param: { id: template.id } },
       { headers: { Authorization: `Bearer ${token}` } },
-      env,
     );
     expect(getRes.status).toBe(404);
   });
 
   it("returns 400 with error details when creating template with invalid body", async () => {
-    const res = await app.request(
-      "/api/v1/workout-templates",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ notes: "No title" }),
-      },
-      env,
+    const res = await client.api.v1["workout-templates"].$post(
+      { json: { notes: "No title" } },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(res.status).toBe(400);
     const data = await res.json<{ error?: string; success?: boolean }>();
