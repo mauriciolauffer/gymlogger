@@ -33,6 +33,7 @@ Table "body_measurements" {
   "thighs" real
   "calves" real
   "neck" real
+  "height" real
   "length_unit" text [default: 'cm']
   "photo_url" text
   "created_at" integer
@@ -163,12 +164,10 @@ Table "user_profile" {
   "location" text
   "birthday" text
   "sex" text
-  "height" real
-  "height_unit" text [default: 'cm']
   "bio" text
   "created_at" integer
 
-  Note: 'Optional extended profile for a user (bio, height, birthday, location).'
+  Note: 'Optional extended profile for a user (bio, birthday, location).'
 }
 
 Table "verification" {

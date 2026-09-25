@@ -57,6 +57,10 @@ const handleCreate = async () => {
 
 const handleClose = () => {
   name.value = "";
+  category.value = "barbell";
+  equipment.value = "barbell";
+  target.value = "";
+  muscleGroupId.value = "";
   errorMsg.value = "";
   emit("close");
 };

@@ -9,20 +9,9 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --parallel --filter gymlogger-api --filter gymlogger-ui dev",
-    "dev:api": "pnpm --filter gymlogger-api dev",
-    "dev:ui": "pnpm --filter gymlogger-ui dev",
-    "build:api": "pnpm --filter gymlogger-api build",
-    "build:ui": "pnpm --filter gymlogger-ui build",
-    "deploy:api": "pnpm --filter gymlogger-api deploy",
-    "deploy:ui": "pnpm --filter gymlogger-ui build && wrangler deploy --config frontend/dist/gymlogger_ui/wrangler.json",
-    "deploy": "pnpm deploy:api && pnpm deploy:ui",
     "test": "pnpm test:api && pnpm test:ui",
     "test:api": "pnpm --filter gymlogger-api test",
     "test:ui": "pnpm --filter gymlogger-ui test",
-    "test:cov:api": "pnpm --filter gymlogger-api test:cov",
-    "test:cov:ui": "pnpm --filter gymlogger-ui test:cov",
-    "migrate:local": "pnpm --filter gymlogger-api migrate:local",
-    "seed:local": "pnpm --filter gymlogger-api seed:local",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:ui": "playwright test --ui",
@@ -30,20 +19,20 @@
     "format": "oxfmt"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.56.0",
-    "@cloudflare/vitest-plugin": "^1.1.13",
-    "@cloudflare/workers-types": "^5.20260921.1",
+    "@cloudflare/vite-plugin": "^1.58.0",
+    "@cloudflare/vitest-plugin": "^1.2.4",
+    "@cloudflare/workers-types": "^5.20260923.1",
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.2",
     "@vitest/coverage-istanbul": "^4.1.11",
     "@vitest/coverage-v8": "^4.1.11",
-    "oxfmt": "^0.68.0",
-    "oxlint": "^1.83.0",
+    "oxfmt": "^0.70.0",
+    "oxlint": "^1.85.0",
     "oxlint-tsgolint": "^7.0.2002",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vitest": "^4.1.11",
-    "wrangler": "^4.135.0"
+    "wrangler": "^4.137.0"
   },
   "packageManager": "pnpm@12.5.1"
 }

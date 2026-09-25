@@ -116,6 +116,7 @@ export const createBodyMeasurementSchema = z.object({
   thighs: measurementField,
   calves: measurementField,
   neck: measurementField,
+  height: z.number().positive().nullable().optional(),
   length_unit: insertBodyMeasurementSchema.shape.lengthUnit.optional(),
 });
 
@@ -133,6 +134,7 @@ export const updateBodyMeasurementBodySchema = z.object({
   thighs: measurementField,
   calves: measurementField,
   neck: measurementField,
+  height: z.number().positive().nullable().optional(),
   length_unit: updateBodyMeasurementSchema.shape.lengthUnit.optional(),
 });
 
@@ -170,8 +172,6 @@ export const updateProfileSchema = z.object({
   location: updateProfileDrizzleSchema.shape.location,
   birthday: updateProfileDrizzleSchema.shape.birthday,
   sex: z.enum(SEX_VALUES).nullable().optional(),
-  height: z.number().positive().nullable().optional(),
-  height_unit: z.enum(["cm", "in"]).nullable().optional(),
   bio: updateProfileDrizzleSchema.shape.bio,
 });
 

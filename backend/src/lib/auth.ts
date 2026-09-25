@@ -33,7 +33,7 @@ export const createAuth = (
     secret,
     baseURL,
     // Requests arrive through frontend service binding, so this is the browser's origin
-    trustedOrigins: [corsOrigin],
+    trustedOrigins: [corsOrigin, "http://localhost:*"],
     advanced: {
       useSecureCookies,
     },

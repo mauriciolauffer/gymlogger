@@ -17,8 +17,6 @@ export const usersRouter = new Hono<Env>()
         location: usersProfile.location,
         birthday: usersProfile.birthday,
         sex: usersProfile.sex,
-        height: usersProfile.height,
-        heightUnit: usersProfile.heightUnit,
         bio: usersProfile.bio,
         createdAt: usersProfile.createdAt,
         email: user.email,
@@ -39,7 +37,7 @@ export const usersRouter = new Hono<Env>()
     const sessionUser = c.get("user")!;
     const body = c.req.valid("json");
 
-    const { name, location, birthday, sex, height, height_unit, bio } = body;
+    const { name, location, birthday, sex, bio } = body;
 
     const db = getDb(c);
     const current = await db
@@ -47,8 +45,6 @@ export const usersRouter = new Hono<Env>()
         location: usersProfile.location,
         birthday: usersProfile.birthday,
         sex: usersProfile.sex,
-        height: usersProfile.height,
-        heightUnit: usersProfile.heightUnit,
         bio: usersProfile.bio,
       })
       .from(usersProfile)
@@ -65,8 +61,6 @@ export const usersRouter = new Hono<Env>()
         location: location !== undefined ? location : current.location,
         birthday: birthday !== undefined ? birthday : current.birthday,
         sex: sex !== undefined ? sex : current.sex,
-        height: height !== undefined ? height : current.height,
-        heightUnit: height_unit !== undefined ? height_unit : current.heightUnit,
         bio: bio !== undefined ? bio : current.bio,
       })
       .where(eq(usersProfile.id, sessionUser.userId))
@@ -82,8 +76,6 @@ export const usersRouter = new Hono<Env>()
         location: usersProfile.location,
         birthday: usersProfile.birthday,
         sex: usersProfile.sex,
-        height: usersProfile.height,
-        heightUnit: usersProfile.heightUnit,
         bio: usersProfile.bio,
         createdAt: usersProfile.createdAt,
         email: user.email,

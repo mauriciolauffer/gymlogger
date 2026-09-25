@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import process from "node:process";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -40,7 +41,7 @@ export default defineConfig({
   webServer: [
     {
       // Wrangler dev API server
-      command: "pnpm migrate:local && pnpm seed:local && pnpm dev:api",
+      command: "pnpm --filter gymlogger-api migrate:local && pnpm dev:api",
       url: "http://localhost:8787/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,

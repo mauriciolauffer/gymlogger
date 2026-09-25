@@ -78,6 +78,12 @@ const handleRemoveExercise = (index: number) => {
   selectedExercises.value.splice(index, 1);
 };
 
+const handleClose = () => {
+  errorMsg.value = "";
+  selectedExerciseToAdd.value = "";
+  emit("close");
+};
+
 const handleSave = async () => {
   errorMsg.value = "";
   if (!title.value.trim()) {
@@ -109,7 +115,7 @@ const handleSave = async () => {
       await client.api.v1["workout-templates"].$post({ json: payload });
     }
     emit("saved");
-    emit("close");
+    handleClose();
   } catch (err: any) {
     errorMsg.value = err.message || "Failed to save template.";
   } finally {
@@ -122,7 +128,7 @@ const handleSave = async () => {
   <ui5-dialog
     :open="open"
     :header-text="template ? 'Edit Template' : 'Create Template'"
-    @close="emit('close')"
+    @close="handleClose"
   >
     <div class="dialog-content">
       <ui5-message-strip v-if="errorMsg" design="Negative" @close="errorMsg = ''">
@@ -187,7 +193,7 @@ const handleSave = async () => {
     </div>
 
     <div slot="footer" class="dialog-footer">
-      <ui5-button design="Transparent" @click="emit('close')">Cancel</ui5-button>
+      <ui5-button design="Transparent" @click="handleClose">Cancel</ui5-button>
       <ui5-button design="Emphasized" :disabled="loading" @click="handleSave">
         {{ loading ? "Saving..." : "Save Template" }}
       </ui5-button>

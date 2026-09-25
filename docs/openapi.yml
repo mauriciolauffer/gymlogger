@@ -670,9 +670,50 @@ components:
         neck:
           type: number
           nullable: true
+        height:
+          type: number
+          nullable: true
         length_unit:
           type: string
           nullable: true
+    GetApiV1PersonalRecordsResponsedefaultPersonalRecordsItem:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        exerciseId:
+          type: string
+        prType:
+          type: string
+          enum:
+            - RM
+            - WT
+            - VO
+            - RP
+        value:
+          type: number
+        valueUnit:
+          type: string
+          nullable: true
+        achievedAt:
+          type: string
+        workoutSetId:
+          type: string
+          nullable: true
+        exerciseName:
+          type: string
+      required:
+        - id
+        - userId
+        - exerciseId
+        - prType
+        - value
+        - valueUnit
+        - achievedAt
+        - workoutSetId
+        - exerciseName
     PostApiV1BodyMeasurementsResponse201Measurement:
       type: object
       properties:
@@ -718,6 +759,9 @@ components:
         neck:
           type: number
           nullable: true
+        height:
+          type: number
+          nullable: true
         lengthUnit:
           type: string
           nullable: true
@@ -743,47 +787,10 @@ components:
         - thighs
         - calves
         - neck
+        - height
         - lengthUnit
         - photoUrl
         - createdAt
-    GetApiV1PersonalRecordsResponsedefaultPersonalRecordsItem:
-      type: object
-      properties:
-        id:
-          type: string
-        userId:
-          type: string
-        exerciseId:
-          type: string
-        prType:
-          type: string
-          enum:
-            - RM
-            - WT
-            - VO
-            - RP
-        value:
-          type: number
-        valueUnit:
-          type: string
-          nullable: true
-        achievedAt:
-          type: string
-        workoutSetId:
-          type: string
-          nullable: true
-        exerciseName:
-          type: string
-      required:
-        - id
-        - userId
-        - exerciseId
-        - prType
-        - value
-        - valueUnit
-        - achievedAt
-        - workoutSetId
-        - exerciseName
     PostApiV1WorkoutTemplatesBody:
       type: object
       properties:
@@ -837,52 +844,6 @@ components:
         - _zod
         - name
         - message
-    GetApiV1UsersProfileResponsedefaultProfile:
-      type: object
-      properties:
-        id:
-          type: string
-        location:
-          type: string
-          nullable: true
-        birthday:
-          type: string
-          nullable: true
-        sex:
-          type: string
-          enum:
-            - M
-            - F
-            - O
-            - P
-          nullable: true
-        height:
-          type: number
-          nullable: true
-        heightUnit:
-          type: string
-          nullable: true
-        bio:
-          type: string
-          nullable: true
-        createdAt:
-          type: string
-          nullable: true
-        email:
-          type: string
-        name:
-          type: string
-      required:
-        - id
-        - location
-        - birthday
-        - sex
-        - height
-        - heightUnit
-        - bio
-        - createdAt
-        - email
-        - name
     PutApiV1WorkoutsIdSetsSetIdBody:
       type: object
       properties:
@@ -1062,6 +1023,51 @@ components:
       required:
         - name
         - category
+    ZodSafeParseError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        data: {}
+        error:
+          $ref: "#/components/schemas/ZodError"
+      required:
+        - success
+        - error
+    PostApiV1BodyMeasurementsResponse201:
+      type: object
+      properties:
+        message:
+          type: string
+        measurement:
+          $ref: "#/components/schemas/PostApiV1BodyMeasurementsResponse201Measurement"
+      required:
+        - message
+        - measurement
+    PutApiV1UsersProfileBody:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+          nullable: true
+        birthday:
+          type: string
+          nullable: true
+        sex:
+          type: string
+          enum:
+            - M
+            - F
+            - O
+            - P
+          nullable: true
+        bio:
+          type: string
+          nullable: true
     PutApiV1WorkoutsIdFinishBody:
       type: object
       properties:
@@ -1428,16 +1434,6 @@ components:
             - code
             - path
             - message
-    PostApiV1BodyMeasurementsResponse201:
-      type: object
-      properties:
-        message:
-          type: string
-        measurement:
-          $ref: "#/components/schemas/PostApiV1BodyMeasurementsResponse201Measurement"
-      required:
-        - message
-        - measurement
     PostApiV1WorkoutsIdSetsBody:
       type: object
       properties:
@@ -1459,6 +1455,44 @@ components:
           type: number
       required:
         - workout_exercise_id
+    GetApiV1UsersProfileResponsedefaultProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        location:
+          type: string
+          nullable: true
+        birthday:
+          type: string
+          nullable: true
+        sex:
+          type: string
+          enum:
+            - M
+            - F
+            - O
+            - P
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          nullable: true
+        email:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - location
+        - birthday
+        - sex
+        - bio
+        - createdAt
+        - email
+        - name
     PostApiV1WorkoutsStartResponse201Workout:
       type: object
       properties:
@@ -1521,19 +1555,6 @@ components:
       required:
         - message
         - exercise
-    ZodSafeParseError:
-      type: object
-      properties:
-        success:
-          type: boolean
-          enum:
-            - false
-        data: {}
-        error:
-          $ref: "#/components/schemas/ZodError"
-      required:
-        - success
-        - error
     PutApiV1WorkoutTemplatesIdBody:
       type: object
       properties:
@@ -1564,37 +1585,6 @@ components:
         - keys
         - path
         - message
-    PutApiV1UsersProfileBody:
-      type: object
-      properties:
-        name:
-          type: string
-        location:
-          type: string
-          nullable: true
-        birthday:
-          type: string
-          nullable: true
-        sex:
-          type: string
-          enum:
-            - M
-            - F
-            - O
-            - P
-          nullable: true
-        height:
-          type: number
-          nullable: true
-        height_unit:
-          type: string
-          enum:
-            - cm
-            - in
-          nullable: true
-        bio:
-          type: string
-          nullable: true
     ZodError_2:
       type: object
       properties:
@@ -1682,7 +1672,7 @@ components:
             - false
         data: {}
         error:
-          $ref: "#/components/schemas/ZodError_10"
+          $ref: "#/components/schemas/ZodError_11"
       required:
         - success
         - error
@@ -1747,7 +1737,7 @@ components:
             - false
         data: {}
         error:
-          $ref: "#/components/schemas/ZodError_8"
+          $ref: "#/components/schemas/ZodError_9"
       required:
         - success
         - error
@@ -1855,6 +1845,45 @@ components:
       required:
         - success
         - error
+    ZodError_7:
+      type: object
+      properties:
+        format:
+          type: object
+        flatten:
+          type: object
+        addIssue:
+          type: object
+        addIssues:
+          type: object
+        isEmpty:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/PutApiV1UsersProfileBody"
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
+        _zod:
+          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
+        stack:
+          type: string
+        name:
+          type: string
+        message:
+          type: string
+        cause: {}
+      required:
+        - format
+        - flatten
+        - addIssue
+        - addIssues
+        - isEmpty
+        - type
+        - issues
+        - _zod
+        - name
+        - message
     ZodSafeParseError_7:
       type: object
       properties:
@@ -1864,7 +1893,7 @@ components:
             - false
         data: {}
         error:
-          $ref: "#/components/schemas/ZodError_9"
+          $ref: "#/components/schemas/ZodError_7"
       required:
         - success
         - error
@@ -1877,7 +1906,7 @@ components:
             - false
         data: {}
         error:
-          $ref: "#/components/schemas/ZodError_11"
+          $ref: "#/components/schemas/ZodError_10"
       required:
         - success
         - error
@@ -1916,11 +1945,11 @@ components:
             - false
         data: {}
         error:
-          $ref: "#/components/schemas/ZodError_7"
+          $ref: "#/components/schemas/ZodError_8"
       required:
         - success
         - error
-    ZodError_7:
+    ZodError_8:
       type: object
       properties:
         format:
@@ -1959,7 +1988,7 @@ components:
         - _zod
         - name
         - message
-    ZodError_8:
+    ZodError_9:
       type: object
       properties:
         format:
@@ -2011,7 +2040,7 @@ components:
       required:
         - success
         - error
-    ZodError_9:
+    ZodError_10:
       type: object
       properties:
         format:
@@ -2050,7 +2079,7 @@ components:
         - _zod
         - name
         - message
-    ZodError_10:
+    ZodError_11:
       type: object
       properties:
         format:
@@ -2089,45 +2118,6 @@ components:
         - _zod
         - name
         - message
-    ZodError_11:
-      type: object
-      properties:
-        format:
-          type: object
-        flatten:
-          type: object
-        addIssue:
-          type: object
-        addIssues:
-          type: object
-        isEmpty:
-          type: boolean
-        type:
-          $ref: "#/components/schemas/PostApiV1WorkoutsStartBody"
-        issues:
-          type: array
-          items:
-            $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorIssuesItem"
-        _zod:
-          $ref: "#/components/schemas/PutApiV1UsersProfileResponse400ErrorZod"
-        stack:
-          type: string
-        name:
-          type: string
-        message:
-          type: string
-        cause: {}
-      required:
-        - format
-        - flatten
-        - addIssue
-        - addIssues
-        - isEmpty
-        - type
-        - issues
-        - _zod
-        - name
-        - message
     ZodError_12:
       type: object
       properties:
@@ -2142,7 +2132,7 @@ components:
         isEmpty:
           type: boolean
         type:
-          $ref: "#/components/schemas/PutApiV1UsersProfileBody"
+          $ref: "#/components/schemas/PostApiV1WorkoutsStartBody"
         issues:
           type: array
           items:
@@ -2273,7 +2263,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ZodSafeParseError_9"
+                $ref: "#/components/schemas/ZodSafeParseError_7"
         "404":
           description: Status 404
           content:
@@ -2468,7 +2458,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ZodSafeParseError_7"
+                $ref: "#/components/schemas/ZodSafeParseError_8"
       requestBody:
         required: true
         content:
@@ -2727,7 +2717,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ZodSafeParseError_8"
+                $ref: "#/components/schemas/ZodSafeParseError_9"
       requestBody:
         required: true
         content:
@@ -3938,6 +3928,9 @@ paths:
                         neck:
                           type: number
                           nullable: true
+                        height:
+                          type: number
+                          nullable: true
                         length_unit:
                           type: string
                         photo_url:
@@ -3962,6 +3955,7 @@ paths:
                         - thighs
                         - calves
                         - neck
+                        - height
                         - length_unit
                         - photo_url
                         - created_at

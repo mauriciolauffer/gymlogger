@@ -59,6 +59,7 @@ export const bodyMeasurementsRouter = new Hono<Env>()
         thighs: convertLength(entry.thighs, entryLengthUnit, targetLengthUnit),
         calves: convertLength(entry.calves, entryLengthUnit, targetLengthUnit),
         neck: convertLength(entry.neck, entryLengthUnit, targetLengthUnit),
+        height: convertLength(entry.height, entryLengthUnit, targetLengthUnit),
         length_unit: targetLengthUnit,
         photo_url: entry.photoUrl,
         created_at: entry.createdAt,
@@ -85,6 +86,7 @@ export const bodyMeasurementsRouter = new Hono<Env>()
       thighs,
       calves,
       neck,
+      height,
       length_unit,
     } = body;
 
@@ -122,6 +124,7 @@ export const bodyMeasurementsRouter = new Hono<Env>()
         thighs: thighs ?? null,
         calves: calves ?? null,
         neck: neck ?? null,
+        height: height ?? null,
         lengthUnit: lUnit,
       })
       .run();
@@ -180,6 +183,7 @@ export const bodyMeasurementsRouter = new Hono<Env>()
       thighs,
       calves,
       neck,
+      height,
       length_unit,
     } = body;
 
@@ -197,6 +201,7 @@ export const bodyMeasurementsRouter = new Hono<Env>()
     if (thighs !== undefined) patch.thighs = thighs;
     if (calves !== undefined) patch.calves = calves;
     if (neck !== undefined) patch.neck = neck;
+    if (height !== undefined) patch.height = height;
     if (length_unit !== undefined) patch.lengthUnit = length_unit;
 
     if (Object.keys(patch).length > 0) {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { onBeforeRouteLeave } from "vue-router";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Input.js";
 import "@ui5/webcomponents/dist/Form.js";
@@ -7,8 +8,6 @@ import "@ui5/webcomponents/dist/FormGroup.js";
 import "@ui5/webcomponents/dist/FormItem.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 import "@ui5/webcomponents/dist/Label.js";
-import "@ui5/webcomponents/dist/SegmentedButton.js";
-import "@ui5/webcomponents/dist/SegmentedButtonItem.js";
 import "@ui5/webcomponents/dist/Select.js";
 import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/DatePicker.js";
@@ -20,16 +19,10 @@ import { SEX } from "../db/constants.js";
 
 type ProfileGetRes = InferResponseType<typeof client.api.v1.users.profile.$get, 200>;
 
-const profile = ref({
-  email: "",
-  name: "",
-  location: "",
-  birthday: "",
-  sex: "P",
-  height: 0,
-  height_unit: "cm",
-  bio: "",
-});
+const emptyProfile = () => ({ email: "", name: "", location: "", birthday: "", sex: "P", bio: "" });
+
+const profile = ref(emptyProfile());
+const savedProfile = ref(emptyProfile());
 
 const loading = ref(false);
 const saving = ref(false);
@@ -45,13 +38,9 @@ const fetchProfile = async () => {
     }
     const res = (await httpRes.json()) as ProfileGetRes;
     if (res.profile) {
-      profile.value = {
-        ...profile.value,
-        ...res.profile,
-        height: res.profile.height ?? 0,
-        sex: res.profile.sex || "P",
-        height_unit: res.profile.heightUnit || res.profile.height_unit || "cm",
-      };
+      const fetched = { ...emptyProfile(), ...res.profile, sex: res.profile.sex || "P" };
+      profile.value = { ...fetched };
+      savedProfile.value = { ...fetched };
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to load profile";
@@ -71,11 +60,10 @@ const handleSave = async () => {
         location: profile.value.location,
         birthday: profile.value.birthday,
         sex: profile.value.sex,
-        height: Number(profile.value.height) > 0 ? Number(profile.value.height) : undefined,
-        height_unit: profile.value.height_unit,
         bio: profile.value.bio,
       },
     });
+    savedProfile.value = { ...profile.value };
     message.value = { text: "Profile updated successfully!", type: "Positive" };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to update profile";
@@ -87,6 +75,11 @@ const handleSave = async () => {
 
 onMounted(() => {
   fetchProfile();
+});
+
+onBeforeRouteLeave(() => {
+  profile.value = { ...savedProfile.value };
+  message.value = null;
 });
 </script>
 
@@ -149,30 +142,6 @@ onMounted(() => {
             >
           </ui5-select>
         </ui5-form-item>
-
-        <ui5-form-item>
-          <ui5-label slot="labelContent">Height</ui5-label>
-          <div class="height-row">
-            <ui5-input
-              type="Number"
-              :value="String(profile.height)"
-              placeholder="175"
-              @input="profile.height = Number($event.target.value)"
-            />
-            <ui5-segmented-button
-              @selection-change="
-                profile.height_unit = $event.detail.selectedItems[0]?.dataset.value
-              "
-            >
-              <ui5-segmented-button-item data-value="cm" :selected="profile.height_unit === 'cm'"
-                >cm</ui5-segmented-button-item
-              >
-              <ui5-segmented-button-item data-value="in" :selected="profile.height_unit === 'in'"
-                >in</ui5-segmented-button-item
-              >
-            </ui5-segmented-button>
-          </div>
-        </ui5-form-item>
       </ui5-form-group>
 
       <ui5-form-group header-text="Bio">
@@ -206,17 +175,6 @@ onMounted(() => {
 
 .message-strip {
   margin-bottom: 0.5rem;
-}
-
-.height-row {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.height-row ui5-input {
-  flex: 1;
-  max-width: 8rem;
 }
 
 .actions {

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2551a244-949c-4512-a39d-5bcfcc94279a",
+  "id": "761699ae-a30a-499c-8d35-cd5143385fa2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -226,6 +226,13 @@
         },
         "neck": {
           "name": "neck",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "height": {
+          "name": "height",
           "type": "real",
           "primaryKey": false,
           "notNull": false,
@@ -834,21 +841,6 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
-        },
-        "height": {
-          "name": "height",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "height_unit": {
-          "name": "height_unit",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'cm'"
         },
         "bio": {
           "name": "bio",

@@ -7,6 +7,9 @@ const isTest = process.env.NODE_ENV === "test" || !!process.env.VITEST;
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    port: 5173,
+  },
   plugins: [
     ...(isTest ? [] : [cloudflare()]),
     vue({

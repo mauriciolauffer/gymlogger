@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { onBeforeRouteLeave } from "vue-router";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Form.js";
 import "@ui5/webcomponents/dist/FormGroup.js";
@@ -38,6 +39,11 @@ const handleSave = async () => {
     saving.value = false;
   }
 };
+
+onBeforeRouteLeave(() => {
+  settings.value = { ...settingsStore.settings };
+  message.value = null;
+});
 </script>
 
 <template>

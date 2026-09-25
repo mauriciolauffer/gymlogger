@@ -93,7 +93,7 @@ describe("User profile", () => {
     expect(res.status).toBe(400);
   });
 
-  it("rejects invalid height unit", async () => {
+  it("ignores unknown fields on profile update", async () => {
     const res = await app.request(
       "/api/v1/users/profile",
       {
@@ -103,20 +103,21 @@ describe("User profile", () => {
       },
       env,
     );
-    expect(res.status).toBe(400);
+    // height_unit is no longer a profile field — unknown fields are stripped, not rejected
+    expect(res.status).toBe(200);
   });
 
-  it("rejects non-positive height", async () => {
+  it("accepts height on body measurements (not profile)", async () => {
     const res = await app.request(
-      "/api/v1/users/profile",
+      "/api/v1/body-measurements",
       {
-        method: "PUT",
+        method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ height: -5 }),
+        body: JSON.stringify({ height: 175, length_unit: "cm" }),
       },
       env,
     );
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(201);
   });
 
   it("returns 404 when profile row is missing", async () => {

@@ -4,11 +4,10 @@ import "@ui5/webcomponents/dist/Dialog.js";
 import "@ui5/webcomponents/dist/Button.js";
 import "@ui5/webcomponents/dist/Input.js";
 import "@ui5/webcomponents/dist/Label.js";
-import "@ui5/webcomponents/dist/Select.js";
-import "@ui5/webcomponents/dist/Option.js";
 import "@ui5/webcomponents/dist/MessageStrip.js";
 
 import { client } from "../api/client.js";
+import { settingsStore } from "../store/settings.js";
 
 defineProps<{
   open: boolean;
@@ -17,21 +16,39 @@ defineProps<{
 const emit = defineEmits(["close", "saved"]);
 
 const weight = ref("");
-const weightUnit = ref("kg");
+const weightUnit = settingsStore.settings.preferred_weight_unit;
 const bodyFatPct = ref("");
+const height = ref("");
 const chest = ref("");
 const waist = ref("");
 const biceps = ref("");
 const thighs = ref("");
-const circumferenceUnit = ref("cm");
+const circumferenceUnit = settingsStore.settings.preferred_length_unit;
 const photoUrl = ref("");
 
 const loading = ref(false);
 const errorMsg = ref("");
 
+const resetForm = () => {
+  weight.value = "";
+  bodyFatPct.value = "";
+  height.value = "";
+  chest.value = "";
+  waist.value = "";
+  biceps.value = "";
+  thighs.value = "";
+  photoUrl.value = "";
+  errorMsg.value = "";
+};
+
+const handleClose = () => {
+  resetForm();
+  emit("close");
+};
+
 const handleSave = async () => {
   errorMsg.value = "";
-  if (!weight.value && !bodyFatPct.value && !chest.value && !waist.value) {
+  if (!weight.value && !bodyFatPct.value && !height.value && !chest.value && !waist.value) {
     errorMsg.value = "Please enter at least one measurement metric.";
     return;
   }
@@ -41,13 +58,14 @@ const handleSave = async () => {
     const httpRes = await client.api.v1["body-measurements"].$post({
       json: {
         weight: weight.value ? Number(weight.value) : undefined,
-        weight_unit: weightUnit.value,
+        weight_unit: weightUnit,
         body_fat_pct: bodyFatPct.value ? Number(bodyFatPct.value) : undefined,
+        height: height.value ? Number(height.value) : undefined,
         chest: chest.value ? Number(chest.value) : undefined,
         waist: waist.value ? Number(waist.value) : undefined,
         biceps: biceps.value ? Number(biceps.value) : undefined,
         thighs: thighs.value ? Number(thighs.value) : undefined,
-        length_unit: circumferenceUnit.value,
+        length_unit: circumferenceUnit,
         photo_url: photoUrl.value || undefined,
       },
     });
@@ -56,7 +74,7 @@ const handleSave = async () => {
       throw new Error(body.error || `Request failed with status ${httpRes.status}`);
     }
     emit("saved");
-    emit("close");
+    handleClose();
   } catch (err: any) {
     errorMsg.value = err.message || "Failed to log measurement.";
   } finally {
@@ -66,50 +84,43 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <ui5-dialog :open="open" header-text="Log Body Measurements" @close="emit('close')">
+  <ui5-dialog :open="open" header-text="Log Body Measurements" @close="handleClose">
     <div class="dialog-content">
       <ui5-message-strip v-if="errorMsg" design="Negative" @close="errorMsg = ''">
         {{ errorMsg }}
       </ui5-message-strip>
 
-      <div class="form-grid">
-        <div class="form-group">
-          <ui5-label>Body Weight</ui5-label>
-          <div class="row-inputs">
-            <ui5-input
-              type="Number"
-              :value="weight"
-              @input="weight = $event.target.value"
-              placeholder="75.0"
-            />
-            <ui5-select @change="weightUnit = $event.target.selectedOption.value">
-              <ui5-option value="kg" :selected="weightUnit === 'kg'">kg</ui5-option>
-              <ui5-option value="lbs" :selected="weightUnit === 'lbs'">lbs</ui5-option>
-            </ui5-select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <ui5-label>Body Fat %</ui5-label>
-          <ui5-input
-            type="Number"
-            :value="bodyFatPct"
-            @input="bodyFatPct = $event.target.value"
-            placeholder="15.0"
-          />
-        </div>
-      </div>
-
-      <div class="section-title">Circumferences</div>
       <div class="form-group">
-        <ui5-label>Unit</ui5-label>
-        <ui5-select @change="circumferenceUnit = $event.target.selectedOption.value">
-          <ui5-option value="cm" :selected="circumferenceUnit === 'cm'"
-            >Centimeters (cm)</ui5-option
-          >
-          <ui5-option value="in" :selected="circumferenceUnit === 'in'">Inches (in)</ui5-option>
-        </ui5-select>
+        <ui5-label>Body Weight ({{ weightUnit }})</ui5-label>
+        <ui5-input
+          type="Number"
+          :value="weight"
+          @input="weight = $event.target.value"
+          placeholder="75.0"
+        />
       </div>
+
+      <div class="form-group">
+        <ui5-label>Body Fat %</ui5-label>
+        <ui5-input
+          type="Number"
+          :value="bodyFatPct"
+          @input="bodyFatPct = $event.target.value"
+          placeholder="15.0"
+        />
+      </div>
+
+      <div class="form-group">
+        <ui5-label>Height ({{ circumferenceUnit }})</ui5-label>
+        <ui5-input
+          type="Number"
+          :value="height"
+          @input="height = $event.target.value"
+          placeholder="175"
+        />
+      </div>
+
+      <div class="section-title">Circumferences ({{ circumferenceUnit }})</div>
 
       <div class="form-grid">
         <div class="form-group">
@@ -164,7 +175,7 @@ const handleSave = async () => {
     </div>
 
     <div slot="footer" class="dialog-footer">
-      <ui5-button design="Transparent" @click="emit('close')">Cancel</ui5-button>
+      <ui5-button design="Transparent" @click="handleClose">Cancel</ui5-button>
       <ui5-button design="Emphasized" :disabled="loading" @click="handleSave">
         {{ loading ? "Saving..." : "Save Log" }}
       </ui5-button>
@@ -192,11 +203,6 @@ const handleSave = async () => {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-}
-
-.row-inputs {
-  display: flex;
-  gap: 0.5rem;
 }
 
 .section-title {

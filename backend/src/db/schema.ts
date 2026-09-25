@@ -102,14 +102,12 @@ export const units = sqliteTable("units", {
   symbol: text("symbol").notNull(),
 });
 
-/** Optional extended profile for a user (bio, height, birthday, location). */
+/** Optional extended profile for a user (bio, birthday, location). */
 export const usersProfile = sqliteTable("user_profile", {
   id: text("id").primaryKey(),
   location: text("location"),
   birthday: text("birthday"),
   sex: text("sex").$type<Sex>(),
-  height: real("height"),
-  heightUnit: text("height_unit").default("cm"),
   bio: text("bio"),
   createdAt: integer("created_at", { mode: "timestamp" }),
 });
@@ -300,6 +298,7 @@ export const bodyMeasurements = sqliteTable(
     thighs: real("thighs"),
     calves: real("calves"),
     neck: real("neck"),
+    height: real("height"),
     lengthUnit: text("length_unit").default("cm"),
     photoUrl: text("photo_url"),
     createdAt: integer("created_at", { mode: "timestamp" }),
