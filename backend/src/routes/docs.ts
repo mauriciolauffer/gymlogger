@@ -9,7 +9,7 @@ export const docsRouter = new Hono()
       return c.json({ error: "Endpoint not found" }, 404);
     }
     if (openApiSpec) {
-      openApiSpec = await import("../../openapi/openapi.json");
+      openApiSpec = await import("../../openapi/openapi.json", { with: { type: "json" } });
     }
     return next();
   })

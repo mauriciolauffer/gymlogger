@@ -2,9 +2,9 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "cloudflare:workers";
-import app from "../src/index.ts";
-import { registerUser } from "./helpers.ts";
-import { user, usersProfile, userSettings } from "../src/db/schema.ts";
+import app from "../src/index.js";
+import { registerUser } from "./helpers.js";
+import { user, usersProfile, userSettings } from "../src/db/schema.js";
 
 describe("Account creation", () => {
   it("accepts signup requests from the local frontend origin", async () => {

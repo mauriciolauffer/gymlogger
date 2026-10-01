@@ -2,8 +2,8 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "cloudflare:workers";
-import { createClient, registerUser } from "./helpers.ts";
-import { usersProfile, userSettings } from "../src/db/schema.ts";
+import { createClient, registerUser } from "./helpers.js";
+import { usersProfile, userSettings } from "../src/db/schema.js";
 
 describe("User profile", () => {
   let token: string;

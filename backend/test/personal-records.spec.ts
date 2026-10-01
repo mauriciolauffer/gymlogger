@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { createClient, buildWorkout, registerUser } from "./helpers.ts";
+import { createClient, buildWorkout, registerUser } from "./helpers.js";
 
 describe("Personal record detection", () => {
   let token: string;

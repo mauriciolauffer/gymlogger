@@ -21,22 +21,28 @@ export default defineConfig({
       },
     }),
   ],
-  optimizeDeps: {
-    include: [
-      "@ui5/webcomponents-fiori/dist/ShellBar.js",
-      "@ui5/webcomponents/dist/TabContainer.js",
-      "@ui5/webcomponents/dist/Tab.js",
-      "@ui5/webcomponents/dist/Button.js",
-      "@ui5/webcomponents/dist/Title.js",
-      "@ui5/webcomponents/dist/Card.js",
-      "@ui5/webcomponents/dist/CardHeader.js",
-      "@ui5/webcomponents/dist/Input.js",
-      "@ui5/webcomponents/dist/Select.js",
-      "@ui5/webcomponents/dist/Option.js",
-      "@ui5/webcomponents/dist/Dialog.js",
-      "@ui5/webcomponents/dist/List.js",
-      "@ui5/webcomponents/dist/ListItemStandard.js",
-    ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          /* if (id.includes("node_modules/@ui5/webcomponents-fiori")) {
+            return "ui5-fiori";
+          }
+          if (id.includes("node_modules/@ui5/webcomponents-icons")) {
+            return "ui5-icons";
+          }
+          if (id.includes("node_modules/@ui5/webcomponents")) {
+            return "ui5";
+          } */
+          if (id.includes("node_modules/vue-router")) {
+            return "vue-router";
+          }
+          if (id.includes("node_modules/vue")) {
+            return "vue";
+          }
+        },
+      },
+    },
   },
   test: {
     globals: true,
@@ -46,8 +52,10 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json", "html"],
       thresholds: {
-        statements: 85,
-        lines: 85,
+        statements: 90,
+        branches: 90,
+        functions: 90,
+        lines: 90,
       },
       exclude: [
         "node_modules/",

@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { createClient, registerUser } from "./helpers.ts";
+import { createClient, registerUser } from "./helpers.js";
 
 describe("Exercises", () => {
   let token: string;
